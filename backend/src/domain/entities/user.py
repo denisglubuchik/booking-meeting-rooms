@@ -27,3 +27,17 @@ class User:
 
     def demote_to_employee(self) -> None:
         self.role = UserRole.EMPLOYEE
+
+    def activate(self) -> None:
+        self.is_active = True
+
+    def deactivate(self) -> None:
+        self.is_active = False
+
+    def update(
+        self, full_name: str | None = None, email: str | None = None,
+    ) -> None:
+        if full_name is not None:
+            self.full_name = full_name
+        if email is not None:
+            self.email = email

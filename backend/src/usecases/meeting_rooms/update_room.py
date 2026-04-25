@@ -13,7 +13,9 @@ class UpdateRoomUseCase:
             raise NotFoundError(f"Room with id {dto.id} not found")
 
         room.update(
-            name=dto.name, description=dto.description, equipment=dto.equipment,
+            name=dto.name,
+            description=dto.description,
+            equipment=dto.equipment,
         )
 
         saved = await self.room_repo.save(room)

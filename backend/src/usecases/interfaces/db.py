@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
@@ -63,4 +64,14 @@ class DBUsersRepositoryInterface(Protocol):
     async def save(self, user: User) -> User: ...
     async def delete_user(self, user: User) -> None: ...
     async def get_by_id(self, user_id: UUID) -> User | None: ...
-    async def get_all(self) -> list[User]: ...
+
+    async def get_all(
+        self,
+        *,
+        is_active: bool | None = None,
+        role: str | None = None,
+        created_at_gte: datetime | None = None,
+        created_at_lte: datetime | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[User]: ...
