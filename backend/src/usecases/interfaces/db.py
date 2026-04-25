@@ -25,7 +25,16 @@ class DBMeetingRoomsRepositoryInterface(Protocol):
     async def save(self, room: MeetingRoom) -> MeetingRoom: ...
     async def delete_room(self, room: MeetingRoom) -> None: ...
     async def get_by_id(self, room_id: UUID) -> MeetingRoom | None: ...
-    async def get_all(self) -> list[MeetingRoom]: ...
+    async def get_all(
+        self,
+        is_active: bool | None = None,
+        office_id: UUID | None = None,
+        floor: int | None = None,
+        capacity_gte: int | None = None,
+        capacity_lte: int | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[MeetingRoom]: ...
 
 
 class DBBookingsRepositoryInterface(Protocol):

@@ -12,3 +12,22 @@ class MeetingRoom:
     description: str = ""
     equipment: list[str] = field(default_factory=list)
     is_active: bool = True
+
+    def activate(self) -> None:
+        self.is_active = True
+
+    def deactivate(self) -> None:
+        self.is_active = False
+
+    def update(
+        self,
+        name: str | None = None,
+        description: str | None = None,
+        equipment: list[str] | None = None,
+    ) -> None:
+        if name is not None:
+            self.name = name
+        if description is not None:
+            self.description = description
+        if equipment is not None:
+            self.equipment = equipment
