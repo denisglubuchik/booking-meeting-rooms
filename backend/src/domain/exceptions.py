@@ -6,7 +6,7 @@ class InvalidTimeRangeError(DomainError):
     pass
 
 
-class BookingAlreadyCancelledError(DomainError):
+class InvalidBookingStateError(DomainError):
     pass
 
 

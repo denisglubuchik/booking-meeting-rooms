@@ -19,3 +19,9 @@ class User:
     role: UserRole = UserRole.EMPLOYEE
     is_active: bool = True
     created_at: datetime = field(default_factory=datetime.now)
+
+    def promote_to_admin(self):
+        self.role = UserRole.ADMIN
+
+    def demote_to_employee(self):
+        self.role = UserRole.EMPLOYEE

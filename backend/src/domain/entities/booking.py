@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import UUID
 
-from domain.exceptions import InvalidTimeRangeError, BookingAlreadyCancelledError
+from domain.exceptions import InvalidTimeRangeError, InvalidBookingStateError
 
 
 class BookingStatus(StrEnum):
@@ -36,13 +36,42 @@ class Booking:
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
 
+    @property
+    def is_active(self) -> bool:
+        return self.status == BookingStatus.CREATED
+
     def cancel(self) -> None:
-        if self.status == BookingStatus.CANCELLED:
-            raise BookingAlreadyCancelledError
+        if self.status != BookingStatus.CREATED:
+            raise InvalidBookingStateError(
+                f"Cannot cancel booking in {self.status} state"
+            )
 
         self.status = BookingStatus.CANCELLED
         self.updated_at = datetime.now()
 
     def complete(self) -> None:
+        if self.status != BookingStatus.CREATED:
+            raise InvalidBookingStateError(
+                f"Cannot complete booking in {self.status} state"
+            )
+
         self.status = BookingStatus.COMPLETED
+        self.updated_at = datetime.now()
+
+    def reschedule(self, new_time_range: TimeRange) -> None:
+        if self.status != BookingStatus.CREATED:
+            raise InvalidBookingStateError(
+                f"Cannot reschedule booking in {self.status} state"
+            )
+
+        self.time_range = new_time_range
+        self.updated_at = datetime.now()
+
+    def change_room(self, new_room_id: UUID) -> None:
+        if self.status != BookingStatus.CREATED:
+            raise InvalidBookingStateError(
+                f"Cannot change room for booking in {self.status} state"
+            )
+
+        self.room_id = new_room_id
         self.updated_at = datetime.now()
