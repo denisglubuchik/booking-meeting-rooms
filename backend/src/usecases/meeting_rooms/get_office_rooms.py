@@ -13,26 +13,28 @@ class GetOfficeRoomsUseCase:
         office_id: UUID,
         filters: OfficeRoomFiltersDTO | None = None,
     ) -> list[RoomResponseDTO]:
-        filters = filters or OfficeRoomFiltersDTO()
-        rooms = await self.rooms_repo.get_all(
-            office_id=office_id,
-            is_active=filters.is_active,
-            floor=filters.floor,
-            capacity_gte=filters.capacity_gte,
-            capacity_lte=filters.capacity_lte,
-            limit=filters.limit,
-            offset=filters.offset,
-        )
-        return [
-            RoomResponseDTO(
-                id=room.id,
-                office_id=room.office_id,
-                name=room.name,
-                floor=room.floor,
-                capacity=room.capacity,
-                description=room.description,
-                equipment=room.equipment,
-                is_active=room.is_active,
+        async with self.rooms_repo:
+            filters = filters or OfficeRoomFiltersDTO()
+            rooms = await self.rooms_repo.get_all(
+                office_id=office_id,
+                is_active=filters.is_active,
+                floor=filters.floor,
+                capacity_gte=filters.capacity_gte,
+                capacity_lte=filters.capacity_lte,
+                limit=filters.limit,
+                offset=filters.offset,
             )
-            for room in rooms
-        ]
+
+            return [
+                RoomResponseDTO(
+                    id=room.id,
+                    office_id=room.office_id,
+                    name=room.name,
+                    floor=room.floor,
+                    capacity=room.capacity,
+                    description=room.description,
+                    equipment=room.equipment,
+                    is_active=room.is_active,
+                )
+                for room in rooms
+            ]

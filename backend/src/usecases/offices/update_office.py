@@ -8,17 +8,19 @@ class UpdateOfficeUseCase:
         self.office_repo = office_repo
 
     async def execute(self, dto: UpdateOfficeDTO) -> OfficeResponseDTO:
-        office = await self.office_repo.get_by_id(dto.id)
-        if not office:
-            raise NotFoundError(f"Office with id {dto.id} not found")
+        async with self.office_repo:
+            office = await self.office_repo.get_by_id(dto.id)
+            if not office:
+                raise NotFoundError(f"Office with id {dto.id} not found")
 
-        office.update(name=dto.name, city=dto.city, address=dto.address)
+            office.update(name=dto.name, city=dto.city, address=dto.address)
 
-        saved = await self.office_repo.save(office)
-        return OfficeResponseDTO(
-            id=saved.id,
-            name=saved.name,
-            city=saved.city,
-            address=saved.address,
-            is_active=saved.is_active,
-        )
+            saved = await self.office_repo.save(office)
+
+            return OfficeResponseDTO(
+                id=saved.id,
+                name=saved.name,
+                city=saved.city,
+                address=saved.address,
+                is_active=saved.is_active,
+            )

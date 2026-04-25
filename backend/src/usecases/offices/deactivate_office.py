@@ -10,17 +10,19 @@ class DeactivateOfficeUseCase:
         self.office_repo = office_repo
 
     async def execute(self, office_id: UUID) -> OfficeResponseDTO:
-        office = await self.office_repo.get_by_id(office_id)
-        if not office:
-            raise NotFoundError(f"Office with id {office_id} not found")
+        async with self.office_repo:
+            office = await self.office_repo.get_by_id(office_id)
+            if not office:
+                raise NotFoundError(f"Office with id {office_id} not found")
 
-        office.deactivate()
+            office.deactivate()
 
-        saved = await self.office_repo.save(office)
-        return OfficeResponseDTO(
-            id=saved.id,
-            name=saved.name,
-            city=saved.city,
-            address=saved.address,
-            is_active=saved.is_active,
-        )
+            saved = await self.office_repo.save(office)
+
+            return OfficeResponseDTO(
+                id=saved.id,
+                name=saved.name,
+                city=saved.city,
+                address=saved.address,
+                is_active=saved.is_active,
+            )
