@@ -47,7 +47,7 @@ class DBBookingsRepositoryInterface(Protocol):
     async def get_all(self) -> list[Booking]: ...
 
 
-class DBBookingHistorysRepositoryInterface(Protocol):
+class DBBookingHistoryRepositoryInterface(Protocol):
     async def save(self, booking_history: BookingHistory) -> BookingHistory: ...
     async def delete_booking_history(
         self,

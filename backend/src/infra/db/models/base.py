@@ -1,0 +1,9 @@
+from uuid import uuid4
+
+from sqlalchemy import UUID
+from sqlalchemy.orm import DeclarativeBase, mapped_column
+
+
+class Base(DeclarativeBase):
+    __abstract__ = True
+    id = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
