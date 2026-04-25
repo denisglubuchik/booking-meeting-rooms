@@ -3,11 +3,18 @@ import uuid
 from domain.entities.meeting_room import MeetingRoom
 from usecases.dto.meeting_room import CreateRoomDTO, RoomResponseDTO
 from usecases.exceptions import NotFoundError
-from usecases.interfaces.db import DBOfficesRepositoryInterface, DBMeetingRoomsRepositoryInterface
+from usecases.interfaces.db import (
+    DBMeetingRoomsRepositoryInterface,
+    DBOfficesRepositoryInterface,
+)
 
 
 class CreateRoomUseCase:
-    def __init__(self, room_repo: DBMeetingRoomsRepositoryInterface, office_repo: DBOfficesRepositoryInterface) -> None:
+    def __init__(
+        self,
+        room_repo: DBMeetingRoomsRepositoryInterface,
+        office_repo: DBOfficesRepositoryInterface,
+    ) -> None:
         self.room_repo = room_repo
         self.office_repo = office_repo
 

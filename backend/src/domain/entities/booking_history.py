@@ -3,6 +3,8 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import UUID
 
+from domain.time import moscow_now
+
 
 class HistoryAction(StrEnum):
     CREATED = "created"
@@ -18,4 +20,4 @@ class BookingHistory:
     action: HistoryAction
     performed_by: UUID
     details: str = ""
-    created_at: datetime = field(default_factory=datetime.now)
+    created_at: datetime = field(default_factory=moscow_now)

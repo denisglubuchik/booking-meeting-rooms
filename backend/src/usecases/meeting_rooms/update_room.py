@@ -1,6 +1,6 @@
-from usecases.dto.meeting_room import UpdateRoomDTO, RoomResponseDTO
-from usecases.interfaces.db import DBMeetingRoomsRepositoryInterface
+from usecases.dto.meeting_room import RoomResponseDTO, UpdateRoomDTO
 from usecases.exceptions import NotFoundError
+from usecases.interfaces.db import DBMeetingRoomsRepositoryInterface
 
 
 class UpdateRoomUseCase:
@@ -12,7 +12,9 @@ class UpdateRoomUseCase:
         if not room:
             raise NotFoundError(f"Room with id {dto.id} not found")
 
-        room.update(name=dto.name, description=dto.description, equipment=dto.equipment)
+        room.update(
+            name=dto.name, description=dto.description, equipment=dto.equipment,
+        )
 
         saved = await self.room_repo.save(room)
         return RoomResponseDTO(

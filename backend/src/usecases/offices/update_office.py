@@ -1,6 +1,6 @@
-from usecases.dto.office import UpdateOfficeDTO, OfficeResponseDTO
-from usecases.interfaces.db import DBOfficesRepositoryInterface
+from usecases.dto.office import OfficeResponseDTO, UpdateOfficeDTO
 from usecases.exceptions import NotFoundError
+from usecases.interfaces.db import DBOfficesRepositoryInterface
 
 
 class UpdateOfficeUseCase:

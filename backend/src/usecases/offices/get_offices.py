@@ -1,4 +1,4 @@
-from usecases.dto.office import OfficeResponseDTO, OfficeFiltersDTO
+from usecases.dto.office import OfficeFiltersDTO, OfficeResponseDTO
 from usecases.interfaces.db import DBOfficesRepositoryInterface
 
 
@@ -7,7 +7,8 @@ class GetOfficesUseCase:
         self.office_repo = office_repo
 
     async def execute(
-        self, filters: OfficeFiltersDTO | None = None
+        self,
+        filters: OfficeFiltersDTO | None = None,
     ) -> list[OfficeResponseDTO]:
         filters = filters or OfficeFiltersDTO()
         offices = await self.office_repo.get_all(

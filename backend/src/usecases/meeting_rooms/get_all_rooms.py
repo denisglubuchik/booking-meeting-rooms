@@ -1,4 +1,4 @@
-from usecases.dto.meeting_room import RoomResponseDTO, RoomFiltersDTO
+from usecases.dto.meeting_room import RoomFiltersDTO, RoomResponseDTO
 from usecases.interfaces.db import DBMeetingRoomsRepositoryInterface
 
 
@@ -7,7 +7,8 @@ class GetAllRoomsUseCase:
         self.rooms_repo = rooms_repo
 
     async def execute(
-        self, filters: RoomFiltersDTO | None = None
+        self,
+        filters: RoomFiltersDTO | None = None,
     ) -> list[RoomResponseDTO]:
         filters = filters or RoomFiltersDTO()
         rooms = await self.rooms_repo.get_all(

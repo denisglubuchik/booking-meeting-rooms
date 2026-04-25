@@ -5,6 +5,8 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import UUID
 
+from domain.time import moscow_now
+
 
 class UserRole(StrEnum):
     EMPLOYEE = "employee"
@@ -18,10 +20,10 @@ class User:
     email: str
     role: UserRole = UserRole.EMPLOYEE
     is_active: bool = True
-    created_at: datetime = field(default_factory=datetime.now)
+    created_at: datetime = field(default_factory=moscow_now)
 
-    def promote_to_admin(self):
+    def promote_to_admin(self) -> None:
         self.role = UserRole.ADMIN
 
-    def demote_to_employee(self):
+    def demote_to_employee(self) -> None:
         self.role = UserRole.EMPLOYEE

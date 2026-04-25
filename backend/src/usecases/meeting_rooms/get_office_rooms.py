@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from usecases.dto.meeting_room import RoomResponseDTO, OfficeRoomFiltersDTO
+from usecases.dto.meeting_room import OfficeRoomFiltersDTO, RoomResponseDTO
 from usecases.interfaces.db import DBMeetingRoomsRepositoryInterface
 
 
@@ -9,7 +9,9 @@ class GetOfficeRoomsUseCase:
         self.rooms_repo = rooms_repo
 
     async def execute(
-        self, office_id: UUID, filters: OfficeRoomFiltersDTO | None = None
+        self,
+        office_id: UUID,
+        filters: OfficeRoomFiltersDTO | None = None,
     ) -> list[RoomResponseDTO]:
         filters = filters or OfficeRoomFiltersDTO()
         rooms = await self.rooms_repo.get_all(

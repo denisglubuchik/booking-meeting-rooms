@@ -3,8 +3,8 @@ from uuid import UUID
 
 from domain.entities.booking import Booking
 from domain.entities.booking_history import BookingHistory
-from domain.entities.office import Office
 from domain.entities.meeting_room import MeetingRoom
+from domain.entities.office import Office
 from domain.entities.user import User
 
 
@@ -14,6 +14,7 @@ class DBOfficesRepositoryInterface(Protocol):
     async def get_by_id(self, office_id: UUID) -> Office | None: ...
     async def get_all(
         self,
+        *,
         is_active: bool | None = None,
         city: str | None = None,
         limit: int = 100,
@@ -27,6 +28,7 @@ class DBMeetingRoomsRepositoryInterface(Protocol):
     async def get_by_id(self, room_id: UUID) -> MeetingRoom | None: ...
     async def get_all(
         self,
+        *,
         is_active: bool | None = None,
         office_id: UUID | None = None,
         floor: int | None = None,
@@ -47,10 +49,12 @@ class DBBookingsRepositoryInterface(Protocol):
 class DBBookingHistorysRepositoryInterface(Protocol):
     async def save(self, booking_history: BookingHistory) -> BookingHistory: ...
     async def delete_booking_history(
-        self, booking_history: BookingHistory
+        self,
+        booking_history: BookingHistory,
     ) -> None: ...
     async def get_by_id(
-        self, booking_history_id: UUID
+        self,
+        booking_history_id: UUID,
     ) -> BookingHistory | None: ...
     async def get_all(self) -> list[BookingHistory]: ...
 

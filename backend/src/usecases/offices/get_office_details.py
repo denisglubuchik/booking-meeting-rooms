@@ -6,7 +6,7 @@ from usecases.interfaces.db import DBOfficesRepositoryInterface
 
 
 class GetOfficeDetailsUseCase:
-    def __init__(self, office_repo: DBOfficesRepositoryInterface):
+    def __init__(self, office_repo: DBOfficesRepositoryInterface) -> None:
         self.office_repo = office_repo
 
     async def execute(self, office_id: UUID) -> OfficeResponseDTO:
