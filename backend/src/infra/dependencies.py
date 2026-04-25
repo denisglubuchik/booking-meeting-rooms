@@ -9,12 +9,14 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from core.config import DBConfig, RedisConfig
+from infra.cache.service import RedisCacheService
 from infra.db.repositories.booking import DBBookingsRepository
 from infra.db.repositories.booking_history import DBBookingHistoryRepository
 from infra.db.repositories.meeting_room import DBMeetingRoomsRepository
 from infra.db.repositories.office import DBOfficesRepository
 from infra.db.repositories.user import DBUsersRepository
 from infra.db.uow import SQLAlchemyUOW
+from infra.interfaces.cache import CacheInterface
 from usecases.interfaces.db import (
     DBBookingHistoryRepositoryInterface,
     DBBookingsRepositoryInterface,
@@ -58,6 +60,10 @@ class DependencyProvider(Provider):
         self.redis_config = redis_config
 
     @provide(scope=Scope.APP)
+    def redis_cache(self) -> CacheInterface:
+        return RedisCacheService(self.redis_config)
+
+    @provide(scope=Scope.APP)
     def db_engine(self) -> AsyncEngine:
         return create_async_engine(
             self.db_config.DATABASE_URL,
@@ -69,54 +75,71 @@ class DependencyProvider(Provider):
 
     @provide(scope=Scope.APP)
     def session_factory(
-        self, engine: AsyncEngine,
+        self,
+        engine: AsyncEngine,
     ) -> async_sessionmaker[AsyncSession]:
         return async_sessionmaker(
-            autocommit=False, autoflush=False, bind=engine,
+            autocommit=False,
+            autoflush=False,
+            bind=engine,
         )
 
     @provide(scope=Scope.REQUEST)
     def sql_alchemy_uow(
-        self, session_factory: async_sessionmaker[AsyncSession],
+        self,
+        session_factory: async_sessionmaker[AsyncSession],
+        cache: CacheInterface,
     ) -> UoWInterface:
-        return SQLAlchemyUOW(session_factory=session_factory)
+        return SQLAlchemyUOW(session_factory=session_factory, cache=cache)
 
     @provide(scope=Scope.REQUEST)
     def db_users_repository(
-        self, session_factory: async_sessionmaker[AsyncSession],
+        self,
+        session_factory: async_sessionmaker[AsyncSession],
+        cache: CacheInterface,
     ) -> DBUsersRepositoryInterface:
-        return DBUsersRepository(session=None, session_factory=session_factory)
+        return DBUsersRepository(
+            session=None, session_factory=session_factory, cache=cache,
+        )
 
     @provide(scope=Scope.REQUEST)
     def db_offices_repository(
-        self, session_factory: async_sessionmaker[AsyncSession],
+        self,
+        session_factory: async_sessionmaker[AsyncSession],
+        cache: CacheInterface,
     ) -> DBOfficesRepositoryInterface:
         return DBOfficesRepository(
-            session=None, session_factory=session_factory,
+            session=None, session_factory=session_factory, cache=cache,
         )
 
     @provide(scope=Scope.REQUEST)
     def db_rooms_repository(
-        self, session_factory: async_sessionmaker[AsyncSession],
+        self,
+        session_factory: async_sessionmaker[AsyncSession],
+        cache: CacheInterface,
     ) -> DBMeetingRoomsRepositoryInterface:
         return DBMeetingRoomsRepository(
-            session=None, session_factory=session_factory,
+            session=None, session_factory=session_factory, cache=cache,
         )
 
     @provide(scope=Scope.REQUEST)
     def db_bookings_repository(
-        self, session_factory: async_sessionmaker[AsyncSession],
+        self,
+        session_factory: async_sessionmaker[AsyncSession],
     ) -> DBBookingsRepositoryInterface:
         return DBBookingsRepository(
-            session=None, session_factory=session_factory,
+            session=None,
+            session_factory=session_factory,
         )
 
     @provide(scope=Scope.REQUEST)
     def db_booking_history_repository(
-        self, session_factory: async_sessionmaker[AsyncSession],
+        self,
+        session_factory: async_sessionmaker[AsyncSession],
     ) -> DBBookingHistoryRepositoryInterface:
         return DBBookingHistoryRepository(
-            session=None, session_factory=session_factory,
+            session=None,
+            session_factory=session_factory,
         )
 
     activate_office_uc = provide(ActivateOfficeUseCase)

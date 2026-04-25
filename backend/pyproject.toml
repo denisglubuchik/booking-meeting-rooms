@@ -6,6 +6,7 @@ dependencies = [
     "asyncpg>=0.31.0",
     "dishka>=1.10.1",
     "pydantic-settings>=2.14.0",
+    "redis>=7.4.0",
     "sqlalchemy[asyncio]>=2.0.49",
 ]
 

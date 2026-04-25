@@ -2,17 +2,21 @@ from typing import Self
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from infra.interfaces.cache import CacheInterface
+
 
 class BaseDBRepository:
     def __init__(
         self,
         session: AsyncSession | None = None,
         session_factory: async_sessionmaker | None = None,
+        cache: CacheInterface | None = None,
     ) -> None:
         if not session and not session_factory:
             raise ValueError("session or session_factory must be provided")
         self._session_factory = session_factory
         self.__session = session
+        self.cache = cache
 
     @property
     def _session(self) -> AsyncSession:

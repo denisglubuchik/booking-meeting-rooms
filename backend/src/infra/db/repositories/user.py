@@ -4,6 +4,7 @@ from uuid import UUID
 from sqlalchemy import delete, select
 
 from domain.entities.user import User
+from infra.cache.decorators import cache, invalidate_cache
 from infra.db.models.user import UserModel
 from infra.db.repositories.base import BaseDBRepository
 from usecases.interfaces.db import DBUsersRepositoryInterface
@@ -13,16 +14,19 @@ class DBUsersRepository(
     BaseDBRepository,
     DBUsersRepositoryInterface,
 ):
+    @invalidate_cache(key_prefix="user")
     async def save(self, user: User) -> User:
         model = UserModel.from_domain(user)
         merged_model = await self._session.merge(model)
         await self._session.flush()
         return merged_model.to_domain()
 
+    @invalidate_cache(key_prefix="user")
     async def delete_user(self, user: User) -> None:
         stmt = delete(UserModel).where(UserModel.id == user.id)
         await self._session.execute(stmt)
 
+    @cache(key_prefix="user", return_type=User)
     async def get_by_id(self, user_id: UUID) -> User | None:
         stmt = select(UserModel).where(UserModel.id == user_id)
         result = await self._session.execute(stmt)

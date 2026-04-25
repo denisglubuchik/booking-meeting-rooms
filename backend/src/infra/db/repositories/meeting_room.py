@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy import delete, select
 
 from domain.entities.meeting_room import MeetingRoom
+from infra.cache.decorators import cache, invalidate_cache
 from infra.db.models.meeting_room import MeetingRoomModel
 from infra.db.repositories.base import BaseDBRepository
 from usecases.interfaces.db import DBMeetingRoomsRepositoryInterface
@@ -12,16 +13,19 @@ class DBMeetingRoomsRepository(
     BaseDBRepository,
     DBMeetingRoomsRepositoryInterface,
 ):
+    @invalidate_cache(key_prefix="meeting_room")
     async def save(self, room: MeetingRoom) -> MeetingRoom:
         model = MeetingRoomModel.from_domain(room)
         merged_model = await self._session.merge(model)
         await self._session.flush()
         return merged_model.to_domain()
 
+    @invalidate_cache(key_prefix="meeting_room")
     async def delete_room(self, room: MeetingRoom) -> None:
         stmt = delete(MeetingRoomModel).where(MeetingRoomModel.id == room.id)
         await self._session.execute(stmt)
 
+    @cache(key_prefix="meeting_room", return_type=MeetingRoom)
     async def get_by_id(self, room_id: UUID) -> MeetingRoom | None:
         stmt = select(MeetingRoomModel).where(MeetingRoomModel.id == room_id)
         result = await self._session.execute(stmt)
