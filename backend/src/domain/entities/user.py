@@ -18,6 +18,7 @@ class User:
     id: UUID
     full_name: str
     email: str
+    hashed_password: str
     role: UserRole = UserRole.EMPLOYEE
     is_active: bool = True
     created_at: datetime = field(default_factory=moscow_now)
@@ -35,7 +36,9 @@ class User:
         self.is_active = False
 
     def update(
-        self, full_name: str | None = None, email: str | None = None,
+        self,
+        full_name: str | None = None,
+        email: str | None = None,
     ) -> None:
         if full_name is not None:
             self.full_name = full_name

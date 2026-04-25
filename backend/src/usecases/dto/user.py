@@ -7,6 +7,7 @@ from uuid import UUID
 class CreateUserDTO:
     full_name: str
     email: str
+    password: str
 
 
 @dataclass(frozen=True)
