@@ -81,6 +81,10 @@ class DBBookingHistoryRepositoryInterface(
     Protocol,
 ):
     async def save(self, booking_history: BookingHistory) -> BookingHistory: ...
+    async def save_many(
+        self,
+        booking_history_items: list[BookingHistory],
+    ) -> list[BookingHistory]: ...
     async def delete_booking_history(
         self,
         booking_history: BookingHistory,

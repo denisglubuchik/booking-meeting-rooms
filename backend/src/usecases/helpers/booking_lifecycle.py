@@ -6,6 +6,21 @@ from domain.entities.booking_history import BookingHistory, HistoryAction
 from usecases.interfaces.uow import UoWInterface
 
 
+def build_cancellation_history(
+    *,
+    booking: Booking,
+    details: str = "",
+    performed_by: UUID | None = None,
+) -> BookingHistory:
+    return BookingHistory(
+        id=uuid.uuid4(),
+        booking_id=booking.id,
+        action=HistoryAction.CANCELLED,
+        performed_by=performed_by or booking.created_by,
+        details=details,
+    )
+
+
 async def cancel_booking_with_history(
     *,
     uow: UoWInterface,
@@ -16,12 +31,10 @@ async def cancel_booking_with_history(
     booking.cancel()
     saved_booking = await uow.bookings_repo.save(booking)
     await uow.booking_history_repo.save(
-        BookingHistory(
-            id=uuid.uuid4(),
-            booking_id=saved_booking.id,
-            action=HistoryAction.CANCELLED,
-            performed_by=performed_by or saved_booking.created_by,
+        build_cancellation_history(
+            booking=saved_booking,
             details=details,
+            performed_by=performed_by,
         ),
     )
     return saved_booking

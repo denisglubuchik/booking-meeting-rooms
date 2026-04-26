@@ -2,7 +2,7 @@ from uuid import UUID
 
 from usecases.dto.meeting_room import RoomResponseDTO
 from usecases.exceptions import NotFoundError
-from usecases.helpers.booking_lifecycle import cancel_booking_with_history
+from usecases.helpers.booking_lifecycle import build_cancellation_history
 from usecases.interfaces.uow import UoWInterface
 
 
@@ -25,13 +25,21 @@ class DeactivateRoomUseCase:
             )
             room.deactivate()
             saved = await self.uow.rooms_repo.save(room)
+            booking_history_items = []
             for booking in active_bookings:
-                await cancel_booking_with_history(
-                    uow=self.uow,
-                    booking=booking,
-                    performed_by=performed_by,
-                    details=f"room_deactivated:{room.id}",
+                booking.cancel()
+                saved_booking = await self.uow.bookings_repo.save(booking)
+                booking_history_items.append(
+                    build_cancellation_history(
+                        booking=saved_booking,
+                        performed_by=performed_by,
+                        details=f"room_deactivated:{room.id}",
+                    ),
                 )
+
+            await self.uow.booking_history_repo.save_many(
+                booking_history_items,
+            )
 
             return RoomResponseDTO(
                 id=saved.id,

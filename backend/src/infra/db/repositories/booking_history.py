@@ -18,6 +18,21 @@ class DBBookingHistoryRepository(
         await self._session.flush()
         return merged_model.to_domain()
 
+    async def save_many(
+        self,
+        booking_history_items: list[BookingHistory],
+    ) -> list[BookingHistory]:
+        if not booking_history_items:
+            return []
+
+        models = [
+            BookingHistoryModel.from_domain(booking_history)
+            for booking_history in booking_history_items
+        ]
+        self._session.add_all(models)
+        await self._session.flush()
+        return [model.to_domain() for model in models]
+
     async def delete_booking_history(
         self,
         booking_history: BookingHistory,
