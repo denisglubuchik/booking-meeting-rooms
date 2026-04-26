@@ -33,6 +33,13 @@ class DBUsersRepository(
         model = result.scalar_one_or_none()
         return model.to_domain() if model else None
 
+    @cache(key_prefix="user", return_type=User)
+    async def get_by_email(self, email: str) -> User | None:
+        stmt = select(UserModel).where(UserModel.email == email)
+        result = await self._session.execute(stmt)
+        model = result.scalar_one_or_none()
+        return model.to_domain() if model else None
+
     async def get_all(
         self,
         *,

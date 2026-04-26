@@ -11,6 +11,12 @@ class CreateUserDTO:
 
 
 @dataclass(frozen=True)
+class LoginUserDTO:
+    email: str
+    password: str
+
+
+@dataclass(frozen=True)
 class UpdateUserDTO:
     id: UUID
     full_name: str

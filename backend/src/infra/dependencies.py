@@ -17,6 +17,7 @@ from infra.db.repositories.office import DBOfficesRepository
 from infra.db.repositories.user import DBUsersRepository
 from infra.db.uow import SQLAlchemyUOW
 from infra.interfaces.cache import CacheInterface
+from infra.password_hasher import PasswordHasher
 from usecases.interfaces.db import (
     DBBookingHistoryRepositoryInterface,
     DBBookingsRepositoryInterface,
@@ -24,6 +25,7 @@ from usecases.interfaces.db import (
     DBOfficesRepositoryInterface,
     DBUsersRepositoryInterface,
 )
+from usecases.interfaces.password_hasher import PasswordHasherInterface
 from usecases.interfaces.uow import UoWInterface
 from usecases.meeting_rooms.activate_room import ActivateRoomUseCase
 from usecases.meeting_rooms.create_room import CreateRoomUseCase
@@ -44,6 +46,7 @@ from usecases.user.create_user import CreateUserUseCase
 from usecases.user.deactivate_user import DeactivateUserUseCase
 from usecases.user.get_user_details import GetUserDetailsUseCase
 from usecases.user.get_users import GetUsersUseCase
+from usecases.user.login_user import LoginUserUseCase
 from usecases.user.update_user import UpdateUserUseCase
 
 
@@ -62,6 +65,10 @@ class DependencyProvider(Provider):
     @provide(scope=Scope.APP)
     def redis_cache(self) -> CacheInterface:
         return RedisCacheService(self.redis_config)
+
+    @provide(scope=Scope.APP)
+    def hasher(self) -> PasswordHasherInterface:
+        return PasswordHasher()
 
     @provide(scope=Scope.APP)
     def db_engine(self) -> AsyncEngine:
@@ -99,7 +106,9 @@ class DependencyProvider(Provider):
         cache: CacheInterface,
     ) -> DBUsersRepositoryInterface:
         return DBUsersRepository(
-            session=None, session_factory=session_factory, cache=cache,
+            session=None,
+            session_factory=session_factory,
+            cache=cache,
         )
 
     @provide(scope=Scope.REQUEST)
@@ -109,7 +118,9 @@ class DependencyProvider(Provider):
         cache: CacheInterface,
     ) -> DBOfficesRepositoryInterface:
         return DBOfficesRepository(
-            session=None, session_factory=session_factory, cache=cache,
+            session=None,
+            session_factory=session_factory,
+            cache=cache,
         )
 
     @provide(scope=Scope.REQUEST)
@@ -119,7 +130,9 @@ class DependencyProvider(Provider):
         cache: CacheInterface,
     ) -> DBMeetingRoomsRepositoryInterface:
         return DBMeetingRoomsRepository(
-            session=None, session_factory=session_factory, cache=cache,
+            session=None,
+            session_factory=session_factory,
+            cache=cache,
         )
 
     @provide(scope=Scope.REQUEST)
@@ -159,6 +172,7 @@ class DependencyProvider(Provider):
 
     activate_user_uc = provide(ActivateUserUseCase)
     create_user_uc = provide(CreateUserUseCase)
+    login_user_uc = provide(LoginUserUseCase)
     deactivate_user_uc = provide(DeactivateUserUseCase)
     change_user_role_uc = provide(ChangeUserRoleUseCase)
     get_user_uc = provide(GetUserDetailsUseCase)

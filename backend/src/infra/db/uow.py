@@ -25,17 +25,20 @@ class SQLAlchemyUOW(UoWInterface):
         self._session = self._session_factory()
 
         self.offices_repo = DBOfficesRepository(
-            session=self._session, cache=self._cache,
+            session=self._session,
+            cache=self._cache,
         )
         self.bookings_repo = DBBookingsRepository(session=self._session)
         self.rooms_repo = DBMeetingRoomsRepository(
-            session=self._session, cache=self._cache,
+            session=self._session,
+            cache=self._cache,
         )
         self.booking_history_repo = DBBookingHistoryRepository(
             session=self._session,
         )
         self.users_repo = DBUsersRepository(
-            session=self._session, cache=self._cache,
+            session=self._session,
+            cache=self._cache,
         )
 
         return self
