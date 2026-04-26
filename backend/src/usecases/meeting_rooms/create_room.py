@@ -19,8 +19,8 @@ class CreateRoomUseCase:
         self.office_repo = office_repo
 
     async def execute(self, dto: CreateRoomDTO) -> RoomResponseDTO:
-        async with self.room_repo:
-            office = self.office_repo.get_by_id(dto.office_id)
+        async with self.room_repo, self.office_repo:
+            office = await self.office_repo.get_by_id(dto.office_id)
             if office is None:
                 raise NotFoundError(f"Office with id={dto.office_id} not found")
 

@@ -33,7 +33,7 @@ class MeetingRoomModel(Base):
         cascade="all, delete-orphan",
     )
 
-    def to_domain(self) -> MeetingRoom:
+    def to_domain(self, *, include_bookings: bool = False) -> MeetingRoom:
         return MeetingRoom(
             id=self.id,
             office_id=self.office_id,
@@ -43,7 +43,11 @@ class MeetingRoomModel(Base):
             description=self.description,
             equipment=self.equipment,
             is_active=self.is_active,
-            bookings=[b.to_domain() for b in self.bookings],
+            bookings=(
+                [booking.to_domain() for booking in self.bookings]
+                if include_bookings
+                else []
+            ),
         )
 
     @classmethod

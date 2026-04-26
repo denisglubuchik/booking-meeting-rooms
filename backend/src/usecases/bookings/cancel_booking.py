@@ -1,9 +1,8 @@
-import uuid
 from uuid import UUID
 
-from domain.entities.booking_history import BookingHistory, HistoryAction
 from usecases.dto.booking import BookingResponseDTO
 from usecases.exceptions import NotFoundError
+from usecases.helpers.booking_lifecycle import cancel_booking_with_history
 from usecases.interfaces.uow import UoWInterface
 
 
@@ -17,17 +16,10 @@ class CancelBookingUseCase:
             if not booking:
                 raise NotFoundError(f"Booking with id {booking_id} not found")
 
-            booking.cancel()
-            saved = await self.uow.bookings_repo.save(booking)
-
-            booking_history = BookingHistory(
-                id=uuid.uuid4(),
-                booking_id=saved.id,
-                action=HistoryAction.CANCELLED,
-                performed_by=saved.created_by,
+            saved = await cancel_booking_with_history(
+                uow=self.uow,
+                booking=booking,
             )
-
-            await self.uow.booking_history_repo.save(booking_history)
 
             return BookingResponseDTO(
                 id=saved.id,

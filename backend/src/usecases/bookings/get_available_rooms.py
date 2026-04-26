@@ -28,6 +28,8 @@ class GetAvailableRoomsUseCase:
                 floor=filters.floor,
                 capacity_gte=filters.capacity_gte,
                 capacity_lte=filters.capacity_lte,
+                start_time_gte=filters.start_time,
+                end_time_lte=filters.end_time,
             )
 
             if not rooms_with_bookings:
@@ -38,8 +40,10 @@ class GetAvailableRoomsUseCase:
                 filters.end_time,
             )
             available_rooms = [
-                room for room in rooms_with_bookings
-                if not room.bookings or AvailabilityService.is_room_available(
+                room
+                for room in rooms_with_bookings
+                if not room.bookings
+                or AvailabilityService.is_room_available(
                     requested_time_range,
                     room.bookings,
                 )

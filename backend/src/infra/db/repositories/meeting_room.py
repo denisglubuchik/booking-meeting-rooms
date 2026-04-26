@@ -35,6 +35,13 @@ class DBMeetingRoomsRepository(
         model = result.scalar_one_or_none()
         return model.to_domain() if model else None
 
+    async def get_by_office_id(self, office_id: UUID) -> list[MeetingRoom]:
+        stmt = select(MeetingRoomModel).where(
+            MeetingRoomModel.office_id == office_id,
+        )
+        result = await self._session.execute(stmt)
+        return [model.to_domain() for model in result.scalars().all()]
+
     async def get_all(
         self,
         *,
@@ -74,7 +81,7 @@ class DBMeetingRoomsRepository(
         capacity_lte: int | None = None,
         start_time_gte: datetime,
         end_time_lte: datetime,
-    ) -> list[MeetingRoomModel]:
+    ) -> list[MeetingRoom]:
         stmt = (
             select(MeetingRoomModel)
             .outerjoin(
@@ -100,4 +107,7 @@ class DBMeetingRoomsRepository(
             stmt = stmt.where(MeetingRoomModel.capacity <= capacity_lte)
 
         result = await self._session.execute(stmt)
-        return [model.to_domain() for model in result.scalars().unique().all()]
+        return [
+            model.to_domain(include_bookings=True)
+            for model in result.scalars().unique().all()
+        ]

@@ -15,7 +15,7 @@ class MeetingRoom:
     equipment: list[str] = field(default_factory=list)
     is_active: bool = True
 
-    bookings: list[Booking] | None = None
+    bookings: list[Booking] = field(default_factory=list)
 
     def activate(self) -> None:
         self.is_active = True

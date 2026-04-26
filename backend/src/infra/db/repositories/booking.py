@@ -29,6 +29,22 @@ class DBBookingsRepository(
         model = result.scalar_one_or_none()
         return model.to_domain() if model else None
 
+    async def get_active_by_room_id(self, room_id: UUID) -> list[Booking]:
+        stmt = select(BookingModel).where(
+            BookingModel.room_id == room_id,
+            BookingModel.status == BookingStatus.CREATED,
+        )
+        result = await self._session.execute(stmt)
+        return [model.to_domain() for model in result.scalars().all()]
+
+    async def get_active_by_user_id(self, user_id: UUID) -> list[Booking]:
+        stmt = select(BookingModel).where(
+            BookingModel.user_id == user_id,
+            BookingModel.status == BookingStatus.CREATED,
+        )
+        result = await self._session.execute(stmt)
+        return [model.to_domain() for model in result.scalars().all()]
+
     async def get_all(
         self,
         *,
