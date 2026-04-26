@@ -22,6 +22,12 @@ class RescheduleBookingDTO:
 
 
 @dataclass(frozen=True)
+class ChangeRoomBookingDTO:
+    id: UUID
+    new_room_id: UUID
+
+
+@dataclass(frozen=True)
 class BookingFiltersDTO:
     user_id: UUID | None = None
     room_id: UUID | None = None
