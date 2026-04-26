@@ -1,7 +1,15 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class DBConfig(BaseSettings):
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+
+class DBConfig(Settings):
     PG_PORT: int = 5432
     PG_DB: str
     PG_USER: str
@@ -13,7 +21,7 @@ class DBConfig(BaseSettings):
         return f"postgresql+asyncpg://{self.PG_USER}:{self.PG_PASS}@{self.PG_HOST}:{self.PG_PORT}/{self.PG_DB}"
 
 
-class RedisConfig(BaseSettings):
+class RedisConfig(Settings):
     REDIS_HOST: str
     REDIS_PORT: int
     REDIS_PASSWORD: str

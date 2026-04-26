@@ -53,3 +53,13 @@ class RedisCacheService(CacheInterface):
 
     async def delete(self, key: str) -> None:
         await self.redis.delete(self._make_key(key))
+
+    async def delete_by_prefix(self, prefix: str) -> None:
+        exact_key = self._make_key(prefix)
+        pattern = self._make_key(f"{prefix}:*")
+        keys = [exact_key]
+
+        async for key in self.redis.scan_iter(match=pattern):
+            keys.append(key)  # noqa: PERF401
+
+        await self.redis.delete(*keys)

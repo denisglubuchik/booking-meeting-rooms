@@ -3,6 +3,7 @@ name = "backend"
 version = "0.1.0"
 requires-python = ">=3.14"
 dependencies = [
+    "alembic>=1.18.4",
     "argon2-cffi>=25.1.0",
     "asyncpg>=0.31.0",
     "dishka>=1.10.1",
@@ -75,6 +76,7 @@ exclude = [
     ".git",
     "**/tests/*",
     "tests",
+    "**/migrations/*"
 ]
 
 # Игнорируем конкретные предупреждения линтера

@@ -51,18 +51,7 @@ def invalidate_cache(key_prefix: str) -> Callable:
 
             cache_service = getattr(self, "cache", None)
             if cache_service is not None:
-                # Try to extract the entity's ID from arguments
-                entity = (
-                    args[0]
-                    if args
-                    else kwargs.get(
-                        next(iter(kwargs.keys())) if kwargs else None,
-                    )
-                )
-
-                if entity and hasattr(entity, "id"):
-                    key = f"{key_prefix}:{entity.id}"
-                    await cache_service.delete(key)
+                await cache_service.delete_by_prefix(key_prefix)
 
             return result
 

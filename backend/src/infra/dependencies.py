@@ -1,6 +1,13 @@
 #  ruff: noqa: PLR6301
 
-from dishka import BaseScope, Component, Provider, Scope, provide
+from dishka import (
+    BaseScope,
+    Component,
+    Provider,
+    Scope,
+    make_async_container,
+    provide,
+)
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -57,6 +64,9 @@ from usecases.user.get_user_details import GetUserDetailsUseCase
 from usecases.user.get_users import GetUsersUseCase
 from usecases.user.login_user import LoginUserUseCase
 from usecases.user.update_user import UpdateUserUseCase
+
+db_config = DBConfig()
+redis_config = RedisConfig()
 
 
 class DependencyProvider(Provider):
@@ -197,3 +207,12 @@ class DependencyProvider(Provider):
     get_room_bookings_uc = provide(GetRoomBookingsUseCase)
     reschedule_booking_uc = provide(RescheduleBookingUseCase)
     change_room_booking_uc = provide(ChangeRoomBookingUseCase)
+
+
+container = make_async_container(
+    DependencyProvider(
+        db_config=db_config,
+        redis_config=redis_config,
+        scope=Scope.REQUEST,
+    ),
+)

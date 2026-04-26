@@ -1,0 +1,36 @@
+volumes:
+  pg_data: { }
+
+
+services:
+  app:
+    build: .
+    command: "sh ./start.sh"
+    env_file: .env
+    depends_on:
+      - db
+#    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./src:/code/src"
+      - "./pyproject.toml:/code/pyproject.toml"
+    tty: true
+
+  db:
+    image: postgres:17-alpine
+    container_name: booking_db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: booking_db
+      POSTGRES_USER: booking_user
+      POSTGRES_PASSWORD: booking_password
+    env_file: .env
+    volumes:
+      - pg_data:/var/lib/postgresql/dataStaff
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"

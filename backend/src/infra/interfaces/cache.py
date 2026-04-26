@@ -20,3 +20,7 @@ class CacheInterface(Protocol):
     async def delete(self, key: str) -> None:
         """Delete key from cache."""
         ...
+
+    async def delete_by_prefix(self, prefix: str) -> None:
+        """Delete all keys by logical prefix."""
+        ...
