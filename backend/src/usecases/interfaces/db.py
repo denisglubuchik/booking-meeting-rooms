@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Protocol, Self
 from uuid import UUID
 
-from domain.entities.booking import Booking
+from domain.entities.booking import Booking, BookingStatus
 from domain.entities.booking_history import BookingHistory
 from domain.entities.meeting_room import MeetingRoom
 from domain.entities.office import Office
@@ -49,7 +49,17 @@ class DBBookingsRepositoryInterface(AsyncContextManagerInterface, Protocol):
     async def save(self, booking: Booking) -> Booking: ...
     async def delete_booking(self, booking: Booking) -> None: ...
     async def get_by_id(self, booking_id: UUID) -> Booking | None: ...
-    async def get_all(self) -> list[Booking]: ...
+    async def get_all(
+        self,
+        *,
+        room_id: UUID | None = None,
+        user_id: UUID | None = None,
+        status: BookingStatus | None = None,
+        start_time_gte: datetime | None = None,
+        end_time_lte: datetime | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[Booking]: ...
 
 
 class DBBookingHistoryRepositoryInterface(
