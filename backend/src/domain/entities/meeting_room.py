@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from uuid import UUID
 
+from domain.entities.booking import Booking
+
 
 @dataclass(slots=True, kw_only=True)
 class MeetingRoom:
@@ -12,6 +14,8 @@ class MeetingRoom:
     description: str = ""
     equipment: list[str] = field(default_factory=list)
     is_active: bool = True
+
+    bookings: list[Booking] | None = None
 
     def activate(self) -> None:
         self.is_active = True

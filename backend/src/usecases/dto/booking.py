@@ -40,8 +40,6 @@ class AvailableRoomsFiltersDTO:
     floor: int | None = None
     capacity_gte: int | None = None
     capacity_lte: int | None = None
-    limit: int = 100
-    offset: int = 0
 
 
 @dataclass(frozen=True)

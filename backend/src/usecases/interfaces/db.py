@@ -43,6 +43,17 @@ class DBMeetingRoomsRepositoryInterface(AsyncContextManagerInterface, Protocol):
         limit: int = 100,
         offset: int = 0,
     ) -> list[MeetingRoom]: ...
+    async def get_rooms_with_bookings(
+        self,
+        *,
+        is_active: bool | None = None,
+        office_id: UUID | None = None,
+        floor: int | None = None,
+        capacity_gte: int | None = None,
+        capacity_lte: int | None = None,
+        start_time_gte: datetime,
+        end_time_lte: datetime,
+    ) -> list[MeetingRoom]: ...
 
 
 class DBBookingsRepositoryInterface(AsyncContextManagerInterface, Protocol):

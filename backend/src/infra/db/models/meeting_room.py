@@ -43,6 +43,7 @@ class MeetingRoomModel(Base):
             description=self.description,
             equipment=self.equipment,
             is_active=self.is_active,
+            bookings=[b.to_domain() for b in self.bookings],
         )
 
     @classmethod

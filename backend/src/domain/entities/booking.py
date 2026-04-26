@@ -21,6 +21,8 @@ class TimeRange:
     def __post_init__(self) -> None:
         if self.end <= self.start:
             raise InvalidTimeRangeError()
+        if self.start.date() != self.end.date():
+            raise InvalidTimeRangeError()
 
     def overlaps(self, other: "TimeRange") -> bool:
         return self.start < other.end and other.start < self.end
