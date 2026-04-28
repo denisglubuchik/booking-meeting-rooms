@@ -28,3 +28,9 @@ class RedisConfig(Settings):
     REDIS_USER: str
     REDIS_DB: int
     APP_REDIS_PREFIX: str = "booking:back"
+
+
+class AuthConfig(Settings):
+    JWT_ACCESS_SECRET: str = "change-me-in-env"
+    JWT_ACCESS_EXPIRES_MINUTES: int = 15
+    JWT_ISSUER: str = "booking-backend"

@@ -15,7 +15,8 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from core.config import DBConfig, RedisConfig
+from core.config import AuthConfig, DBConfig, RedisConfig
+from infra.auth.access_token import JWTAccessTokenIssuer, JWTAccessTokenVerifier
 from infra.cache.service import RedisCacheService
 from infra.db.repositories.booking import DBBookingsRepository
 from infra.db.repositories.booking_history import DBBookingHistoryRepository
@@ -23,6 +24,10 @@ from infra.db.repositories.meeting_room import DBMeetingRoomsRepository
 from infra.db.repositories.office import DBOfficesRepository
 from infra.db.repositories.user import DBUsersRepository
 from infra.db.uow import SQLAlchemyUOW
+from infra.interfaces.access_token import (
+    AccessTokenIssuerInterface,
+    AccessTokenVerifierInterface,
+)
 from infra.interfaces.cache import CacheInterface
 from infra.password_hasher import PasswordHasher
 from usecases.bookings.cancel_booking import CancelBookingUseCase
@@ -67,6 +72,7 @@ from usecases.user.update_user import UpdateUserUseCase
 
 db_config = DBConfig()
 redis_config = RedisConfig()
+auth_config = AuthConfig()
 
 
 class DependencyProvider(Provider):
@@ -74,12 +80,18 @@ class DependencyProvider(Provider):
         self,
         db_config: DBConfig,
         redis_config: RedisConfig,
+        auth_config: AuthConfig,
         scope: BaseScope | None = None,
         component: Component | None = None,
     ) -> None:
         super().__init__(scope=scope, component=component)
         self.db_config = db_config
         self.redis_config = redis_config
+        self.auth_config = auth_config
+
+    @provide(scope=Scope.APP)
+    def auth_settings(self) -> AuthConfig:
+        return self.auth_config
 
     @provide(scope=Scope.APP)
     def redis_cache(self) -> CacheInterface:
@@ -88,6 +100,20 @@ class DependencyProvider(Provider):
     @provide(scope=Scope.APP)
     def hasher(self) -> PasswordHasherInterface:
         return PasswordHasher()
+
+    @provide(scope=Scope.APP)
+    def access_token_issuer(
+        self,
+        auth_settings: AuthConfig,
+    ) -> AccessTokenIssuerInterface:
+        return JWTAccessTokenIssuer(config=auth_settings)
+
+    @provide(scope=Scope.APP)
+    def access_token_verifier(
+        self,
+        auth_settings: AuthConfig,
+    ) -> AccessTokenVerifierInterface:
+        return JWTAccessTokenVerifier(config=auth_settings)
 
     @provide(scope=Scope.APP)
     def db_engine(self) -> AsyncEngine:
@@ -213,6 +239,7 @@ container = make_async_container(
     DependencyProvider(
         db_config=db_config,
         redis_config=redis_config,
+        auth_config=auth_config,
         scope=Scope.REQUEST,
     ),
 )
