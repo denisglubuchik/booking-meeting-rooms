@@ -3,6 +3,7 @@ from datetime import datetime
 from uuid import UUID
 
 from domain.entities.booking import BookingStatus
+from domain.entities.user import UserRole
 
 
 @dataclass(frozen=True)
@@ -17,6 +18,8 @@ class CreateBookingDTO:
 @dataclass(frozen=True)
 class RescheduleBookingDTO:
     id: UUID
+    actor_id: UUID
+    actor_role: UserRole
     new_start_time: datetime
     new_end_time: datetime
 
@@ -24,7 +27,16 @@ class RescheduleBookingDTO:
 @dataclass(frozen=True)
 class ChangeRoomBookingDTO:
     id: UUID
+    actor_id: UUID
+    actor_role: UserRole
     new_room_id: UUID
+
+
+@dataclass(frozen=True)
+class CancelBookingDTO:
+    id: UUID
+    actor_id: UUID
+    actor_role: UserRole
 
 
 @dataclass(frozen=True)

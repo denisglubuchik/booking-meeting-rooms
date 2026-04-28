@@ -8,3 +8,7 @@ class NotFoundError(ApplicationError):
 
 class BadRequest(ApplicationError):
     pass
+
+
+class ForbiddenError(ApplicationError):
+    pass

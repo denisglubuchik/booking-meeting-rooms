@@ -3,10 +3,11 @@ from datetime import timedelta
 
 from domain.entities.booking import TimeRange
 from domain.entities.booking_history import BookingHistory, HistoryAction
+from domain.entities.user import UserRole
 from domain.exceptions import RoomUnavailableError
 from domain.services.availability import AvailabilityService
 from usecases.dto.booking import BookingResponseDTO, RescheduleBookingDTO
-from usecases.exceptions import NotFoundError
+from usecases.exceptions import ForbiddenError, NotFoundError
 from usecases.interfaces.uow import UoWInterface
 
 
@@ -19,6 +20,13 @@ class RescheduleBookingUseCase:
             booking = await self.uow.bookings_repo.get_by_id(dto.id)
             if not booking:
                 raise NotFoundError(f"Booking with id {dto.id} not found")
+            if (
+                dto.actor_role != UserRole.ADMIN
+                and booking.created_by != dto.actor_id
+            ):
+                raise ForbiddenError(
+                    "Not enough permissions for booking action",
+                )
 
             old_time_range = booking.time_range
             start_of_day = dto.new_start_time.replace(

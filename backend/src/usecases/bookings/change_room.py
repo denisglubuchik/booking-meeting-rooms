@@ -2,10 +2,11 @@ import uuid
 from datetime import timedelta
 
 from domain.entities.booking_history import BookingHistory, HistoryAction
+from domain.entities.user import UserRole
 from domain.exceptions import RoomUnavailableError
 from domain.services.availability import AvailabilityService
 from usecases.dto.booking import BookingResponseDTO, ChangeRoomBookingDTO
-from usecases.exceptions import NotFoundError
+from usecases.exceptions import ForbiddenError, NotFoundError
 from usecases.interfaces.uow import UoWInterface
 
 
@@ -18,6 +19,13 @@ class ChangeRoomBookingUseCase:
             booking = await self.uow.bookings_repo.get_by_id(dto.id)
             if not booking:
                 raise NotFoundError(f"Booking with id {dto.id} not found")
+            if (
+                dto.actor_role != UserRole.ADMIN
+                and booking.created_by != dto.actor_id
+            ):
+                raise ForbiddenError(
+                    "Not enough permissions for booking action",
+                )
 
             old_room_id = booking.room_id
 

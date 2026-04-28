@@ -5,6 +5,7 @@ from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, Query
 
+from api.dependencies.auth import AdminUserDep, CurrentUserDep
 from api.schemas.rooms import (
     CreateRoomRequest,
     GetOfficeRoomsFilters,
@@ -27,6 +28,7 @@ router = APIRouter(tags=["rooms"], route_class=DishkaRoute)
 async def get_rooms(
     get_rooms_uc: FromDishka[GetAllRoomsUseCase],
     filters: Annotated[GetRoomsFilters, Query()],
+    _: CurrentUserDep,
 ) -> list[RoomResponse]:
     rooms = await get_rooms_uc.execute(filters.to_dto())
     return [RoomResponse.from_dto(room) for room in rooms]
@@ -36,6 +38,7 @@ async def get_rooms(
 async def get_room(
     room_id: UUID,
     get_room_uc: FromDishka[GetRoomDetailsUseCase],
+    _: CurrentUserDep,
 ) -> RoomResponse:
     room = await get_room_uc.execute(room_id)
     return RoomResponse.from_dto(room)
@@ -46,6 +49,7 @@ async def get_office_rooms(
     office_id: UUID,
     get_office_rooms_uc: FromDishka[GetOfficeRoomsUseCase],
     filters: Annotated[GetOfficeRoomsFilters, Query()],
+    _: CurrentUserDep,
 ) -> list[RoomResponse]:
     rooms = await get_office_rooms_uc.execute(office_id, filters.to_dto())
     return [RoomResponse.from_dto(room) for room in rooms]
@@ -55,6 +59,7 @@ async def get_office_rooms(
 async def create_room(
     payload: CreateRoomRequest,
     create_room_uc: FromDishka[CreateRoomUseCase],
+    _: AdminUserDep,
 ) -> RoomResponse:
     room = await create_room_uc.execute(payload.to_dto())
     return RoomResponse.from_dto(room)
@@ -65,6 +70,7 @@ async def update_room(
     room_id: UUID,
     payload: UpdateRoomRequest,
     update_room_uc: FromDishka[UpdateRoomUseCase],
+    _: AdminUserDep,
 ) -> RoomResponse:
     room = await update_room_uc.execute(payload.to_dto(room_id))
     return RoomResponse.from_dto(room)
@@ -74,6 +80,7 @@ async def update_room(
 async def activate_room(
     room_id: UUID,
     activate_room_uc: FromDishka[ActivateRoomUseCase],
+    _: AdminUserDep,
 ) -> RoomResponse:
     room = await activate_room_uc.execute(room_id)
     return RoomResponse.from_dto(room)
@@ -83,6 +90,7 @@ async def activate_room(
 async def deactivate_room(
     room_id: UUID,
     deactivate_room_uc: FromDishka[DeactivateRoomUseCase],
+    _: AdminUserDep,
 ) -> RoomResponse:
     room = await deactivate_room_uc.execute(room_id)
     return RoomResponse.from_dto(room)

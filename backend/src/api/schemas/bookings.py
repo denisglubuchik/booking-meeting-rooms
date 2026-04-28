@@ -4,6 +4,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from domain.entities.booking import BookingStatus
+from domain.entities.user import UserRole
 from usecases.dto.booking import (
     AvailableRoomsFiltersDTO,
     BookingFiltersDTO,
@@ -61,15 +62,14 @@ class GetAvailableRoomsFilters(BaseModel):
 
 class CreateBookingRequest(BaseModel):
     room_id: UUID
-    created_by: UUID
     start_time: datetime
     end_time: datetime
     title: str | None = None
 
-    def to_dto(self) -> CreateBookingDTO:
+    def to_dto(self, created_by: UUID) -> CreateBookingDTO:
         return CreateBookingDTO(
             room_id=self.room_id,
-            created_by=self.created_by,
+            created_by=created_by,
             start_time=self.start_time,
             end_time=self.end_time,
             title=self.title,
@@ -80,9 +80,16 @@ class RescheduleBookingRequest(BaseModel):
     new_start_time: datetime
     new_end_time: datetime
 
-    def to_dto(self, booking_id: UUID) -> RescheduleBookingDTO:
+    def to_dto(
+        self,
+        booking_id: UUID,
+        actor_id: UUID,
+        actor_role: UserRole,
+    ) -> RescheduleBookingDTO:
         return RescheduleBookingDTO(
             id=booking_id,
+            actor_id=actor_id,
+            actor_role=actor_role,
             new_start_time=self.new_start_time,
             new_end_time=self.new_end_time,
         )
@@ -91,9 +98,16 @@ class RescheduleBookingRequest(BaseModel):
 class ChangeRoomBookingRequest(BaseModel):
     new_room_id: UUID
 
-    def to_dto(self, booking_id: UUID) -> ChangeRoomBookingDTO:
+    def to_dto(
+        self,
+        booking_id: UUID,
+        actor_id: UUID,
+        actor_role: UserRole,
+    ) -> ChangeRoomBookingDTO:
         return ChangeRoomBookingDTO(
             id=booking_id,
+            actor_id=actor_id,
+            actor_role=actor_role,
             new_room_id=self.new_room_id,
         )
 
