@@ -4,8 +4,7 @@ from datetime import timedelta
 from domain.entities.booking import TimeRange
 from domain.entities.booking_history import BookingHistory, HistoryAction
 from domain.entities.user import UserRole
-from domain.exceptions import RoomUnavailableError
-from domain.services.availability import AvailabilityService
+from domain.services.booking_policy import BookingPolicy
 from usecases.dto.booking import BookingResponseDTO, RescheduleBookingDTO
 from usecases.exceptions import ForbiddenError, NotFoundError
 from usecases.interfaces.uow import UoWInterface
@@ -48,13 +47,11 @@ class RescheduleBookingUseCase:
             ]
             new_time_range = TimeRange(dto.new_start_time, dto.new_end_time)
 
-            if not AvailabilityService.is_room_available(
+            BookingPolicy.ensure_time_range_not_in_past(new_time_range)
+            BookingPolicy.ensure_room_is_available(
                 new_time_range,
                 other_bookings,
-            ):
-                raise RoomUnavailableError(
-                    "The room is not available for the requested time range",
-                )
+            )
 
             booking.reschedule(new_time_range)
 

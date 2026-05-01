@@ -1,5 +1,5 @@
 from domain.entities.booking import TimeRange
-from domain.services.availability import AvailabilityService
+from domain.services.booking_policy import BookingPolicy
 from usecases.dto.booking import AvailableRoomsFiltersDTO
 from usecases.dto.meeting_room import RoomResponseDTO
 from usecases.interfaces.db import (
@@ -43,7 +43,7 @@ class GetAvailableRoomsUseCase:
                 room
                 for room in rooms_with_bookings
                 if not room.bookings
-                or AvailabilityService.is_room_available(
+                or BookingPolicy.is_room_available(
                     requested_time_range,
                     room.bookings,
                 )

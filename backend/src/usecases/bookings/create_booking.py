@@ -3,8 +3,7 @@ from datetime import timedelta
 
 from domain.entities.booking import Booking, BookingStatus, TimeRange
 from domain.entities.booking_history import BookingHistory, HistoryAction
-from domain.exceptions import RoomUnavailableError
-from domain.services.availability import AvailabilityService
+from domain.services.booking_policy import BookingPolicy
 from usecases.dto.booking import BookingResponseDTO, CreateBookingDTO
 from usecases.interfaces.uow import UoWInterface
 
@@ -30,13 +29,11 @@ class CreateBookingUseCase:
             )
             time_range = TimeRange(dto.start_time, dto.end_time)
 
-            if not AvailabilityService.is_room_available(
+            BookingPolicy.ensure_time_range_not_in_past(time_range)
+            BookingPolicy.ensure_room_is_available(
                 time_range,
                 existing_bookings,
-            ):
-                raise RoomUnavailableError(
-                    "The room is not available for the requested time range",
-                )
+            )
 
             booking = Booking(
                 id=uuid.uuid4(),

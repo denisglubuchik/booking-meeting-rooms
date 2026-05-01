@@ -14,5 +14,9 @@ class RoomUnavailableError(DomainError):
     pass
 
 
+class BookingTimeInPastError(DomainError):
+    pass
+
+
 class PermissionDeniedError(DomainError):
     pass

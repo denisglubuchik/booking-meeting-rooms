@@ -3,8 +3,7 @@ from datetime import timedelta
 
 from domain.entities.booking_history import BookingHistory, HistoryAction
 from domain.entities.user import UserRole
-from domain.exceptions import RoomUnavailableError
-from domain.services.availability import AvailabilityService
+from domain.services.booking_policy import BookingPolicy
 from usecases.dto.booking import BookingResponseDTO, ChangeRoomBookingDTO
 from usecases.exceptions import ForbiddenError, NotFoundError
 from usecases.interfaces.uow import UoWInterface
@@ -43,13 +42,10 @@ class ChangeRoomBookingUseCase:
                 end_time_lte=end_of_day,
             )
 
-            if not AvailabilityService.is_room_available(
+            BookingPolicy.ensure_room_is_available(
                 booking.time_range,
                 existing_bookings,
-            ):
-                raise RoomUnavailableError(
-                    "The room is not available for the requested time range",
-                )
+            )
 
             booking.change_room(dto.new_room_id)
 
