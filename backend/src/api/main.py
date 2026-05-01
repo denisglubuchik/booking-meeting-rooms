@@ -3,14 +3,20 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.errors import register_exception_handlers
+from api.middleware import register_middlewares
 from api.routes.bookings import router as bookings_router
 from api.routes.offices import router as offices_router
 from api.routes.rooms import router as rooms_router
 from api.routes.users import router as users_router
+from core.config import LoggingConfig
+from core.logging import setup_logging
 from infra.dependencies import container
+
+setup_logging(LoggingConfig())
 
 app = FastAPI(title="Booking meeting rooms API")
 register_exception_handlers(app)
+register_middlewares(app)
 
 app.add_middleware(
     CORSMiddleware,

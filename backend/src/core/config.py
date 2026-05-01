@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -34,3 +36,8 @@ class AuthConfig(Settings):
     JWT_ACCESS_SECRET: str = "change-me-in-env"
     JWT_ACCESS_EXPIRES_MINUTES: int = 15
     JWT_ISSUER: str = "booking-backend"
+
+
+class LoggingConfig(Settings):
+    LOG_LEVEL: str = "INFO"
+    LOG_FORMAT: Literal["console", "json"] = "console"
