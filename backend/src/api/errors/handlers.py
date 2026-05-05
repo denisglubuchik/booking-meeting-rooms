@@ -3,6 +3,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
 from domain.exceptions import (
+    BookingHorizonExceededError,
     BookingTimeInPastError,
     DomainError,
     InvalidBookingStateError,
@@ -76,6 +77,17 @@ def register_exception_handlers(app: FastAPI) -> None:
     ) -> JSONResponse:
         return _error_response(
             code="booking_time_in_past",
+            message=str(exc),
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+    @app.exception_handler(BookingHorizonExceededError)
+    async def handle_booking_horizon_exceeded(
+        _request: Request,
+        exc: BookingHorizonExceededError,
+    ) -> JSONResponse:
+        return _error_response(
+            code="booking_horizon_exceeded",
             message=str(exc),
             status_code=status.HTTP_400_BAD_REQUEST,
         )

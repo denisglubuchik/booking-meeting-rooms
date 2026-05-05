@@ -47,8 +47,8 @@ class RescheduleBookingUseCase:
             ]
             new_time_range = TimeRange(dto.new_start_time, dto.new_end_time)
 
-            BookingPolicy.ensure_time_range_not_in_past(new_time_range)
-            BookingPolicy.ensure_room_is_available(
+            BookingPolicy.validate_time_range(new_time_range)
+            BookingPolicy.validate_room_availability(
                 new_time_range,
                 other_bookings,
             )

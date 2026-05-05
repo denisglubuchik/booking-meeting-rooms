@@ -18,5 +18,9 @@ class BookingTimeInPastError(DomainError):
     pass
 
 
+class BookingHorizonExceededError(DomainError):
+    pass
+
+
 class PermissionDeniedError(DomainError):
     pass

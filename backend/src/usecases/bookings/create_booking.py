@@ -29,8 +29,8 @@ class CreateBookingUseCase:
             )
             time_range = TimeRange(dto.start_time, dto.end_time)
 
-            BookingPolicy.ensure_time_range_not_in_past(time_range)
-            BookingPolicy.ensure_room_is_available(
+            BookingPolicy.validate_time_range(time_range)
+            BookingPolicy.validate_room_availability(
                 time_range,
                 existing_bookings,
             )

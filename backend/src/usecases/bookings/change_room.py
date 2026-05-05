@@ -42,7 +42,7 @@ class ChangeRoomBookingUseCase:
                 end_time_lte=end_of_day,
             )
 
-            BookingPolicy.ensure_room_is_available(
+            BookingPolicy.validate_room_availability(
                 booking.time_range,
                 existing_bookings,
             )
