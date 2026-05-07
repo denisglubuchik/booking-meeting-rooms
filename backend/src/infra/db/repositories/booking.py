@@ -1,10 +1,11 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select
 
 from domain.entities.booking import Booking, BookingStatus
 from infra.db.models.booking import BookingModel
+from infra.db.models.booking_participant import BookingParticipantModel
 from infra.db.repositories.base import BaseDBRepository
 from usecases.interfaces.db import DBBookingsRepositoryInterface
 
@@ -70,5 +71,46 @@ class DBBookingsRepository(
             stmt = stmt.where(BookingModel.end_time <= end_time_lte)
 
         stmt = stmt.limit(limit).offset(offset)
+        result = await self._session.execute(stmt)
+        return [model.to_domain() for model in result.scalars().all()]
+
+    async def get_all_for_participant(
+        self,
+        *,
+        participant_id: UUID,
+        room_id: UUID | None = None,
+        status: BookingStatus | None = None,
+        start_time_gte: datetime | None = None,
+        end_time_lte: datetime | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[Booking]:
+        stmt = select(BookingModel).outerjoin(
+            BookingParticipantModel,
+            BookingParticipantModel.booking_id == BookingModel.id,
+        )
+        stmt = stmt.where(
+            or_(
+                BookingModel.user_id == participant_id,
+                BookingParticipantModel.user_id == participant_id,
+            ),
+        )
+
+        if room_id is not None:
+            stmt = stmt.where(BookingModel.room_id == room_id)
+        if status is not None:
+            stmt = stmt.where(BookingModel.status == status)
+        if start_time_gte is not None:
+            stmt = stmt.where(BookingModel.start_time >= start_time_gte)
+        if end_time_lte is not None:
+            stmt = stmt.where(BookingModel.end_time <= end_time_lte)
+
+        stmt = (
+            stmt
+            .distinct()
+            .order_by(BookingModel.start_time)
+            .limit(limit)
+            .offset(offset)
+        )
         result = await self._session.execute(stmt)
         return [model.to_domain() for model in result.scalars().all()]

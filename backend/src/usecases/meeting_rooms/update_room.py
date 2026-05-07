@@ -1,7 +1,7 @@
+from infra.interfaces.file_storage import FileStorageInterface
 from usecases.dto.meeting_room import RoomResponseDTO, UpdateRoomDTO
 from usecases.exceptions import NotFoundError
 from usecases.interfaces.db import DBMeetingRoomsRepositoryInterface
-from infra.interfaces.file_storage import FileStorageInterface
 
 
 class UpdateRoomUseCase:

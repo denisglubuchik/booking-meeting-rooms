@@ -11,8 +11,8 @@ class GetMyBookingsUseCase:
         filters: BookingFiltersDTO,
     ) -> list[BookingResponseDTO]:
         async with self.booking_repo:
-            bookings = await self.booking_repo.get_all(
-                user_id=filters.user_id,
+            bookings = await self.booking_repo.get_all_for_participant(
+                participant_id=filters.user_id,
                 room_id=filters.room_id,
                 status=filters.status,
                 start_time_gte=filters.start_time_gte,

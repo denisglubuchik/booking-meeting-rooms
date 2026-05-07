@@ -5,6 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from infra.db.repositories.booking import DBBookingsRepository
 from infra.db.repositories.booking_history import DBBookingHistoryRepository
+from infra.db.repositories.booking_participant import (
+    DBBookingParticipantsRepository,
+)
 from infra.db.repositories.meeting_room import DBMeetingRoomsRepository
 from infra.db.repositories.office import DBOfficesRepository
 from infra.db.repositories.user import DBUsersRepository
@@ -34,6 +37,9 @@ class SQLAlchemyUOW(UoWInterface):
             cache=self._cache,
         )
         self.booking_history_repo = DBBookingHistoryRepository(
+            session=self._session,
+        )
+        self.booking_participants_repo = DBBookingParticipantsRepository(
             session=self._session,
         )
         self.users_repo = DBUsersRepository(

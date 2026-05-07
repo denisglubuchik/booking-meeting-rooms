@@ -1,9 +1,9 @@
 from uuid import UUID
 
+from infra.interfaces.file_storage import FileStorageInterface
 from usecases.dto.office import OfficeResponseDTO
 from usecases.exceptions import NotFoundError
 from usecases.interfaces.db import DBOfficesRepositoryInterface
-from infra.interfaces.file_storage import FileStorageInterface
 
 
 class GetOfficeDetailsUseCase:

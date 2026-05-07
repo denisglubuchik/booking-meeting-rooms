@@ -10,6 +10,7 @@ from infra.db.models.base import Base
 if TYPE_CHECKING:
     from infra.db.models.booking import BookingModel
     from infra.db.models.booking_history import BookingHistoryModel
+    from infra.db.models.booking_participant import BookingParticipantModel
 
 
 class UserModel(Base):
@@ -29,6 +30,13 @@ class UserModel(Base):
     history_actions: Mapped[list["BookingHistoryModel"]] = relationship(
         back_populates="performed_by_user",
         cascade="all, delete-orphan",
+    )
+    booking_participations: Mapped[list["BookingParticipantModel"]] = (
+        relationship(
+            back_populates="user",
+            cascade="all, delete-orphan",
+            foreign_keys="BookingParticipantModel.user_id",
+        )
     )
 
     def to_domain(self) -> User:

@@ -1,5 +1,5 @@
-from datetime import datetime
 from calendar import monthrange
+from datetime import datetime
 
 from domain.entities.booking import Booking, TimeRange
 from domain.exceptions import (
@@ -70,8 +70,8 @@ class BookingPolicy:
 
     @staticmethod
     def _add_month(dt: datetime) -> datetime:
-        year = dt.year + (1 if dt.month == 12 else 0)
-        month = 1 if dt.month == 12 else dt.month + 1
+        year = dt.year + (1 if dt.month == 12 else 0)  # noqa: PLR2004
+        month = 1 if dt.month == 12 else dt.month + 1  # noqa: PLR2004
         month_days = monthrange(year, month)[1]
         day = min(dt.day, month_days)
         return dt.replace(year=year, month=month, day=day)

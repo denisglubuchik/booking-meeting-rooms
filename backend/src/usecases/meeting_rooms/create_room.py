@@ -1,13 +1,13 @@
 import uuid
 
 from domain.entities.meeting_room import MeetingRoom
+from infra.interfaces.file_storage import FileStorageInterface
 from usecases.dto.meeting_room import CreateRoomDTO, RoomResponseDTO
 from usecases.exceptions import NotFoundError
 from usecases.interfaces.db import (
     DBMeetingRoomsRepositoryInterface,
     DBOfficesRepositoryInterface,
 )
-from infra.interfaces.file_storage import FileStorageInterface
 
 
 class CreateRoomUseCase:

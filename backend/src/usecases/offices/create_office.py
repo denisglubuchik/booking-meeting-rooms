@@ -1,9 +1,9 @@
 import uuid
 
 from domain.entities.office import Office
+from infra.interfaces.file_storage import FileStorageInterface
 from usecases.dto.office import CreateOfficeDTO, OfficeResponseDTO
 from usecases.interfaces.db import DBOfficesRepositoryInterface
-from infra.interfaces.file_storage import FileStorageInterface
 
 
 class CreateOfficeUseCase:

@@ -3,6 +3,10 @@ from datetime import timedelta
 
 from domain.entities.booking import Booking, BookingStatus, TimeRange
 from domain.entities.booking_history import BookingHistory, HistoryAction
+from domain.entities.booking_participant import (
+    BookingParticipant,
+    BookingParticipantRole,
+)
 from domain.services.booking_policy import BookingPolicy
 from usecases.dto.booking import BookingResponseDTO, CreateBookingDTO
 from usecases.interfaces.uow import UoWInterface
@@ -51,6 +55,14 @@ class CreateBookingUseCase:
             )
 
             saved = await self.uow.bookings_repo.save(booking)
+            organizer = BookingParticipant(
+                id=uuid.uuid4(),
+                booking_id=saved.id,
+                user_id=dto.created_by,
+                role=BookingParticipantRole.ORGANIZER,
+                added_by=dto.created_by,
+            )
+            await self.uow.booking_participants_repo.save(organizer)
             await self.uow.booking_history_repo.save(booking_history)
 
             return BookingResponseDTO(

@@ -7,6 +7,8 @@ from fastapi import APIRouter, Query
 
 from api.dependencies.auth import AdminUserDep, CurrentUserDep
 from api.schemas.bookings import (
+    AddBookingParticipantRequest,
+    BookingParticipantResponse,
     BookingResponse,
     ChangeRoomBookingRequest,
     CreateBookingRequest,
@@ -15,16 +17,23 @@ from api.schemas.bookings import (
     RescheduleBookingRequest,
 )
 from api.schemas.rooms import RoomResponse
+from usecases.bookings.add_participant import AddBookingParticipantUseCase
 from usecases.bookings.cancel_booking import CancelBookingUseCase
 from usecases.bookings.change_room import ChangeRoomBookingUseCase
 from usecases.bookings.create_booking import CreateBookingUseCase
 from usecases.bookings.get_all_bookings import GetAllBookingsUseCase
 from usecases.bookings.get_available_rooms import GetAvailableRoomsUseCase
 from usecases.bookings.get_booking_details import GetBookingDetailsUseCase
+from usecases.bookings.get_booking_participants import (
+    GetBookingParticipantsUseCase,
+)
 from usecases.bookings.get_my_bookings import GetMyBookingsUseCase
 from usecases.bookings.get_room_bookings import GetRoomBookingsUseCase
+from usecases.bookings.remove_participant import (
+    RemoveBookingParticipantUseCase,
+)
 from usecases.bookings.reschedule_booking import RescheduleBookingUseCase
-from usecases.dto.booking import CancelBookingDTO
+from usecases.dto.booking import CancelBookingDTO, RemoveBookingParticipantDTO
 
 router = APIRouter(tags=["bookings"], route_class=DishkaRoute)
 
@@ -156,3 +165,50 @@ async def cancel_booking(
         ),
     )
     return BookingResponse.from_dto(booking)
+
+
+@router.get("/{booking_id}/participants")
+async def get_booking_participants(
+    booking_id: UUID,
+    get_booking_participants_uc: FromDishka[GetBookingParticipantsUseCase],
+    _: CurrentUserDep,
+) -> list[BookingParticipantResponse]:
+    participants = await get_booking_participants_uc.execute(booking_id)
+    return [
+        BookingParticipantResponse.from_dto(participant)
+        for participant in participants
+    ]
+
+
+@router.post("/{booking_id}/participants")
+async def add_booking_participant(
+    booking_id: UUID,
+    payload: AddBookingParticipantRequest,
+    add_booking_participant_uc: FromDishka[AddBookingParticipantUseCase],
+    current_user: CurrentUserDep,
+) -> BookingParticipantResponse:
+    participant = await add_booking_participant_uc.execute(
+        payload.to_dto(
+            booking_id=booking_id,
+            actor_id=current_user.id,
+            actor_role=current_user.role,
+        ),
+    )
+    return BookingParticipantResponse.from_dto(participant)
+
+
+@router.delete("/{booking_id}/participants/{user_id}", status_code=204)
+async def remove_booking_participant(
+    booking_id: UUID,
+    user_id: UUID,
+    remove_booking_participant_uc: FromDishka[RemoveBookingParticipantUseCase],
+    current_user: CurrentUserDep,
+) -> None:
+    await remove_booking_participant_uc.execute(
+        RemoveBookingParticipantDTO(
+            booking_id=booking_id,
+            actor_id=current_user.id,
+            actor_role=current_user.role,
+            user_id=user_id,
+        ),
+    )

@@ -15,6 +15,7 @@ from infra.db.models.base import Base
 
 if TYPE_CHECKING:
     from infra.db.models.booking_history import BookingHistoryModel
+    from infra.db.models.booking_participant import BookingParticipantModel
     from infra.db.models.meeting_room import MeetingRoomModel
     from infra.db.models.user import UserModel
 
@@ -44,6 +45,10 @@ class BookingModel(Base):
     room: Mapped["MeetingRoomModel"] = relationship(back_populates="bookings")
     user: Mapped["UserModel"] = relationship(back_populates="bookings")
     history: Mapped[list["BookingHistoryModel"]] = relationship(
+        back_populates="booking",
+        cascade="all, delete-orphan",
+    )
+    participants: Mapped[list["BookingParticipantModel"]] = relationship(
         back_populates="booking",
         cascade="all, delete-orphan",
     )

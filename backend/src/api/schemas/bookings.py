@@ -4,10 +4,13 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from domain.entities.booking import BookingStatus
+from domain.entities.booking_participant import BookingParticipantRole
 from domain.entities.user import UserRole
 from usecases.dto.booking import (
+    AddBookingParticipantDTO,
     AvailableRoomsFiltersDTO,
     BookingFiltersDTO,
+    BookingParticipantResponseDTO,
     BookingResponseDTO,
     ChangeRoomBookingDTO,
     CreateBookingDTO,
@@ -112,6 +115,23 @@ class ChangeRoomBookingRequest(BaseModel):
         )
 
 
+class AddBookingParticipantRequest(BaseModel):
+    user_id: UUID
+
+    def to_dto(
+        self,
+        booking_id: UUID,
+        actor_id: UUID,
+        actor_role: UserRole,
+    ) -> AddBookingParticipantDTO:
+        return AddBookingParticipantDTO(
+            booking_id=booking_id,
+            actor_id=actor_id,
+            actor_role=actor_role,
+            user_id=self.user_id,
+        )
+
+
 class BookingResponse(BaseModel):
     id: UUID
     room_id: UUID
@@ -135,4 +155,27 @@ class BookingResponse(BaseModel):
             status=dto.status,
             created_at=dto.created_at,
             updated_at=dto.updated_at,
+        )
+
+
+class BookingParticipantResponse(BaseModel):
+    id: UUID
+    booking_id: UUID
+    user_id: UUID
+    role: BookingParticipantRole
+    added_by: UUID | None
+    created_at: datetime
+
+    @classmethod
+    def from_dto(
+        cls,
+        dto: BookingParticipantResponseDTO,
+    ) -> "BookingParticipantResponse":
+        return cls(
+            id=dto.id,
+            booking_id=dto.booking_id,
+            user_id=dto.user_id,
+            role=dto.role,
+            added_by=dto.added_by,
+            created_at=dto.created_at,
         )

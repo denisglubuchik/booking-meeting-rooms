@@ -1,6 +1,6 @@
+from infra.interfaces.file_storage import FileStorageInterface
 from usecases.dto.office import OfficeFiltersDTO, OfficeResponseDTO
 from usecases.interfaces.db import DBOfficesRepositoryInterface
-from infra.interfaces.file_storage import FileStorageInterface
 
 
 class GetOfficesUseCase:

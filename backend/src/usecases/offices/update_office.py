@@ -1,7 +1,7 @@
+from infra.interfaces.file_storage import FileStorageInterface
 from usecases.dto.office import OfficeResponseDTO, UpdateOfficeDTO
 from usecases.exceptions import NotFoundError
 from usecases.interfaces.db import DBOfficesRepositoryInterface
-from infra.interfaces.file_storage import FileStorageInterface
 
 
 class UpdateOfficeUseCase:

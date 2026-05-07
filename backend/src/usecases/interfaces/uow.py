@@ -2,6 +2,7 @@ from typing import Protocol, Self
 
 from usecases.interfaces.db import (
     DBBookingHistoryRepositoryInterface,
+    DBBookingParticipantsRepositoryInterface,
     DBBookingsRepositoryInterface,
     DBMeetingRoomsRepositoryInterface,
     DBOfficesRepositoryInterface,
@@ -13,6 +14,7 @@ class UoWInterface(Protocol):
     offices_repo: DBOfficesRepositoryInterface
     rooms_repo: DBMeetingRoomsRepositoryInterface
     bookings_repo: DBBookingsRepositoryInterface
+    booking_participants_repo: DBBookingParticipantsRepositoryInterface
     booking_history_repo: DBBookingHistoryRepositoryInterface
     users_repo: DBUsersRepositoryInterface
 

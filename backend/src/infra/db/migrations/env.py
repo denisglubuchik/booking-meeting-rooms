@@ -1,19 +1,19 @@
 import asyncio
 from logging.config import fileConfig
 
+from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from core.config import DBConfig  # NOQA
 from infra.db.models.base import Base  # NOQA
-from infra.db.models.user import User  # NOQA
-from infra.db.models.office import Office  # NOQA
-from infra.db.models.meeting_room import MeetingRoom  # NOQA
-from infra.db.models.booking import Booking  # NOQA
-from infra.db.models.booking_history import BookingHistory  # NOQA
-
-from alembic import context
+from infra.db.models.booking import BookingModel  # NOQA
+from infra.db.models.booking_history import BookingHistoryModel  # NOQA
+from infra.db.models.booking_participant import BookingParticipantModel  # NOQA
+from infra.db.models.meeting_room import MeetingRoomModel  # NOQA
+from infra.db.models.office import OfficeModel  # NOQA
+from infra.db.models.user import UserModel  # NOQA
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

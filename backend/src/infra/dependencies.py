@@ -20,6 +20,9 @@ from infra.auth.access_token import JWTAccessTokenIssuer, JWTAccessTokenVerifier
 from infra.cache.service import RedisCacheService
 from infra.db.repositories.booking import DBBookingsRepository
 from infra.db.repositories.booking_history import DBBookingHistoryRepository
+from infra.db.repositories.booking_participant import (
+    DBBookingParticipantsRepository,
+)
 from infra.db.repositories.meeting_room import DBMeetingRoomsRepository
 from infra.db.repositories.office import DBOfficesRepository
 from infra.db.repositories.user import DBUsersRepository
@@ -30,24 +33,30 @@ from infra.interfaces.access_token import (
     AccessTokenVerifierInterface,
 )
 from infra.interfaces.cache import CacheInterface
+from infra.interfaces.file_storage import FileStorageInterface
 from infra.password_hasher import PasswordHasher
+from usecases.bookings.add_participant import AddBookingParticipantUseCase
 from usecases.bookings.cancel_booking import CancelBookingUseCase
 from usecases.bookings.change_room import ChangeRoomBookingUseCase
 from usecases.bookings.create_booking import CreateBookingUseCase
 from usecases.bookings.get_all_bookings import GetAllBookingsUseCase
 from usecases.bookings.get_available_rooms import GetAvailableRoomsUseCase
 from usecases.bookings.get_booking_details import GetBookingDetailsUseCase
+from usecases.bookings.get_booking_participants import (
+    GetBookingParticipantsUseCase,
+)
 from usecases.bookings.get_my_bookings import GetMyBookingsUseCase
 from usecases.bookings.get_room_bookings import GetRoomBookingsUseCase
+from usecases.bookings.remove_participant import RemoveBookingParticipantUseCase
 from usecases.bookings.reschedule_booking import RescheduleBookingUseCase
 from usecases.interfaces.db import (
     DBBookingHistoryRepositoryInterface,
+    DBBookingParticipantsRepositoryInterface,
     DBBookingsRepositoryInterface,
     DBMeetingRoomsRepositoryInterface,
     DBOfficesRepositoryInterface,
     DBUsersRepositoryInterface,
 )
-from infra.interfaces.file_storage import FileStorageInterface
 from usecases.interfaces.password_hasher import PasswordHasherInterface
 from usecases.interfaces.uow import UoWInterface
 from usecases.meeting_rooms.activate_room import ActivateRoomUseCase
@@ -221,6 +230,16 @@ class DependencyProvider(Provider):
             session_factory=session_factory,
         )
 
+    @provide(scope=Scope.REQUEST)
+    def db_booking_participants_repository(
+        self,
+        session_factory: async_sessionmaker[AsyncSession],
+    ) -> DBBookingParticipantsRepositoryInterface:
+        return DBBookingParticipantsRepository(
+            session=None,
+            session_factory=session_factory,
+        )
+
     activate_office_uc = provide(ActivateOfficeUseCase)
     create_office_uc = provide(CreateOfficeUseCase)
     deactivate_office_uc = provide(DeactivateOfficeUseCase)
@@ -250,12 +269,15 @@ class DependencyProvider(Provider):
     get_users_uc = provide(GetUsersUseCase)
 
     cancel_booking_uc = provide(CancelBookingUseCase)
+    add_booking_participant_uc = provide(AddBookingParticipantUseCase)
     create_booking_uc = provide(CreateBookingUseCase)
     get_all_bookings_uc = provide(GetAllBookingsUseCase)
     get_available_rooms_uc = provide(GetAvailableRoomsUseCase)
     get_booking_uc = provide(GetBookingDetailsUseCase)
+    get_booking_participants_uc = provide(GetBookingParticipantsUseCase)
     get_my_bookings_uc = provide(GetMyBookingsUseCase)
     get_room_bookings_uc = provide(GetRoomBookingsUseCase)
+    remove_booking_participant_uc = provide(RemoveBookingParticipantUseCase)
     reschedule_booking_uc = provide(RescheduleBookingUseCase)
     change_room_booking_uc = provide(ChangeRoomBookingUseCase)
 

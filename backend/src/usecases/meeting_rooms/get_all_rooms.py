@@ -1,6 +1,6 @@
+from infra.interfaces.file_storage import FileStorageInterface
 from usecases.dto.meeting_room import RoomFiltersDTO, RoomResponseDTO
 from usecases.interfaces.db import DBMeetingRoomsRepositoryInterface
-from infra.interfaces.file_storage import FileStorageInterface
 
 
 class GetAllRoomsUseCase:

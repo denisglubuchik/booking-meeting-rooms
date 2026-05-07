@@ -4,6 +4,7 @@ from uuid import UUID
 
 from domain.entities.booking import Booking, BookingStatus
 from domain.entities.booking_history import BookingHistory
+from domain.entities.booking_participant import BookingParticipant
 from domain.entities.meeting_room import MeetingRoom
 from domain.entities.office import Office
 from domain.entities.user import User
@@ -74,6 +75,17 @@ class DBBookingsRepositoryInterface(AsyncContextManagerInterface, Protocol):
         limit: int = 100,
         offset: int = 0,
     ) -> list[Booking]: ...
+    async def get_all_for_participant(
+        self,
+        *,
+        participant_id: UUID,
+        room_id: UUID | None = None,
+        status: BookingStatus | None = None,
+        start_time_gte: datetime | None = None,
+        end_time_lte: datetime | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[Booking]: ...
 
 
 class DBBookingHistoryRepositoryInterface(
@@ -112,3 +124,28 @@ class DBUsersRepositoryInterface(AsyncContextManagerInterface, Protocol):
         limit: int = 100,
         offset: int = 0,
     ) -> list[User]: ...
+
+
+class DBBookingParticipantsRepositoryInterface(
+    AsyncContextManagerInterface,
+    Protocol,
+):
+    async def save(
+        self,
+        participant: BookingParticipant,
+    ) -> BookingParticipant: ...
+    async def delete(self, participant: BookingParticipant) -> None: ...
+    async def get_by_id(
+        self,
+        participant_id: UUID,
+    ) -> BookingParticipant | None: ...
+    async def get_by_booking_and_user(
+        self,
+        booking_id: UUID,
+        user_id: UUID,
+    ) -> BookingParticipant | None: ...
+    async def get_by_booking_id(
+        self,
+        booking_id: UUID,
+    ) -> list[BookingParticipant]: ...
+    async def count_by_booking_id(self, booking_id: UUID) -> int: ...

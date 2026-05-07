@@ -3,6 +3,7 @@ from datetime import datetime
 from uuid import UUID
 
 from domain.entities.booking import BookingStatus
+from domain.entities.booking_participant import BookingParticipantRole
 from domain.entities.user import UserRole
 
 
@@ -71,3 +72,29 @@ class BookingResponseDTO:
     status: BookingStatus
     created_at: datetime
     updated_at: datetime
+
+
+@dataclass(frozen=True)
+class AddBookingParticipantDTO:
+    booking_id: UUID
+    actor_id: UUID
+    actor_role: UserRole
+    user_id: UUID
+
+
+@dataclass(frozen=True)
+class RemoveBookingParticipantDTO:
+    booking_id: UUID
+    actor_id: UUID
+    actor_role: UserRole
+    user_id: UUID
+
+
+@dataclass(frozen=True)
+class BookingParticipantResponseDTO:
+    id: UUID
+    booking_id: UUID
+    user_id: UUID
+    role: BookingParticipantRole
+    added_by: UUID | None
+    created_at: datetime

@@ -1,9 +1,9 @@
 import uuid
 from uuid import UUID
 
+from infra.interfaces.file_storage import FileStorageInterface
 from usecases.exceptions import BadRequest, NotFoundError
 from usecases.interfaces.db import DBOfficesRepositoryInterface
-from infra.interfaces.file_storage import FileStorageInterface
 
 _ALLOWED_IMAGE_CONTENT_TYPES = {
     "image/jpeg",
