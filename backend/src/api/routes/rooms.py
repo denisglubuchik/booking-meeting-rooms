@@ -36,7 +36,11 @@ async def get_rooms(
     filters: Annotated[GetRoomsFilters, Query()],
     _: CurrentUserDep,
 ) -> list[RoomResponse]:
-    logger.info("get_rooms_started limit=%s offset=%s", filters.limit, filters.offset)
+    logger.info(
+        "get_rooms_started limit=%s offset=%s",
+        filters.limit,
+        filters.offset,
+    )
     rooms = await get_rooms_uc.execute(filters.to_dto())
     logger.info("get_rooms_finished count=%s", len(rooms))
     return [RoomResponse.from_dto(room) for room in rooms]
@@ -63,7 +67,11 @@ async def get_office_rooms(
 ) -> list[RoomResponse]:
     logger.info("get_office_rooms_started office_id=%s", office_id)
     rooms = await get_office_rooms_uc.execute(office_id, filters.to_dto())
-    logger.info("get_office_rooms_finished office_id=%s count=%s", office_id, len(rooms))
+    logger.info(
+        "get_office_rooms_finished office_id=%s count=%s",
+        office_id,
+        len(rooms),
+    )
     return [RoomResponse.from_dto(room) for room in rooms]
 
 
@@ -73,7 +81,11 @@ async def create_room(
     create_room_uc: FromDishka[CreateRoomUseCase],
     _: AdminUserDep,
 ) -> RoomResponse:
-    logger.info("create_room_started office_id=%s name=%s", payload.office_id, payload.name)
+    logger.info(
+        "create_room_started office_id=%s name=%s",
+        payload.office_id,
+        payload.name,
+    )
     room = await create_room_uc.execute(payload.to_dto())
     logger.info("create_room_finished room_id=%s", room.id)
     return RoomResponse.from_dto(room)

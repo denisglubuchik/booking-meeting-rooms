@@ -21,7 +21,10 @@ class UpdateUserUseCase:
             user.update(full_name=dto.full_name, email=dto.email)
 
             saved = await self.user_repo.save(user)
-            self.logger.debug("update_user_usecase_finished user_id=%s", saved.id)
+            self.logger.debug(
+                "update_user_usecase_finished user_id=%s",
+                saved.id,
+            )
 
             return UserResponseDTO(
                 id=saved.id,

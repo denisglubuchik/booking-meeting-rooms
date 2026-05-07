@@ -16,14 +16,19 @@ from usecases.interfaces.uow import UoWInterface
 
 class GetBookingDetailsUseCase:
     def __init__(
-        self, uow: UoWInterface, file_storage: FileStorageInterface,
+        self,
+        uow: UoWInterface,
+        file_storage: FileStorageInterface,
     ) -> None:
         self.uow = uow
         self.file_storage = file_storage
         self.logger = logging.getLogger("usecases.bookings.get_booking_details")
 
     async def execute(self, booking_id: UUID) -> BookingDetailsResponseDTO:
-        self.logger.debug("get_booking_details_usecase_started booking_id=%s", booking_id)
+        self.logger.debug(
+            "get_booking_details_usecase_started booking_id=%s",
+            booking_id,
+        )
         async with self.uow:
             booking_context = await self.uow.bookings_repo.get_with_room_office(
                 booking_id,
@@ -42,7 +47,8 @@ class GetBookingDetailsUseCase:
                 )
             )
             self.logger.debug(
-                "get_booking_details_participants_fetched booking_id=%s count=%s",
+                "get_booking_details_participants_fetched "
+                "booking_id=%s count=%s",
                 booking.id,
                 len(participant_rows),
             )

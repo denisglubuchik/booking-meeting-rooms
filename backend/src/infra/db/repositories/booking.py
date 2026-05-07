@@ -23,7 +23,10 @@ class DBBookingsRepository(
         model = BookingModel.from_domain(booking)
         merged_model = await self._session.merge(model)
         await self._session.flush()
-        self._logger.debug("save_booking_finished booking_id=%s", merged_model.id)
+        self._logger.debug(
+            "save_booking_finished booking_id=%s",
+            merged_model.id,
+        )
         return merged_model.to_domain()
 
     async def delete_booking(self, booking: Booking) -> None:
@@ -33,7 +36,10 @@ class DBBookingsRepository(
         self._logger.debug("delete_booking_finished booking_id=%s", booking.id)
 
     async def get_by_id(self, booking_id: UUID) -> Booking | None:
-        self._logger.debug("get_booking_by_id_started booking_id=%s", booking_id)
+        self._logger.debug(
+            "get_booking_by_id_started booking_id=%s",
+            booking_id,
+        )
         stmt = select(BookingModel).where(BookingModel.id == booking_id)
         result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
@@ -48,7 +54,10 @@ class DBBookingsRepository(
         self,
         booking_id: UUID,
     ) -> tuple[Booking, MeetingRoom, Office] | None:
-        self._logger.debug("get_with_room_office_started booking_id=%s", booking_id)
+        self._logger.debug(
+            "get_with_room_office_started booking_id=%s",
+            booking_id,
+        )
         stmt = (
             select(BookingModel, MeetingRoomModel, OfficeModel)
             .join(MeetingRoomModel, MeetingRoomModel.id == BookingModel.room_id)
@@ -58,10 +67,16 @@ class DBBookingsRepository(
         result = await self._session.execute(stmt)
         row = result.first()
         if row is None:
-            self._logger.debug("get_with_room_office_finished booking_id=%s found=false", booking_id)
+            self._logger.debug(
+                "get_with_room_office_finished booking_id=%s found=false",
+                booking_id,
+            )
             return None
         booking_model, room_model, office_model = row
-        self._logger.debug("get_with_room_office_finished booking_id=%s found=true", booking_id)
+        self._logger.debug(
+            "get_with_room_office_finished booking_id=%s found=true",
+            booking_id,
+        )
         return (
             booking_model.to_domain(),
             room_model.to_domain(),
@@ -69,7 +84,10 @@ class DBBookingsRepository(
         )
 
     async def get_active_by_room_id(self, room_id: UUID) -> list[Booking]:
-        self._logger.debug("get_active_bookings_by_room_started room_id=%s", room_id)
+        self._logger.debug(
+            "get_active_bookings_by_room_started room_id=%s",
+            room_id,
+        )
         stmt = select(BookingModel).where(
             BookingModel.room_id == room_id,
             BookingModel.status == BookingStatus.CREATED,
@@ -84,7 +102,10 @@ class DBBookingsRepository(
         return bookings
 
     async def get_active_by_user_id(self, user_id: UUID) -> list[Booking]:
-        self._logger.debug("get_active_bookings_by_user_started user_id=%s", user_id)
+        self._logger.debug(
+            "get_active_bookings_by_user_started user_id=%s",
+            user_id,
+        )
         stmt = select(BookingModel).where(
             BookingModel.user_id == user_id,
             BookingModel.status == BookingStatus.CREATED,
@@ -174,7 +195,8 @@ class DBBookingsRepository(
         result = await self._session.execute(stmt)
         bookings = [model.to_domain() for model in result.scalars().all()]
         self._logger.debug(
-            "get_all_bookings_for_participant_finished participant_id=%s count=%s",
+            "get_all_bookings_for_participant_finished "
+            "participant_id=%s count=%s",
             participant_id,
             len(bookings),
         )

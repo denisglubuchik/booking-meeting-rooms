@@ -16,13 +16,19 @@ class ActivateRoomUseCase:
         async with self.room_repo:
             room = await self.room_repo.get_by_id(room_id)
             if not room:
-                self.logger.warning("activate_room_usecase_not_found room_id=%s", room_id)
+                self.logger.warning(
+                    "activate_room_usecase_not_found room_id=%s",
+                    room_id,
+                )
                 raise NotFoundError(f"Room with id {room_id} not found")
 
             room.activate()
 
             saved = await self.room_repo.save(room)
-            self.logger.debug("activate_room_usecase_finished room_id=%s", saved.id)
+            self.logger.debug(
+                "activate_room_usecase_finished room_id=%s",
+                saved.id,
+            )
 
             return RoomResponseDTO(
                 id=saved.id,

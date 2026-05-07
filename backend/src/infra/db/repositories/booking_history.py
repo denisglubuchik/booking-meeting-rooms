@@ -13,11 +13,17 @@ class DBBookingHistoryRepository(
     DBBookingHistoryRepositoryInterface,
 ):
     async def save(self, booking_history: BookingHistory) -> BookingHistory:
-        self._logger.debug("save_booking_history_started booking_history_id=%s", booking_history.id)
+        self._logger.debug(
+            "save_booking_history_started booking_history_id=%s",
+            booking_history.id,
+        )
         model = BookingHistoryModel.from_domain(booking_history)
         merged_model = await self._session.merge(model)
         await self._session.flush()
-        self._logger.debug("save_booking_history_finished booking_history_id=%s", merged_model.id)
+        self._logger.debug(
+            "save_booking_history_finished booking_history_id=%s",
+            merged_model.id,
+        )
         return merged_model.to_domain()
 
     async def save_many(
@@ -27,7 +33,10 @@ class DBBookingHistoryRepository(
         if not booking_history_items:
             self._logger.debug("save_many_booking_history_finished count=0")
             return []
-        self._logger.debug("save_many_booking_history_started count=%s", len(booking_history_items))
+        self._logger.debug(
+            "save_many_booking_history_started count=%s",
+            len(booking_history_items),
+        )
 
         models = [
             BookingHistoryModel.from_domain(booking_history)
@@ -35,7 +44,10 @@ class DBBookingHistoryRepository(
         ]
         self._session.add_all(models)
         await self._session.flush()
-        self._logger.debug("save_many_booking_history_finished count=%s", len(models))
+        self._logger.debug(
+            "save_many_booking_history_finished count=%s",
+            len(models),
+        )
         return [model.to_domain() for model in models]
 
     async def delete_booking_history(
@@ -59,7 +71,10 @@ class DBBookingHistoryRepository(
         self,
         booking_history_id: UUID,
     ) -> BookingHistory | None:
-        self._logger.debug("get_booking_history_by_id_started booking_history_id=%s", booking_history_id)
+        self._logger.debug(
+            "get_booking_history_by_id_started booking_history_id=%s",
+            booking_history_id,
+        )
         stmt = select(BookingHistoryModel).where(
             BookingHistoryModel.id == booking_history_id,
         )
@@ -77,5 +92,8 @@ class DBBookingHistoryRepository(
         stmt = select(BookingHistoryModel)
         result = await self._session.execute(stmt)
         history = [model.to_domain() for model in result.scalars().all()]
-        self._logger.debug("get_all_booking_history_finished count=%s", len(history))
+        self._logger.debug(
+            "get_all_booking_history_finished count=%s",
+            len(history),
+        )
         return history

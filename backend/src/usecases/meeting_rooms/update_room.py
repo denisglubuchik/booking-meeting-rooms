@@ -21,7 +21,10 @@ class UpdateRoomUseCase:
         async with self.room_repo:
             room = await self.room_repo.get_by_id(dto.id)
             if not room:
-                self.logger.warning("update_room_usecase_not_found room_id=%s", dto.id)
+                self.logger.warning(
+                    "update_room_usecase_not_found room_id=%s",
+                    dto.id,
+                )
                 raise NotFoundError(f"Room with id {dto.id} not found")
 
             room.update(
@@ -31,7 +34,10 @@ class UpdateRoomUseCase:
             )
 
             saved = await self.room_repo.save(room)
-            self.logger.debug("update_room_usecase_finished room_id=%s", saved.id)
+            self.logger.debug(
+                "update_room_usecase_finished room_id=%s",
+                saved.id,
+            )
             image_url = None
             if saved.image_key:
                 image_url = await (

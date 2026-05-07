@@ -29,7 +29,10 @@ class GetAllRoomsUseCase:
                 limit=filters.limit,
                 offset=filters.offset,
             )
-            self.logger.debug("get_all_rooms_usecase_fetched count=%s", len(rooms))
+            self.logger.debug(
+                "get_all_rooms_usecase_fetched count=%s",
+                len(rooms),
+            )
 
             output: list[RoomResponseDTO] = []
             for room in rooms:
@@ -54,5 +57,8 @@ class GetAllRoomsUseCase:
                     ),
                 )
 
-            self.logger.debug("get_all_rooms_usecase_finished count=%s", len(output))
+            self.logger.debug(
+                "get_all_rooms_usecase_finished count=%s",
+                len(output),
+            )
             return output

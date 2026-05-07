@@ -38,7 +38,11 @@ async def get_users(
     filters: Annotated[GetUsersFilters, Query()],
     _: AdminUserDep,
 ) -> list[UserResponse]:
-    logger.info("get_users_started limit=%s offset=%s", filters.limit, filters.offset)
+    logger.info(
+        "get_users_started limit=%s offset=%s",
+        filters.limit,
+        filters.offset,
+    )
     users = await get_users_uc.execute(filters.to_dto())
     logger.info("get_users_finished count=%s", len(users))
     return [UserResponse.from_dto(user) for user in users]

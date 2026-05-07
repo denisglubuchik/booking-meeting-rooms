@@ -13,7 +13,10 @@ class GetMyBookingsUseCase:
         self,
         filters: BookingFiltersDTO,
     ) -> list[BookingResponseDTO]:
-        self.logger.debug("get_my_bookings_usecase_started user_id=%s", filters.user_id)
+        self.logger.debug(
+            "get_my_bookings_usecase_started user_id=%s",
+            filters.user_id,
+        )
         async with self.booking_repo:
             bookings = await self.booking_repo.get_all_for_participant(
                 participant_id=filters.user_id,

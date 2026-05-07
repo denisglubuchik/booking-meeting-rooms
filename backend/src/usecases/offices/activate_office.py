@@ -12,7 +12,10 @@ class ActivateOfficeUseCase:
         self.logger = logging.getLogger("usecases.offices.activate_office")
 
     async def execute(self, office_id: UUID) -> OfficeResponseDTO:
-        self.logger.debug("activate_office_usecase_started office_id=%s", office_id)
+        self.logger.debug(
+            "activate_office_usecase_started office_id=%s",
+            office_id,
+        )
         async with self.office_repo:
             office = await self.office_repo.get_by_id(office_id)
             if not office:

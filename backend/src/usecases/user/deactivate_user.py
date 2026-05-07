@@ -21,7 +21,10 @@ class DeactivateUserUseCase:
         async with self.uow:
             user = await self.uow.users_repo.get_by_id(user_id)
             if not user:
-                self.logger.warning("deactivate_user_not_found user_id=%s", user_id)
+                self.logger.warning(
+                    "deactivate_user_not_found user_id=%s",
+                    user_id,
+                )
                 raise NotFoundError(f"User with id {user_id} not found")
 
             active_bookings = (

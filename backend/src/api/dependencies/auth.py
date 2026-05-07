@@ -65,7 +65,11 @@ def get_current_user(
             detail="User is deactivated",
         )
 
-    logger.info("auth_user_resolved user_id=%s role=%s", user.id, user.role.value)
+    logger.info(
+        "auth_user_resolved user_id=%s role=%s",
+        user.id,
+        user.role.value,
+    )
     return user
 
 

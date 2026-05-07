@@ -37,7 +37,9 @@ class GetAvailableRoomsUseCase:
             )
 
             if not rooms_with_bookings:
-                self.logger.debug("get_available_rooms_usecase_finished count=0")
+                self.logger.debug(
+                    "get_available_rooms_usecase_finished count=0",
+                )
                 return []
 
             requested_time_range = TimeRange(

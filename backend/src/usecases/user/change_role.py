@@ -16,7 +16,10 @@ class ChangeUserRoleUseCase:
         async with self.user_repo:
             user = await self.user_repo.get_by_id(user_id)
             if not user:
-                self.logger.warning("promote_to_admin_not_found user_id=%s", user_id)
+                self.logger.warning(
+                    "promote_to_admin_not_found user_id=%s",
+                    user_id,
+                )
                 raise NotFoundError(f"User with id {user_id} not found")
 
             user.promote_to_admin()
@@ -38,13 +41,19 @@ class ChangeUserRoleUseCase:
         async with self.user_repo:
             user = await self.user_repo.get_by_id(user_id)
             if not user:
-                self.logger.warning("demote_to_employee_not_found user_id=%s", user_id)
+                self.logger.warning(
+                    "demote_to_employee_not_found user_id=%s",
+                    user_id,
+                )
                 raise NotFoundError(f"User with id {user_id} not found")
 
             user.demote_to_employee()
 
             saved = await self.user_repo.save(user)
-            self.logger.debug("demote_to_employee_finished user_id=%s", saved.id)
+            self.logger.debug(
+                "demote_to_employee_finished user_id=%s",
+                saved.id,
+            )
 
             return UserResponseDTO(
                 id=saved.id,

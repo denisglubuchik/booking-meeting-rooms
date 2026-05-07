@@ -79,4 +79,8 @@ class RedisCacheService(CacheInterface):
             keys.append(key)  # noqa: PERF401
 
         await self.redis.delete(*keys)
-        self._logger.debug("redis_delete_by_prefix_finished prefix=%s keys=%s", prefix, len(keys))
+        self._logger.debug(
+            "redis_delete_by_prefix_finished prefix=%s keys=%s",
+            prefix,
+            len(keys),
+        )

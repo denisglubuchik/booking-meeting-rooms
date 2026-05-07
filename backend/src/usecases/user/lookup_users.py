@@ -16,13 +16,19 @@ class LookupUsersUseCase:
         self,
         filters: UserLookupFiltersDTO,
     ) -> list[UserLookupResponseDTO]:
-        self.logger.debug("lookup_users_usecase_started query=%s", filters.query)
+        self.logger.debug(
+            "lookup_users_usecase_started query=%s",
+            filters.query,
+        )
         async with self.user_repo:
             users = await self.user_repo.search_active(
                 query=filters.query.strip(),
                 limit=filters.limit,
             )
-            self.logger.debug("lookup_users_usecase_finished count=%s", len(users))
+            self.logger.debug(
+                "lookup_users_usecase_finished count=%s",
+                len(users),
+            )
             return [
                 UserLookupResponseDTO(
                     id=user.id,

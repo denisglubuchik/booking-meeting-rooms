@@ -46,7 +46,10 @@ class DBMeetingRoomsRepository(
         return model.to_domain() if model else None
 
     async def get_by_office_id(self, office_id: UUID) -> list[MeetingRoom]:
-        self._logger.debug("get_rooms_by_office_started office_id=%s", office_id)
+        self._logger.debug(
+            "get_rooms_by_office_started office_id=%s",
+            office_id,
+        )
         stmt = select(MeetingRoomModel).where(
             MeetingRoomModel.office_id == office_id,
         )
@@ -88,7 +91,10 @@ class DBMeetingRoomsRepository(
 
         result = await self._session.execute(stmt)
         rooms = [model.to_domain() for model in result.scalars().all()]
-        self._logger.debug("get_all_rooms_repository_finished count=%s", len(rooms))
+        self._logger.debug(
+            "get_all_rooms_repository_finished count=%s",
+            len(rooms),
+        )
         return rooms
 
     async def get_rooms_with_bookings(
@@ -132,5 +138,8 @@ class DBMeetingRoomsRepository(
             model.to_domain(include_bookings=True)
             for model in result.scalars().unique().all()
         ]
-        self._logger.debug("get_rooms_with_bookings_finished count=%s", len(rooms))
+        self._logger.debug(
+            "get_rooms_with_bookings_finished count=%s",
+            len(rooms),
+        )
         return rooms

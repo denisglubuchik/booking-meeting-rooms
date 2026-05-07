@@ -48,7 +48,11 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: NotFoundError,
     ) -> JSONResponse:
-        logger.warning("not_found_error path=%s detail=%s", request.url.path, str(exc))
+        logger.warning(
+            "not_found_error path=%s detail=%s",
+            request.url.path,
+            str(exc),
+        )
         return _error_response(
             code="not_found",
             message=str(exc),
@@ -60,7 +64,11 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: ForbiddenError,
     ) -> JSONResponse:
-        logger.warning("forbidden_error path=%s detail=%s", request.url.path, str(exc))
+        logger.warning(
+            "forbidden_error path=%s detail=%s",
+            request.url.path,
+            str(exc),
+        )
         return _error_response(
             code="forbidden",
             message=str(exc),
@@ -72,7 +80,11 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: BadRequest,
     ) -> JSONResponse:
-        logger.warning("bad_request_error path=%s detail=%s", request.url.path, str(exc))
+        logger.warning(
+            "bad_request_error path=%s detail=%s",
+            request.url.path,
+            str(exc),
+        )
         return _error_response(
             code="bad_request",
             message=str(exc),
@@ -84,7 +96,11 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: UnauthorizedError,
     ) -> JSONResponse:
-        logger.warning("unauthorized_error path=%s detail=%s", request.url.path, str(exc))
+        logger.warning(
+            "unauthorized_error path=%s detail=%s",
+            request.url.path,
+            str(exc),
+        )
         return _error_response(
             code="invalid_credentials",
             message=str(exc),
@@ -96,7 +112,11 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: BookingTimeInPastError,
     ) -> JSONResponse:
-        logger.warning("booking_time_in_past path=%s detail=%s", request.url.path, str(exc))
+        logger.warning(
+            "booking_time_in_past path=%s detail=%s",
+            request.url.path,
+            str(exc),
+        )
         return _error_response(
             code="booking_time_in_past",
             message=str(exc),
@@ -108,7 +128,11 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: BookingHorizonExceededError,
     ) -> JSONResponse:
-        logger.warning("booking_horizon_exceeded path=%s detail=%s", request.url.path, str(exc))
+        logger.warning(
+            "booking_horizon_exceeded path=%s detail=%s",
+            request.url.path,
+            str(exc),
+        )
         return _error_response(
             code="booking_horizon_exceeded",
             message=str(exc),
@@ -120,7 +144,11 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: RoomUnavailableError,
     ) -> JSONResponse:
-        logger.warning("room_unavailable path=%s detail=%s", request.url.path, str(exc))
+        logger.warning(
+            "room_unavailable path=%s detail=%s",
+            request.url.path,
+            str(exc),
+        )
         return _error_response(
             code="room_unavailable",
             message=str(exc),
@@ -132,7 +160,11 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: InvalidTimeRangeError,
     ) -> JSONResponse:
-        logger.warning("invalid_time_range path=%s detail=%s", request.url.path, str(exc))
+        logger.warning(
+            "invalid_time_range path=%s detail=%s",
+            request.url.path,
+            str(exc),
+        )
         return _error_response(
             code="invalid_time_range",
             message=str(exc) or "Invalid time range",
@@ -160,7 +192,11 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: PermissionDeniedError,
     ) -> JSONResponse:
-        logger.warning("permission_denied path=%s detail=%s", request.url.path, str(exc))
+        logger.warning(
+            "permission_denied path=%s detail=%s",
+            request.url.path,
+            str(exc),
+        )
         return _error_response(
             code="permission_denied",
             message=str(exc) or "Permission denied",
@@ -172,7 +208,11 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: ApplicationError,
     ) -> JSONResponse:
-        logger.warning("application_error path=%s detail=%s", request.url.path, str(exc))
+        logger.warning(
+            "application_error path=%s detail=%s",
+            request.url.path,
+            str(exc),
+        )
         return _error_response(
             code="application_error",
             message=str(exc) or "Application error",
@@ -184,7 +224,11 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: DomainError,
     ) -> JSONResponse:
-        logger.warning("domain_error path=%s detail=%s", request.url.path, str(exc))
+        logger.warning(
+            "domain_error path=%s detail=%s",
+            request.url.path,
+            str(exc),
+        )
         return _error_response(
             code="domain_error",
             message=str(exc) or "Domain error",

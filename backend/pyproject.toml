@@ -95,7 +95,8 @@ ignore = [
     "PLR0917", # Максимум позиционных аргументов (новое правило pylint)
     "FBT001", # Boolean-typed positional argument
     "FBT002",
-    "TC003" # Move standard library import into a type-checking block
+    "TC003", # Move standard library import into a type-checking block
+    "RUF065"
 ]
 
 # Ошибки, которые могут исправлены автоматически

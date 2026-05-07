@@ -21,13 +21,19 @@ class UpdateOfficeUseCase:
         async with self.office_repo:
             office = await self.office_repo.get_by_id(dto.id)
             if not office:
-                self.logger.warning("update_office_usecase_not_found office_id=%s", dto.id)
+                self.logger.warning(
+                    "update_office_usecase_not_found office_id=%s",
+                    dto.id,
+                )
                 raise NotFoundError(f"Office with id {dto.id} not found")
 
             office.update(name=dto.name, city=dto.city, address=dto.address)
 
             saved = await self.office_repo.save(office)
-            self.logger.debug("update_office_usecase_finished office_id=%s", saved.id)
+            self.logger.debug(
+                "update_office_usecase_finished office_id=%s",
+                saved.id,
+            )
             image_url = None
             if saved.image_key:
                 image_url = await (

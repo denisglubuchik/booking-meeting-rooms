@@ -53,7 +53,10 @@ class SQLAlchemyUOW(UoWInterface):
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001
         if exc_val:
-            self._logger.warning("uow_rollback_on_exception error=%s", str(exc_val))
+            self._logger.warning(
+                "uow_rollback_on_exception error=%s",
+                str(exc_val),
+            )
             await self._session.rollback()
             await self._session.close()
             raise exc_val

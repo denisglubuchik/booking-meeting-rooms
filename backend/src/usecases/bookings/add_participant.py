@@ -26,7 +26,8 @@ class AddBookingParticipantUseCase:
         dto: AddBookingParticipantDTO,
     ) -> BookingParticipantResponseDTO:
         self.logger.debug(
-            "add_booking_participant_usecase_started booking_id=%s actor_id=%s user_id=%s",
+            "add_booking_participant_usecase_started "
+            "booking_id=%s actor_id=%s user_id=%s",
             dto.booking_id,
             dto.actor_id,
             dto.user_id,
@@ -44,7 +45,8 @@ class AddBookingParticipantUseCase:
 
             if booking.status != BookingStatus.CREATED:
                 self.logger.warning(
-                    "add_booking_participant_invalid_state booking_id=%s status=%s",
+                    "add_booking_participant_invalid_state "
+                    "booking_id=%s status=%s",
                     booking.id,
                     booking.status,
                 )
@@ -63,7 +65,8 @@ class AddBookingParticipantUseCase:
                     != BookingParticipantRole.ORGANIZER
                 ):
                     self.logger.warning(
-                        "add_booking_participant_forbidden booking_id=%s actor_id=%s",
+                        "add_booking_participant_forbidden "
+                        "booking_id=%s actor_id=%s",
                         booking.id,
                         dto.actor_id,
                     )
@@ -115,7 +118,8 @@ class AddBookingParticipantUseCase:
                 room_id=booking.room_id,
             )
             self.logger.debug(
-                "add_booking_participant_usecase_finished booking_id=%s participant_id=%s",
+                "add_booking_participant_usecase_finished "
+                "booking_id=%s participant_id=%s",
                 booking.id,
                 participant.id,
             )

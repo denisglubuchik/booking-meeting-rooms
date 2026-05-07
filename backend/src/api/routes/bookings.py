@@ -44,7 +44,11 @@ async def get_bookings(
     filters: Annotated[GetBookingsFilters, Query()],
     _: AdminUserDep,
 ) -> list[BookingResponse]:
-    logger.info("get_bookings_started limit=%s offset=%s", filters.limit, filters.offset)
+    logger.info(
+        "get_bookings_started limit=%s offset=%s",
+        filters.limit,
+        filters.offset,
+    )
     bookings = await get_bookings_uc.execute(filters.to_dto())
     logger.info("get_bookings_finished count=%s", len(bookings))
     return [BookingResponse.from_dto(booking) for booking in bookings]
@@ -73,7 +77,11 @@ async def get_room_bookings(
     bookings = await get_room_bookings_uc.execute(
         filters.to_dto(room_id=room_id),
     )
-    logger.info("get_room_bookings_finished room_id=%s count=%s", room_id, len(bookings))
+    logger.info(
+        "get_room_bookings_finished room_id=%s count=%s",
+        room_id,
+        len(bookings),
+    )
     return [BookingResponse.from_dto(booking) for booking in bookings]
 
 
@@ -88,7 +96,11 @@ async def get_user_bookings(
     bookings = await get_user_bookings_uc.execute(
         filters.to_dto(user_id=user_id),
     )
-    logger.info("get_user_bookings_finished user_id=%s count=%s", user_id, len(bookings))
+    logger.info(
+        "get_user_bookings_finished user_id=%s count=%s",
+        user_id,
+        len(bookings),
+    )
     return [BookingResponse.from_dto(booking) for booking in bookings]
 
 
@@ -102,7 +114,11 @@ async def get_my_bookings(
     bookings = await get_user_bookings_uc.execute(
         filters.to_dto(user_id=current_user.id),
     )
-    logger.info("get_my_bookings_finished user_id=%s count=%s", current_user.id, len(bookings))
+    logger.info(
+        "get_my_bookings_finished user_id=%s count=%s",
+        current_user.id,
+        len(bookings),
+    )
     return [BookingResponse.from_dto(booking) for booking in bookings]
 
 
@@ -123,7 +139,11 @@ async def create_booking(
     create_booking_uc: FromDishka[CreateBookingUseCase],
     current_user: CurrentUserDep,
 ) -> BookingResponse:
-    logger.info("create_booking_started actor_id=%s room_id=%s", current_user.id, payload.room_id)
+    logger.info(
+        "create_booking_started actor_id=%s room_id=%s",
+        current_user.id,
+        payload.room_id,
+    )
     booking = await create_booking_uc.execute(
         payload.to_dto(created_by=current_user.id),
     )
@@ -138,7 +158,11 @@ async def reschedule_booking(
     reschedule_booking_uc: FromDishka[RescheduleBookingUseCase],
     current_user: CurrentUserDep,
 ) -> BookingResponse:
-    logger.info("reschedule_booking_started booking_id=%s actor_id=%s", booking_id, current_user.id)
+    logger.info(
+        "reschedule_booking_started booking_id=%s actor_id=%s",
+        booking_id,
+        current_user.id,
+    )
     booking = await reschedule_booking_uc.execute(
         payload.to_dto(
             booking_id=booking_id,
@@ -157,7 +181,11 @@ async def change_room_booking(
     change_room_booking_uc: FromDishka[ChangeRoomBookingUseCase],
     current_user: CurrentUserDep,
 ) -> BookingResponse:
-    logger.info("change_room_booking_started booking_id=%s actor_id=%s", booking_id, current_user.id)
+    logger.info(
+        "change_room_booking_started booking_id=%s actor_id=%s",
+        booking_id,
+        current_user.id,
+    )
     booking = await change_room_booking_uc.execute(
         payload.to_dto(
             booking_id=booking_id,
@@ -165,7 +193,11 @@ async def change_room_booking(
             actor_role=current_user.role,
         ),
     )
-    logger.info("change_room_booking_finished booking_id=%s room_id=%s", booking.id, booking.room_id)
+    logger.info(
+        "change_room_booking_finished booking_id=%s room_id=%s",
+        booking.id,
+        booking.room_id,
+    )
     return BookingResponse.from_dto(booking)
 
 
@@ -175,7 +207,11 @@ async def cancel_booking(
     cancel_booking_uc: FromDishka[CancelBookingUseCase],
     current_user: CurrentUserDep,
 ) -> BookingResponse:
-    logger.info("cancel_booking_started booking_id=%s actor_id=%s", booking_id, current_user.id)
+    logger.info(
+        "cancel_booking_started booking_id=%s actor_id=%s",
+        booking_id,
+        current_user.id,
+    )
     booking = await cancel_booking_uc.execute(
         CancelBookingDTO(
             id=booking_id,
@@ -194,7 +230,12 @@ async def add_booking_participant(
     add_booking_participant_uc: FromDishka[AddBookingParticipantUseCase],
     current_user: CurrentUserDep,
 ) -> BookingParticipantResponse:
-    logger.info("add_booking_participant_started booking_id=%s actor_id=%s user_id=%s", booking_id, current_user.id, payload.user_id)
+    logger.info(
+        "add_booking_participant_started booking_id=%s actor_id=%s user_id=%s",
+        booking_id,
+        current_user.id,
+        payload.user_id,
+    )
     participant = await add_booking_participant_uc.execute(
         payload.to_dto(
             booking_id=booking_id,
@@ -202,7 +243,11 @@ async def add_booking_participant(
             actor_role=current_user.role,
         ),
     )
-    logger.info("add_booking_participant_finished booking_id=%s user_id=%s", booking_id, participant.user_id)
+    logger.info(
+        "add_booking_participant_finished booking_id=%s user_id=%s",
+        booking_id,
+        participant.user_id,
+    )
     return BookingParticipantResponse.from_dto(participant)
 
 
@@ -213,7 +258,13 @@ async def remove_booking_participant(
     remove_booking_participant_uc: FromDishka[RemoveBookingParticipantUseCase],
     current_user: CurrentUserDep,
 ) -> None:
-    logger.info("remove_booking_participant_started booking_id=%s actor_id=%s user_id=%s", booking_id, current_user.id, user_id)
+    logger.info(
+        "remove_booking_participant_started "
+        "booking_id=%s actor_id=%s user_id=%s",
+        booking_id,
+        current_user.id,
+        user_id,
+    )
     await remove_booking_participant_uc.execute(
         RemoveBookingParticipantDTO(
             booking_id=booking_id,
@@ -222,4 +273,8 @@ async def remove_booking_participant(
             user_id=user_id,
         ),
     )
-    logger.info("remove_booking_participant_finished booking_id=%s user_id=%s", booking_id, user_id)
+    logger.info(
+        "remove_booking_participant_finished booking_id=%s user_id=%s",
+        booking_id,
+        user_id,
+    )

@@ -34,7 +34,11 @@ async def get_offices(
     filters: Annotated[GetOfficesFilters, Query()],
     _: CurrentUserDep,
 ) -> list[OfficeResponse]:
-    logger.info("get_offices_started limit=%s offset=%s", filters.limit, filters.offset)
+    logger.info(
+        "get_offices_started limit=%s offset=%s",
+        filters.limit,
+        filters.offset,
+    )
     offices = await get_offices_uc.execute(filters.to_dto())
     logger.info("get_offices_finished count=%s", len(offices))
     return [OfficeResponse.from_dto(office) for office in offices]
@@ -58,7 +62,11 @@ async def create_office(
     create_office_uc: FromDishka[CreateOfficeUseCase],
     _: AdminUserDep,
 ) -> OfficeResponse:
-    logger.info("create_office_started name=%s city=%s", payload.name, payload.city)
+    logger.info(
+        "create_office_started name=%s city=%s",
+        payload.name,
+        payload.city,
+    )
     office = await create_office_uc.execute(payload.to_dto())
     logger.info("create_office_finished office_id=%s", office.id)
     return OfficeResponse.from_dto(office)
@@ -111,7 +119,8 @@ async def upload_office_image(
     content_type = image.content_type or ""
     data = await image.read()
     logger.info(
-        "upload_office_image_started office_id=%s content_type=%s size_bytes=%s",
+        "upload_office_image_started "
+        "office_id=%s content_type=%s size_bytes=%s",
         office_id,
         content_type,
         len(data),

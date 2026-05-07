@@ -28,7 +28,10 @@ class GetOfficesUseCase:
                 limit=filters.limit,
                 offset=filters.offset,
             )
-            self.logger.debug("get_offices_usecase_fetched count=%s", len(offices))
+            self.logger.debug(
+                "get_offices_usecase_fetched count=%s",
+                len(offices),
+            )
 
             output: list[OfficeResponseDTO] = []
             for office in offices:
@@ -50,5 +53,8 @@ class GetOfficesUseCase:
                     ),
                 )
 
-            self.logger.debug("get_offices_usecase_finished count=%s", len(output))
+            self.logger.debug(
+                "get_offices_usecase_finished count=%s",
+                len(output),
+            )
             return output

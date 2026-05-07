@@ -63,5 +63,8 @@ class DBOfficesRepository(
 
         result = await self._session.execute(stmt)
         offices = [model.to_domain() for model in result.scalars().all()]
-        self._logger.debug("get_all_offices_repository_finished count=%s", len(offices))
+        self._logger.debug(
+            "get_all_offices_repository_finished count=%s",
+            len(offices),
+        )
         return offices

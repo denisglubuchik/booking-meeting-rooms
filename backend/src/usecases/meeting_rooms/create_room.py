@@ -48,7 +48,10 @@ class CreateRoomUseCase:
                 equipment=dto.equipment,
             )
             saved = await self.room_repo.save(room)
-            self.logger.debug("create_room_usecase_finished room_id=%s", saved.id)
+            self.logger.debug(
+                "create_room_usecase_finished room_id=%s",
+                saved.id,
+            )
             image_url = None
             if saved.image_key:
                 image_url = await (

@@ -41,7 +41,11 @@ def cache(key_prefix: str, return_type: type, expire: int = 3600) -> Callable:
             # Save to cache if result is not None
             if result is not None:
                 await cache_service.set(key, result, ttl=expire)
-                logger.info("cache_set key_prefix=%s ttl=%s", key_prefix, expire)
+                logger.info(
+                    "cache_set key_prefix=%s ttl=%s",
+                    key_prefix,
+                    expire,
+                )
 
             return result
 

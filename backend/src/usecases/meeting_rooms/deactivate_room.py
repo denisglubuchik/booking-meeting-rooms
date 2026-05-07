@@ -10,7 +10,9 @@ from usecases.interfaces.uow import UoWInterface
 class DeactivateRoomUseCase:
     def __init__(self, uow: UoWInterface) -> None:
         self.uow = uow
-        self.logger = logging.getLogger("usecases.meeting_rooms.deactivate_room")
+        self.logger = logging.getLogger(
+            "usecases.meeting_rooms.deactivate_room",
+        )
 
     async def execute(
         self,
@@ -21,7 +23,10 @@ class DeactivateRoomUseCase:
         async with self.uow:
             room = await self.uow.rooms_repo.get_by_id(room_id)
             if not room:
-                self.logger.warning("deactivate_room_usecase_not_found room_id=%s", room_id)
+                self.logger.warning(
+                    "deactivate_room_usecase_not_found room_id=%s",
+                    room_id,
+                )
                 raise NotFoundError(f"Room with id {room_id} not found")
 
             active_bookings = (
@@ -49,7 +54,10 @@ class DeactivateRoomUseCase:
             await self.uow.booking_history_repo.save_many(
                 booking_history_items,
             )
-            self.logger.debug("deactivate_room_usecase_finished room_id=%s", saved.id)
+            self.logger.debug(
+                "deactivate_room_usecase_finished room_id=%s",
+                saved.id,
+            )
 
             return RoomResponseDTO(
                 id=saved.id,

@@ -62,7 +62,11 @@ class DBUsersRepository(
         query: str,
         limit: int = 20,
     ) -> list[User]:
-        self._logger.debug("search_active_users_started query=%s limit=%s", query, limit)
+        self._logger.debug(
+            "search_active_users_started query=%s limit=%s",
+            query,
+            limit,
+        )
         pattern = f"%{query}%"
         stmt = (
             select(UserModel)
@@ -107,5 +111,8 @@ class DBUsersRepository(
 
         result = await self._session.execute(stmt)
         users = [model.to_domain() for model in result.scalars().all()]
-        self._logger.debug("get_all_users_repository_finished count=%s", len(users))
+        self._logger.debug(
+            "get_all_users_repository_finished count=%s",
+            len(users),
+        )
         return users

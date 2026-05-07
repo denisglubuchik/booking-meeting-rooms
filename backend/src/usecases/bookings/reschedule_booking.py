@@ -25,7 +25,10 @@ class RescheduleBookingUseCase:
         async with self.uow:
             booking = await self.uow.bookings_repo.get_by_id(dto.id)
             if not booking:
-                self.logger.warning("reschedule_booking_not_found booking_id=%s", dto.id)
+                self.logger.warning(
+                    "reschedule_booking_not_found booking_id=%s",
+                    dto.id,
+                )
                 raise NotFoundError(f"Booking with id {dto.id} not found")
             if (
                 dto.actor_role != UserRole.ADMIN

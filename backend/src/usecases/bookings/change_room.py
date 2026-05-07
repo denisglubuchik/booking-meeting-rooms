@@ -17,7 +17,8 @@ class ChangeRoomBookingUseCase:
 
     async def execute(self, dto: ChangeRoomBookingDTO) -> BookingResponseDTO:
         self.logger.debug(
-            "change_room_usecase_started booking_id=%s actor_id=%s new_room_id=%s",
+            "change_room_usecase_started "
+            "booking_id=%s actor_id=%s new_room_id=%s",
             dto.id,
             dto.actor_id,
             dto.new_room_id,
@@ -25,7 +26,10 @@ class ChangeRoomBookingUseCase:
         async with self.uow:
             booking = await self.uow.bookings_repo.get_by_id(dto.id)
             if not booking:
-                self.logger.warning("change_room_not_found booking_id=%s", dto.id)
+                self.logger.warning(
+                    "change_room_not_found booking_id=%s",
+                    dto.id,
+                )
                 raise NotFoundError(f"Booking with id {dto.id} not found")
             if (
                 dto.actor_role != UserRole.ADMIN
