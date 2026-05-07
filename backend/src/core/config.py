@@ -41,3 +41,13 @@ class AuthConfig(Settings):
 class LoggingConfig(Settings):
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: Literal["console", "json"] = "console"
+
+
+class S3Config(Settings):
+    S3_ENDPOINT_URL: str
+    S3_REGION: str
+    S3_BUCKET: str
+    S3_ACCESS_KEY_ID: str
+    S3_SECRET_ACCESS_KEY: str
+    S3_PRESIGN_EXPIRES_SECONDS: int = 900
+    S3_USE_PATH_STYLE: bool = False

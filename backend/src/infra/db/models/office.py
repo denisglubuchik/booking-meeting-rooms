@@ -16,6 +16,7 @@ class OfficeModel(Base):
     name: Mapped[str] = mapped_column(String(255), unique=True)
     city: Mapped[str] = mapped_column(String(255))
     address: Mapped[str] = mapped_column(String(255))
+    image_key: Mapped[str | None] = mapped_column(String(512), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     rooms: Mapped[list["MeetingRoomModel"]] = relationship(
@@ -29,6 +30,7 @@ class OfficeModel(Base):
             name=self.name,
             city=self.city,
             address=self.address,
+            image_key=self.image_key,
             is_active=self.is_active,
         )
 
@@ -39,5 +41,6 @@ class OfficeModel(Base):
             name=office.name,
             city=office.city,
             address=office.address,
+            image_key=office.image_key,
             is_active=office.is_active,
         )

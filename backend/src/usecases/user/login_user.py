@@ -1,5 +1,5 @@
 from usecases.dto.user import LoginUserDTO, UserResponseDTO
-from usecases.exceptions import BadRequest
+from usecases.exceptions import UnauthorizedError
 from usecases.interfaces.db import DBUsersRepositoryInterface
 from usecases.interfaces.password_hasher import PasswordHasherInterface
 
@@ -17,10 +17,10 @@ class LoginUserUseCase:
         async with self.user_repo:
             user = await self.user_repo.get_by_email(dto.email)
             if user is None:
-                raise BadRequest("Invalid email or password")
+                raise UnauthorizedError("Invalid email or password")
 
             if not self.hasher.verify(dto.password, user.hashed_password):
-                raise BadRequest("Invalid email or password")
+                raise UnauthorizedError("Invalid email or password")
 
             return UserResponseDTO(
                 id=user.id,

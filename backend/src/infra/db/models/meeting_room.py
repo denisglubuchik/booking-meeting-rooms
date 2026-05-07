@@ -25,6 +25,7 @@ class MeetingRoomModel(Base):
     capacity: Mapped[int] = mapped_column(Integer)
     description: Mapped[str] = mapped_column(Text)
     equipment: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
+    image_key: Mapped[str | None] = mapped_column(String(512), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     office: Mapped["OfficeModel"] = relationship(back_populates="rooms")
@@ -42,6 +43,7 @@ class MeetingRoomModel(Base):
             capacity=self.capacity,
             description=self.description,
             equipment=self.equipment,
+            image_key=self.image_key,
             is_active=self.is_active,
             bookings=(
                 [booking.to_domain() for booking in self.bookings]
@@ -60,5 +62,6 @@ class MeetingRoomModel(Base):
             capacity=meeting_room.capacity,
             description=meeting_room.description,
             equipment=meeting_room.equipment,
+            image_key=meeting_room.image_key,
             is_active=meeting_room.is_active,
         )

@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from core.config import AuthConfig, DBConfig, RedisConfig
+from core.config import AuthConfig, DBConfig, RedisConfig, S3Config
 from infra.auth.access_token import JWTAccessTokenIssuer, JWTAccessTokenVerifier
 from infra.cache.service import RedisCacheService
 from infra.db.repositories.booking import DBBookingsRepository
@@ -24,6 +24,7 @@ from infra.db.repositories.meeting_room import DBMeetingRoomsRepository
 from infra.db.repositories.office import DBOfficesRepository
 from infra.db.repositories.user import DBUsersRepository
 from infra.db.uow import SQLAlchemyUOW
+from infra.integrations.s3storage.s3 import S3FileStorage
 from infra.interfaces.access_token import (
     AccessTokenIssuerInterface,
     AccessTokenVerifierInterface,
@@ -46,6 +47,7 @@ from usecases.interfaces.db import (
     DBOfficesRepositoryInterface,
     DBUsersRepositoryInterface,
 )
+from infra.interfaces.file_storage import FileStorageInterface
 from usecases.interfaces.password_hasher import PasswordHasherInterface
 from usecases.interfaces.uow import UoWInterface
 from usecases.meeting_rooms.activate_room import ActivateRoomUseCase
@@ -54,12 +56,20 @@ from usecases.meeting_rooms.deactivate_room import DeactivateRoomUseCase
 from usecases.meeting_rooms.get_all_rooms import GetAllRoomsUseCase
 from usecases.meeting_rooms.get_office_rooms import GetOfficeRoomsUseCase
 from usecases.meeting_rooms.get_room_details import GetRoomDetailsUseCase
+from usecases.meeting_rooms.image_ops import (
+    DeleteRoomImageUseCase,
+    UploadRoomImageUseCase,
+)
 from usecases.meeting_rooms.update_room import UpdateRoomUseCase
 from usecases.offices.activate_office import ActivateOfficeUseCase
 from usecases.offices.create_office import CreateOfficeUseCase
 from usecases.offices.deactivate_office import DeactivateOfficeUseCase
 from usecases.offices.get_office_details import GetOfficeDetailsUseCase
 from usecases.offices.get_offices import GetOfficesUseCase
+from usecases.offices.image_ops import (
+    DeleteOfficeImageUseCase,
+    UploadOfficeImageUseCase,
+)
 from usecases.offices.update_office import UpdateOfficeUseCase
 from usecases.user.activate_user import ActivateUserUseCase
 from usecases.user.change_role import ChangeUserRoleUseCase
@@ -73,6 +83,7 @@ from usecases.user.update_user import UpdateUserUseCase
 db_config = DBConfig()
 redis_config = RedisConfig()
 auth_config = AuthConfig()
+s3_config = S3Config()
 
 
 class DependencyProvider(Provider):
@@ -81,6 +92,7 @@ class DependencyProvider(Provider):
         db_config: DBConfig,
         redis_config: RedisConfig,
         auth_config: AuthConfig,
+        s3_config: S3Config,
         scope: BaseScope | None = None,
         component: Component | None = None,
     ) -> None:
@@ -88,10 +100,19 @@ class DependencyProvider(Provider):
         self.db_config = db_config
         self.redis_config = redis_config
         self.auth_config = auth_config
+        self.s3_config = s3_config
 
     @provide(scope=Scope.APP)
     def auth_settings(self) -> AuthConfig:
         return self.auth_config
+
+    @provide(scope=Scope.APP)
+    def s3_settings(self) -> S3Config:
+        return self.s3_config
+
+    @provide(scope=Scope.APP)
+    def file_storage(self, s3_settings: S3Config) -> FileStorageInterface:
+        return S3FileStorage(config=s3_settings)
 
     @provide(scope=Scope.APP)
     def redis_cache(self) -> CacheInterface:
@@ -206,6 +227,8 @@ class DependencyProvider(Provider):
     get_office_uc = provide(GetOfficeDetailsUseCase)
     get_offices_uc = provide(GetOfficesUseCase)
     update_office_uc = provide(UpdateOfficeUseCase)
+    upload_office_image_uc = provide(UploadOfficeImageUseCase)
+    delete_office_image_uc = provide(DeleteOfficeImageUseCase)
 
     activate_room_uc = provide(ActivateRoomUseCase)
     create_room_uc = provide(CreateRoomUseCase)
@@ -214,6 +237,8 @@ class DependencyProvider(Provider):
     update_room_uc = provide(UpdateRoomUseCase)
     get_all_rooms_uc = provide(GetAllRoomsUseCase)
     get_office_rooms_uc = provide(GetOfficeRoomsUseCase)
+    upload_room_image_uc = provide(UploadRoomImageUseCase)
+    delete_room_image_uc = provide(DeleteRoomImageUseCase)
 
     activate_user_uc = provide(ActivateUserUseCase)
     create_user_uc = provide(CreateUserUseCase)
@@ -240,6 +265,7 @@ container = make_async_container(
         db_config=db_config,
         redis_config=redis_config,
         auth_config=auth_config,
+        s3_config=s3_config,
         scope=Scope.REQUEST,
     ),
 )

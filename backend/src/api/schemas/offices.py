@@ -57,6 +57,7 @@ class OfficeResponse(BaseModel):
     name: str
     city: str
     address: str
+    image_url: str | None
     is_active: bool
 
     @classmethod
@@ -66,5 +67,6 @@ class OfficeResponse(BaseModel):
             name=dto.name,
             city=dto.city,
             address=dto.address,
+            image_url=dto.image_url,
             is_active=dto.is_active,
         )

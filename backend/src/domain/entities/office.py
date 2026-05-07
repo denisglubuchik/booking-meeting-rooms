@@ -8,6 +8,7 @@ class Office:
     name: str
     city: str
     address: str
+    image_key: str | None = None
     is_active: bool = True
 
     def activate(self) -> None:

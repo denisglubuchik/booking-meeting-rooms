@@ -16,6 +16,7 @@ from usecases.exceptions import (
     BadRequest,
     ForbiddenError,
     NotFoundError,
+    UnauthorizedError,
 )
 
 
@@ -28,6 +29,7 @@ def _error_response(
     return JSONResponse(
         status_code=status_code,
         content={
+            "detail": message,
             "error": {
                 "code": code,
                 "message": message,
@@ -68,6 +70,17 @@ def register_exception_handlers(app: FastAPI) -> None:
             code="bad_request",
             message=str(exc),
             status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+    @app.exception_handler(UnauthorizedError)
+    async def handle_unauthorized(
+        _request: Request,
+        exc: UnauthorizedError,
+    ) -> JSONResponse:
+        return _error_response(
+            code="invalid_credentials",
+            message=str(exc),
+            status_code=status.HTTP_401_UNAUTHORIZED,
         )
 
     @app.exception_handler(BookingTimeInPastError)

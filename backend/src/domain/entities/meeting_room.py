@@ -13,6 +13,7 @@ class MeetingRoom:
     capacity: int
     description: str = ""
     equipment: list[str] = field(default_factory=list)
+    image_key: str | None = None
     is_active: bool = True
 
     bookings: list[Booking] = field(default_factory=list)

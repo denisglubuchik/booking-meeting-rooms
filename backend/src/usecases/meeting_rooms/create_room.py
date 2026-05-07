@@ -7,6 +7,7 @@ from usecases.interfaces.db import (
     DBMeetingRoomsRepositoryInterface,
     DBOfficesRepositoryInterface,
 )
+from infra.interfaces.file_storage import FileStorageInterface
 
 
 class CreateRoomUseCase:
@@ -14,9 +15,11 @@ class CreateRoomUseCase:
         self,
         room_repo: DBMeetingRoomsRepositoryInterface,
         office_repo: DBOfficesRepositoryInterface,
+        file_storage: FileStorageInterface,
     ) -> None:
         self.room_repo = room_repo
         self.office_repo = office_repo
+        self.file_storage = file_storage
 
     async def execute(self, dto: CreateRoomDTO) -> RoomResponseDTO:
         async with self.room_repo, self.office_repo:
@@ -34,6 +37,13 @@ class CreateRoomUseCase:
                 equipment=dto.equipment,
             )
             saved = await self.room_repo.save(room)
+            image_url = None
+            if saved.image_key:
+                image_url = await (
+                    self.file_storage.generate_presigned_download_url(
+                        key=saved.image_key,
+                    )
+                )
 
             return RoomResponseDTO(
                 id=saved.id,
@@ -43,5 +53,6 @@ class CreateRoomUseCase:
                 capacity=saved.capacity,
                 description=saved.description,
                 equipment=saved.equipment,
+                image_url=image_url,
                 is_active=saved.is_active,
             )

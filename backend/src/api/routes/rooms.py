@@ -3,7 +3,7 @@ from uuid import UUID
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, File, Query, UploadFile
 
 from api.dependencies.auth import AdminUserDep, CurrentUserDep
 from api.schemas.rooms import (
@@ -19,6 +19,10 @@ from usecases.meeting_rooms.deactivate_room import DeactivateRoomUseCase
 from usecases.meeting_rooms.get_all_rooms import GetAllRoomsUseCase
 from usecases.meeting_rooms.get_office_rooms import GetOfficeRoomsUseCase
 from usecases.meeting_rooms.get_room_details import GetRoomDetailsUseCase
+from usecases.meeting_rooms.image_ops import (
+    DeleteRoomImageUseCase,
+    UploadRoomImageUseCase,
+)
 from usecases.meeting_rooms.update_room import UpdateRoomUseCase
 
 router = APIRouter(tags=["rooms"], route_class=DishkaRoute)
@@ -94,3 +98,28 @@ async def deactivate_room(
 ) -> RoomResponse:
     room = await deactivate_room_uc.execute(room_id)
     return RoomResponse.from_dto(room)
+
+
+@router.post("/{room_id}/image", status_code=204)
+async def upload_room_image(
+    room_id: UUID,
+    image: Annotated[UploadFile, File()],
+    upload_image_uc: FromDishka[UploadRoomImageUseCase],
+    _: AdminUserDep,
+) -> None:
+    content_type = image.content_type or ""
+    data = await image.read()
+    await upload_image_uc.execute(
+        room_id,
+        content_type=content_type,
+        data=data,
+    )
+
+
+@router.delete("/{room_id}/image", status_code=204)
+async def delete_room_image(
+    room_id: UUID,
+    delete_image_uc: FromDishka[DeleteRoomImageUseCase],
+    _: AdminUserDep,
+) -> None:
+    await delete_image_uc.execute(room_id)

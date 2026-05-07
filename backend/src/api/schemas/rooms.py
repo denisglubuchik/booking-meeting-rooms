@@ -88,6 +88,7 @@ class RoomResponse(BaseModel):
     capacity: int
     description: str
     equipment: list[str]
+    image_url: str | None
     is_active: bool
 
     @classmethod
@@ -100,5 +101,6 @@ class RoomResponse(BaseModel):
             capacity=dto.capacity,
             description=dto.description,
             equipment=dto.equipment,
+            image_url=dto.image_url,
             is_active=dto.is_active,
         )

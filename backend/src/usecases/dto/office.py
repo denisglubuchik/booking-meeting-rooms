@@ -31,4 +31,5 @@ class OfficeResponseDTO:
     name: str
     city: str
     address: str
+    image_url: str | None
     is_active: bool

@@ -49,5 +49,6 @@ class DeactivateRoomUseCase:
                 capacity=saved.capacity,
                 description=saved.description,
                 equipment=saved.equipment,
+                image_url=None,
                 is_active=saved.is_active,
             )

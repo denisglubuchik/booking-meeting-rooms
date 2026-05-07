@@ -24,5 +24,6 @@ class ActivateOfficeUseCase:
                 name=saved.name,
                 city=saved.city,
                 address=saved.address,
+                image_url=None,
                 is_active=saved.is_active,
             )

@@ -48,4 +48,5 @@ class RoomResponseDTO:
     capacity: int
     description: str
     equipment: list[str]
+    image_url: str | None
     is_active: bool

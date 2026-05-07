@@ -3,7 +3,7 @@ from uuid import UUID
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, File, Query, UploadFile
 
 from api.dependencies.auth import AdminUserDep, CurrentUserDep
 from api.schemas.offices import (
@@ -17,6 +17,10 @@ from usecases.offices.create_office import CreateOfficeUseCase
 from usecases.offices.deactivate_office import DeactivateOfficeUseCase
 from usecases.offices.get_office_details import GetOfficeDetailsUseCase
 from usecases.offices.get_offices import GetOfficesUseCase
+from usecases.offices.image_ops import (
+    DeleteOfficeImageUseCase,
+    UploadOfficeImageUseCase,
+)
 from usecases.offices.update_office import UpdateOfficeUseCase
 
 router = APIRouter(tags=["offices"], route_class=DishkaRoute)
@@ -81,3 +85,28 @@ async def deactivate_office(
 ) -> OfficeResponse:
     office = await deactivate_office_uc.execute(office_id)
     return OfficeResponse.from_dto(office)
+
+
+@router.post("/{office_id}/image", status_code=204)
+async def upload_office_image(
+    office_id: UUID,
+    image: Annotated[UploadFile, File()],
+    upload_image_uc: FromDishka[UploadOfficeImageUseCase],
+    _: AdminUserDep,
+) -> None:
+    content_type = image.content_type or ""
+    data = await image.read()
+    await upload_image_uc.execute(
+        office_id,
+        content_type=content_type,
+        data=data,
+    )
+
+
+@router.delete("/{office_id}/image", status_code=204)
+async def delete_office_image(
+    office_id: UUID,
+    delete_image_uc: FromDishka[DeleteOfficeImageUseCase],
+    _: AdminUserDep,
+) -> None:
+    await delete_image_uc.execute(office_id)

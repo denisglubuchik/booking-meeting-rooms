@@ -58,6 +58,7 @@ class GetAvailableRoomsUseCase:
                     capacity=room.capacity,
                     description=room.description,
                     equipment=room.equipment,
+                    image_url=None,
                     is_active=room.is_active,
                 )
                 for room in available_rooms

@@ -12,3 +12,7 @@ class BadRequest(ApplicationError):
 
 class ForbiddenError(ApplicationError):
     pass
+
+
+class UnauthorizedError(ApplicationError):
+    pass

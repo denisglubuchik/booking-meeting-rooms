@@ -2,11 +2,17 @@ from uuid import UUID
 
 from usecases.dto.meeting_room import OfficeRoomFiltersDTO, RoomResponseDTO
 from usecases.interfaces.db import DBMeetingRoomsRepositoryInterface
+from infra.interfaces.file_storage import FileStorageInterface
 
 
 class GetOfficeRoomsUseCase:
-    def __init__(self, rooms_repo: DBMeetingRoomsRepositoryInterface) -> None:
+    def __init__(
+        self,
+        rooms_repo: DBMeetingRoomsRepositoryInterface,
+        file_storage: FileStorageInterface,
+    ) -> None:
         self.rooms_repo = rooms_repo
+        self.file_storage = file_storage
 
     async def execute(
         self,
@@ -25,16 +31,27 @@ class GetOfficeRoomsUseCase:
                 offset=filters.offset,
             )
 
-            return [
-                RoomResponseDTO(
-                    id=room.id,
-                    office_id=room.office_id,
-                    name=room.name,
-                    floor=room.floor,
-                    capacity=room.capacity,
-                    description=room.description,
-                    equipment=room.equipment,
-                    is_active=room.is_active,
+            output: list[RoomResponseDTO] = []
+            for room in rooms:
+                image_url = None
+                if room.image_key:
+                    image_url = (
+                        await self.file_storage.generate_presigned_download_url(
+                            key=room.image_key,
+                        )
+                    )
+                output.append(
+                    RoomResponseDTO(
+                        id=room.id,
+                        office_id=room.office_id,
+                        name=room.name,
+                        floor=room.floor,
+                        capacity=room.capacity,
+                        description=room.description,
+                        equipment=room.equipment,
+                        image_url=image_url,
+                        is_active=room.is_active,
+                    ),
                 )
-                for room in rooms
-            ]
+
+            return output

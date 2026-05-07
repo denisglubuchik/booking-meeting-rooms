@@ -1,11 +1,17 @@
 from usecases.dto.meeting_room import RoomResponseDTO, UpdateRoomDTO
 from usecases.exceptions import NotFoundError
 from usecases.interfaces.db import DBMeetingRoomsRepositoryInterface
+from infra.interfaces.file_storage import FileStorageInterface
 
 
 class UpdateRoomUseCase:
-    def __init__(self, room_repo: DBMeetingRoomsRepositoryInterface) -> None:
+    def __init__(
+        self,
+        room_repo: DBMeetingRoomsRepositoryInterface,
+        file_storage: FileStorageInterface,
+    ) -> None:
         self.room_repo = room_repo
+        self.file_storage = file_storage
 
     async def execute(self, dto: UpdateRoomDTO) -> RoomResponseDTO:
         async with self.room_repo:
@@ -20,6 +26,13 @@ class UpdateRoomUseCase:
             )
 
             saved = await self.room_repo.save(room)
+            image_url = None
+            if saved.image_key:
+                image_url = await (
+                    self.file_storage.generate_presigned_download_url(
+                        key=saved.image_key,
+                    )
+                )
 
             return RoomResponseDTO(
                 id=saved.id,
@@ -29,5 +42,6 @@ class UpdateRoomUseCase:
                 capacity=saved.capacity,
                 description=saved.description,
                 equipment=saved.equipment,
+                image_url=image_url,
                 is_active=saved.is_active,
             )
