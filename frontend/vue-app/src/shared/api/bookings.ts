@@ -1,0 +1,95 @@
+import type { Booking, Room } from "../types/api";
+import { apiClient, unwrapData } from "./client";
+
+export async function getAvailableRooms(params: {
+  start_time: string;
+  end_time: string;
+  office_id?: string;
+  floor?: number;
+  capacity_gte?: number;
+  capacity_lte?: number;
+}) {
+  const result = await apiClient.GET("/bookings/available-rooms", {
+    params: {
+      query: {
+        start_time: params.start_time,
+        end_time: params.end_time,
+        office_id: params.office_id,
+        floor: params.floor,
+        capacity_gte: params.capacity_gte,
+        capacity_lte: params.capacity_lte,
+      },
+    },
+  });
+  return unwrapData(result) as Promise<Room[]>;
+}
+
+export async function getRoomBookings(roomId: string) {
+  const result = await apiClient.GET("/bookings/by-room/{room_id}", {
+    params: { path: { room_id: roomId } },
+  });
+  return unwrapData(result) as Promise<Booking[]>;
+}
+
+export async function getMyBookings() {
+  const result = await apiClient.GET("/bookings/my-bookings");
+  return unwrapData(result) as Promise<Booking[]>;
+}
+
+export async function getAllBookings(params?: {
+  user_id?: string;
+  room_id?: string;
+  status?: "created" | "cancelled" | "completed";
+  start_time_gte?: string;
+  end_time_lte?: string;
+  limit?: number;
+  offset?: number;
+}) {
+  const result = await apiClient.GET("/bookings/", {
+    params: {
+      query: {
+        user_id: params?.user_id,
+        room_id: params?.room_id,
+        status: params?.status,
+        start_time_gte: params?.start_time_gte,
+        end_time_lte: params?.end_time_lte,
+        limit: params?.limit,
+        offset: params?.offset,
+      },
+    },
+  });
+  return unwrapData(result) as Promise<Booking[]>;
+}
+
+export async function createBooking(payload: {
+  room_id: string;
+  start_time: string;
+  end_time: string;
+  title?: string | null;
+}) {
+  const result = await apiClient.POST("/bookings/", { body: payload });
+  return unwrapData(result) as Promise<Booking>;
+}
+
+export async function cancelBooking(bookingId: string) {
+  const result = await apiClient.POST("/bookings/{booking_id}/cancel", {
+    params: { path: { booking_id: bookingId } },
+  });
+  return unwrapData(result) as Promise<Booking>;
+}
+
+export async function rescheduleBooking(bookingId: string, new_start_time: string, new_end_time: string) {
+  const result = await apiClient.PATCH("/bookings/{booking_id}/reschedule", {
+    params: { path: { booking_id: bookingId } },
+    body: { new_start_time, new_end_time },
+  });
+  return unwrapData(result) as Promise<Booking>;
+}
+
+export async function changeBookingRoom(bookingId: string, new_room_id: string) {
+  const result = await apiClient.PATCH("/bookings/{booking_id}/change_room", {
+    params: { path: { booking_id: bookingId } },
+    body: { new_room_id },
+  });
+  return unwrapData(result) as Promise<Booking>;
+}

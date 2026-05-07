@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Booking Rooms Mockup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f5efe6;
+        --surface: #fffaf4;
+        --surface-strong: #fffdf9;
+        --surface-alt: #efe4d6;
+        --line: #dccbb7;
+        --line-strong: #c4ad90;
+        --text: #2f241d;
+        --muted: #6f6258;
+        --accent: #b96e3a;
+        --accent-soft: #f2dfcf;
+        --success: #456b52;
+        --warning: #a7772e;
+        --danger: #9a5048;
+        --radius-xl: 28px;
+        --radius-lg: 22px;
+        --radius-md: 16px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Manrope", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(255, 255, 255, 0.9), transparent 28%),
+          linear-gradient(180deg, #f7f1e9 0%, #f2e8db 48%, #efe4d4 100%);
+        color: var(--text);
+      }
+
+      .mockup-card {
+        background: rgba(255, 253, 249, 0.82);
+        backdrop-filter: blur(18px);
+        border: 1px solid rgba(196, 173, 144, 0.45);
+        border-radius: var(--radius-xl);
+        box-shadow: 0 18px 50px rgba(83, 55, 35, 0.08);
+      }
+
+      .screen-card {
+        background: linear-gradient(180deg, rgba(255, 253, 249, 0.96), rgba(251, 245, 237, 0.96));
+        border: 1px solid rgba(196, 173, 144, 0.55);
+        border-radius: 34px;
+        box-shadow: 0 24px 70px rgba(90, 63, 37, 0.1);
+        overflow: hidden;
+      }
+
+      .screen-header {
+        background: linear-gradient(180deg, rgba(255, 250, 243, 0.95), rgba(249, 239, 226, 0.95));
+        border-bottom: 1px solid rgba(196, 173, 144, 0.45);
+      }
+
+      .soft-pill {
+        border-radius: 999px;
+        border: 1px solid rgba(185, 110, 58, 0.18);
+        background: rgba(255, 247, 240, 0.92);
+      }
+
+      .status-created {
+        color: var(--success);
+        background: rgba(69, 107, 82, 0.12);
+      }
+
+      .status-cancelled {
+        color: var(--danger);
+        background: rgba(154, 80, 72, 0.12);
+      }
+
+      .status-completed {
+        color: var(--warning);
+        background: rgba(167, 119, 46, 0.12);
+      }
+
+      .image-placeholder {
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(238, 226, 211, 0.78)),
+          repeating-linear-gradient(
+            -45deg,
+            rgba(185, 110, 58, 0.06),
+            rgba(185, 110, 58, 0.06) 10px,
+            transparent 10px,
+            transparent 20px
+          );
+      }
+
+      .data-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+      }
+
+      .table-row {
+        display: grid;
+        gap: 0.75rem;
+        align-items: center;
+      }
+
+      @media (max-width: 900px) {
+        .table-row {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <header class="mockup-card mb-8 overflow-hidden">
+        <div class="grid gap-8 px-6 py-8 lg:grid-cols-[1.2fr_0.8fr] lg:px-10">
+          <div>
+            <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-stone-300/80 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-stone-600">
+              Booking Rooms / First Mockup
+            </div>
+            <h1 class="max-w-3xl text-4xl font-extrabold leading-tight text-stone-900 sm:text-5xl">
+              Спокойный и практичный интерфейс для бронирования переговорных
+            </h1>
+            <p class="mt-4 max-w-2xl text-base leading-7 text-stone-600 sm:text-lg">
+              Первый мокап собран как единый HTML-файл: здесь есть карта навигации,
+              пользовательские экраны, административные разделы и визуальные
+              шаблоны для карточек офисов, переговорных и бронирований.
+            </p>
+          </div>
+          <div class="grid gap-4 rounded-[30px] border border-stone-300/70 bg-white/55 p-5">
+            <div class="rounded-3xl bg-stone-900 px-5 py-4 text-stone-50">
+              <div class="text-xs uppercase tracking-[0.3em] text-stone-300">Цель</div>
+              <div class="mt-2 text-lg font-semibold">Быстро найти свободную комнату и оформить бронь</div>
+            </div>
+            <div class="data-grid">
+              <div class="rounded-3xl border border-stone-300/70 bg-white/75 p-4">
+                <div class="text-sm text-stone-500">Роли</div>
+                <div class="mt-2 text-xl font-bold">Сотрудник, администратор</div>
+              </div>
+              <div class="rounded-3xl border border-stone-300/70 bg-white/75 p-4">
+                <div class="text-sm text-stone-500">Формат</div>
+                <div class="mt-2 text-xl font-bold">13 экранов + карта переходов</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="space-y-10">
+        <section id="navigation-map" class="mockup-card px-6 py-8 lg:px-8">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p class="text-sm font-semibold uppercase tracking-[0.28em] text-stone-500">Navigation Map</p>
+              <h2 class="mt-2 text-3xl font-extrabold text-stone-900">Карта навигации приложения</h2>
+            </div>
+            <p class="max-w-2xl text-sm leading-6 text-stone-600">
+              Этот блок можно редактировать прямо в HTML, чтобы уточнять состав экранов
+              и связи между ними до переноса в компоненты.
+            </p>
+          </div>
+
+          <div class="mt-8 grid gap-6 xl:grid-cols-3">
+            <div class="rounded-[26px] border border-stone-300/75 bg-white/70 p-5">
+              <h3 class="text-lg font-bold text-stone-900">Общие разделы</h3>
+              <ul class="mt-4 space-y-3 text-sm leading-6 text-stone-700">
+                <li><strong>Вход</strong> → <strong>Дашборд</strong></li>
+                <li><strong>Дашборд</strong> → <strong>Найти комнату</strong> → <strong>Детали переговорной</strong> → <strong>Создать бронь</strong></li>
+                <li><strong>Офисы</strong> → <strong>Комнаты офиса</strong> → <strong>Детали переговорной</strong></li>
+                <li><strong>Мои бронирования</strong> → <strong>Перенос / смена комнаты / отмена</strong></li>
+                <li><strong>Профиль</strong> → <strong>Редактирование личных данных</strong></li>
+              </ul>
+            </div>
+            <div class="rounded-[26px] border border-stone-300/75 bg-white/70 p-5">
+              <h3 class="text-lg font-bold text-stone-900">Админ-маршруты</h3>
+              <ul class="mt-4 space-y-3 text-sm leading-6 text-stone-700">
+                <li><strong>Офисы</strong> → создание / редактирование / активация</li>
+                <li><strong>Комнаты</strong> → фильтры / редактирование / управление статусом</li>
+                <li><strong>Бронирования</strong> → просмотр по статусам, пользователям и датам</li>
+                <li><strong>Пользователи</strong> → роль / активация / деактивация</li>
+              </ul>
+            </div>
+            <div class="rounded-[26px] border border-stone-300/75 bg-stone-900 p-5 text-stone-50">
+              <h3 class="text-lg font-bold">Ключевые сценарии</h3>
+              <ul class="mt-4 space-y-3 text-sm leading-6 text-stone-200">
+                <li>1. Выбрать офис, дату и слот, затем увидеть свободные комнаты.</li>
+                <li>2. Изучить офис и доступные переговорные без запуска поиска.</li>
+                <li>3. Быстро понять свои ближайшие встречи и изменить активные брони.</li>
+                <li>4. Для администратора: просматривать каталоги и управлять данными в табличных режимах.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="grid gap-10">
+          <article class="screen-card">
+            <div class="screen-header flex items-center justify-between px-6 py-4">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-stone-500">Screen 1</p>
+                <h2 class="text-2xl font-bold text-stone-900">Вход</h2>
+              </div>
+              <span class="soft-pill px-4 py-2 text-sm font-medium text-stone-600">Employee / Admin</span>
+            </div>
+            <div class="grid gap-6 p-6 lg:grid-cols-[0.95fr_1.05fr] lg:p-8">
+              <div class="rounded-[30px] bg-stone-900 p-6 text-stone-50">
+                <div class="text-sm uppercase tracking-[0.3em] text-stone-300">RoomFlow</div>
+                <h3 class="mt-8 max-w-sm text-3xl font-bold leading-tight">Бронирование переговорных без лишних шагов</h3>
+                <p class="mt-4 max-w-md text-sm leading-7 text-stone-300">
+                  Единая точка для офисов, переговорных и встреч. Сотрудники быстро
+                  находят свободные комнаты, а администраторы держат под контролем
+                  каталоги и занятость.
+                </p>
+                <div class="mt-8 grid gap-3 sm:grid-cols-2">
+                  <div class="rounded-3xl bg-white/10 p-4">
+                    <div class="text-2xl font-bold">24</div>
+                    <div class="mt-1 text-sm text-stone-300">активных переговорных</div>
+                  </div>
+                  <div class="rounded-3xl bg-white/10 p-4">
+                    <div class="text-2xl font-bold">6</div>
+                    <div class="mt-1 text-sm text-stone-300">офисов в каталоге</div>
+                  </div>
+                </div>
+              </div>
+              <div class="rounded-[30px] border border-stone-300/75 bg-white/80 p-6">
+                <div class="mx-auto max-w-md">
+                  <h3 class="text-2xl font-bold text-stone-900">Войти в систему</h3>
+                  <p class="mt-2 text-sm leading-6 text-stone-500">
+                    Используйте корпоративную почту, чтобы увидеть доступные офисы,
+                    переговорные и ваши бронирования.
+                  </p>
+                  <form class="mt-8 space-y-4">
+                    <label class="block">
+                      <span class="mb-2 block text-sm font-medium text-stone-700">Рабочий email</span>
+                      <input class="w-full rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 outline-none ring-0 transition hover:border-stone-400 focus:border-orange-400" type="email" value="anna.ivanova@company.ru" />
+                    </label>
+                    <label class="block">
+                      <span class="mb-2 block text-sm font-medium text-stone-700">Пароль</span>
+                      <input class="w-full rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 outline-none transition hover:border-stone-400 focus:border-orange-400" type="password" value="password" />
+                    </label>
+                    <div class="flex items-center justify-between text-sm text-stone-500">
+                      <label class="flex items-center gap-2">
+                        <input type="checkbox" checked />
+                        <span>Оставаться в системе</span>
+                      </label>
+                      <a href="#profile" class="font-semibold text-orange-700">Нужна помощь?</a>
+                    </div>
+                    <button class="w-full rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-800">
+                      Войти
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="screen-card">
+            <div class="screen-header flex items-center justify-between px-6 py-4">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-stone-500">Screen 2</p>
+                <h2 class="text-2xl font-bold text-stone-900">Дашборд</h2>
+              </div>
+              <nav class="hidden items-center gap-2 lg:flex">
+                <span class="soft-pill px-4 py-2 text-sm font-medium text-stone-700">Главная</span>
+                <span class="soft-pill px-4 py-2 text-sm text-stone-600">Офисы</span>
+                <span class="soft-pill px-4 py-2 text-sm text-stone-600">Комнаты</span>
+                <span class="soft-pill px-4 py-2 text-sm text-stone-600">Мои бронирования</span>
+              </nav>
+            </div>
+            <div class="space-y-6 p-6 lg:p-8">
+              <div class="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+                <div class="rounded-[28px] bg-stone-900 px-6 py-7 text-stone-50">
+                  <p class="text-sm uppercase tracking-[0.28em] text-stone-300">Доброе утро</p>
+                  <h3 class="mt-3 text-3xl font-bold">Анна, где проведём следующую встречу?</h3>
+                  <div class="mt-6 grid gap-4 md:grid-cols-4">
+                    <div class="rounded-3xl bg-white/10 p-4">
+                      <div class="text-sm text-stone-300">Активные брони</div>
+                      <div class="mt-2 text-3xl font-bold">3</div>
+                    </div>
+                    <div class="rounded-3xl bg-white/10 p-4">
+                      <div class="text-sm text-stone-300">Свободно сейчас</div>
+                      <div class="mt-2 text-3xl font-bold">12</div>
+                    </div>
+                    <div class="rounded-3xl bg-white/10 p-4">
+                      <div class="text-sm text-stone-300">Офисы</div>
+                      <div class="mt-2 text-3xl font-bold">6</div>
+                    </div>
+                    <div class="rounded-3xl bg-white/10 p-4">
+                      <div class="text-sm text-stone-300">Мои встречи сегодня</div>
+                      <div class="mt-2 text-3xl font-bold">2</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="rounded-[28px] border border-stone-300/75 bg-white/80 p-6">
+                  <h3 class="text-xl font-bold text-stone-900">Быстрый поиск переговорной</h3>
+                  <div class="mt-5 grid gap-3 md:grid-cols-2">
+                    <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Офис: Москва, Белая площадь</div>
+                    <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Дата: 28 апреля</div>
+                    <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Начало: 14:00</div>
+                    <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Конец: 15:00</div>
+                    <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Вместимость: от 6 человек</div>
+                    <button class="rounded-2xl bg-orange-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-800">
+                      Найти комнату
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="grid gap-6">
+                <div class="rounded-[28px] border border-stone-300/75 bg-white/80 p-6">
+                  <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-stone-900">Ближайшие бронирования</h3>
+                    <a href="#my-bookings" class="text-sm font-semibold text-orange-700">Смотреть все</a>
+                  </div>
+                  <div class="mt-5 space-y-4">
+                    <div class="rounded-3xl border border-stone-300/75 bg-stone-50 p-4">
+                      <div class="flex items-start justify-between gap-3">
+                        <div>
+                          <h4 class="font-semibold text-stone-900">Планирование квартала</h4>
+                          <p class="mt-1 text-sm text-stone-500">Комната "Север", 14:00-15:00</p>
+                        </div>
+                        <span class="rounded-full px-3 py-1 text-xs font-semibold status-created">создано</span>
+                      </div>
+                    </div>
+                    <div class="rounded-3xl border border-stone-300/75 bg-stone-50 p-4">
+                      <div class="flex items-start justify-between gap-3">
+                        <div>
+                          <h4 class="font-semibold text-stone-900">One-to-one с командой</h4>
+                          <p class="mt-1 text-sm text-stone-500">Комната "Форум", 16:30-17:00</p>
+                        </div>
+                        <span class="rounded-full px-3 py-1 text-xs font-semibold status-created">создано</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article id="offices" class="screen-card">
+            <div class="screen-header flex items-center justify-between px-6 py-4">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-stone-500">Screen 3</p>
+                <h2 class="text-2xl font-bold text-stone-900">Офисы</h2>
+              </div>
+              <span class="soft-pill px-4 py-2 text-sm text-stone-600">Обзор по локациям</span>
+            </div>
+            <div class="p-6 lg:p-8">
+              <div class="grid gap-5 lg:grid-cols-3">
+                <div class="rounded-[28px] border border-stone-300/75 bg-white/80 p-4">
+                  <div class="image-placeholder h-44 rounded-[24px]"></div>
+                  <div class="mt-4">
+                    <h3 class="text-xl font-bold text-stone-900">Белая площадь</h3>
+                    <p class="mt-1 text-sm text-stone-500">Москва, Лесная 5</p>
+                  </div>
+                  <p class="mt-4 text-sm leading-6 text-stone-600">
+                    Флагманский офис рядом с метро. Есть большие переговорные для командных сессий и небольшие комнаты для встреч один на один.
+                  </p>
+                </div>
+                <div class="rounded-[28px] border border-stone-300/75 bg-white/80 p-4">
+                  <div class="image-placeholder h-44 rounded-[24px]"></div>
+                  <div class="mt-4">
+                    <h3 class="text-xl font-bold text-stone-900">Сити Парк</h3>
+                    <p class="mt-1 text-sm text-stone-500">Москва, Пресненская наб. 8</p>
+                  </div>
+                  <p class="mt-4 text-sm leading-6 text-stone-600">
+                    Городской офис с современными маленькими комнатами для переговоров и большим количеством быстрых встреч.
+                  </p>
+                </div>
+                <div class="rounded-[28px] border border-stone-300/75 bg-white/80 p-4">
+                  <div class="image-placeholder h-44 rounded-[24px]"></div>
+                  <div class="mt-4">
+                    <h3 class="text-xl font-bold text-stone-900">Невский</h3>
+                    <p class="mt-1 text-sm text-stone-500">Санкт-Петербург, Невский пр. 42</p>
+                  </div>
+                  <p class="mt-4 text-sm leading-6 text-stone-600">
+                    Пространство для региональной команды, где полезно быстро понять состав комнат внутри конкретной локации.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article id="rooms" class="screen-card">
+            <div class="screen-header flex items-center justify-between px-6 py-4">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-stone-500">Screen 4</p>
+                <h2 class="text-2xl font-bold text-stone-900">Комнаты</h2>
+              </div>
+              <span class="soft-pill px-4 py-2 text-sm text-stone-600">Глобальный каталог</span>
+            </div>
+            <div class="space-y-6 p-6 lg:p-8">
+              <div class="grid gap-4 rounded-[28px] border border-stone-300/75 bg-white/80 p-4 md:grid-cols-5">
+                <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Офис: все</div>
+                <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Этаж: любой</div>
+                <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Вместимость: 2-14</div>
+                <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Оснащение: экран, камера</div>
+                <button class="rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white">Применить</button>
+              </div>
+              <div class="grid gap-5 lg:grid-cols-3">
+                <div class="rounded-[28px] border border-stone-300/75 bg-white/80 p-4">
+                  <div class="image-placeholder h-44 rounded-[24px]"></div>
+                  <div class="mt-4">
+                    <div class="flex items-center justify-between">
+                      <h3 class="text-xl font-bold text-stone-900">Север</h3>
+                      <span class="soft-pill px-3 py-1 text-xs text-stone-600">10 мест</span>
+                    </div>
+                    <p class="mt-2 text-sm text-stone-500">Белая площадь, 8 этаж</p>
+                    <p class="mt-3 text-sm leading-6 text-stone-600">Экран, видеосвязь, доска, тихий фон для клиентских звонков.</p>
+                  </div>
+                </div>
+                <div class="rounded-[28px] border border-stone-300/75 bg-white/80 p-4">
+                  <div class="image-placeholder h-44 rounded-[24px]"></div>
+                  <div class="mt-4">
+                    <div class="flex items-center justify-between">
+                      <h3 class="text-xl font-bold text-stone-900">Форум</h3>
+                      <span class="soft-pill px-3 py-1 text-xs text-stone-600">6 мест</span>
+                    </div>
+                    <p class="mt-2 text-sm text-stone-500">Сити Парк, 5 этаж</p>
+                    <p class="mt-3 text-sm leading-6 text-stone-600">Удобна для быстрых синков и коротких встреч с гибридным форматом.</p>
+                  </div>
+                </div>
+                <div class="rounded-[28px] border border-stone-300/75 bg-white/80 p-4">
+                  <div class="image-placeholder h-44 rounded-[24px]"></div>
+                  <div class="mt-4">
+                    <div class="flex items-center justify-between">
+                      <h3 class="text-xl font-bold text-stone-900">Маяк</h3>
+                      <span class="soft-pill px-3 py-1 text-xs text-stone-600">14 мест</span>
+                    </div>
+                    <p class="mt-2 text-sm text-stone-500">Белая площадь, 7 этаж</p>
+                    <p class="mt-3 text-sm leading-6 text-stone-600">Большая переговорная для стратегических сессий и длинных командных встреч.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="screen-card">
+            <div class="screen-header flex items-center justify-between px-6 py-4">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-stone-500">Screen 5</p>
+                <h2 class="text-2xl font-bold text-stone-900">Найти комнату</h2>
+              </div>
+              <span class="soft-pill px-4 py-2 text-sm text-stone-600">Основной сценарий</span>
+            </div>
+            <div class="space-y-6 p-6 lg:p-8">
+              <div class="rounded-[28px] border border-stone-300/75 bg-white/80 p-5">
+                <div class="grid gap-4 lg:grid-cols-6">
+                  <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Офис: Белая площадь</div>
+                  <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Дата: 28.04</div>
+                  <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">14:00</div>
+                  <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">15:00</div>
+                  <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">от 6 мест</div>
+                  <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Этаж: любой</div>
+                </div>
+              </div>
+              <div class="grid gap-5 xl:grid-cols-2">
+                <div class="rounded-[28px] border border-stone-300/75 bg-white/80 p-4">
+                  <div class="grid gap-4 md:grid-cols-[180px_1fr]">
+                    <div class="image-placeholder h-40 rounded-[24px]"></div>
+                    <div>
+                      <div class="flex items-start justify-between gap-4">
+                        <div>
+                          <h3 class="text-xl font-bold text-stone-900">Север</h3>
+                          <p class="mt-1 text-sm text-stone-500">Белая площадь, 8 этаж</p>
+                        </div>
+                        <span class="rounded-full px-3 py-1 text-xs font-semibold status-created">свободна</span>
+                      </div>
+                      <p class="mt-3 text-sm leading-6 text-stone-600">Тихая комната для встреч до 10 человек. Экран, камера, флипчарт.</p>
+                      <div class="mt-4 flex flex-wrap gap-2 text-xs text-stone-600">
+                        <span class="soft-pill px-3 py-1">10 мест</span>
+                        <span class="soft-pill px-3 py-1">видеосвязь</span>
+                        <span class="soft-pill px-3 py-1">экран</span>
+                        <span class="soft-pill px-3 py-1">доска</span>
+                      </div>
+                      <div class="mt-5 flex gap-3">
+                        <button class="rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white">Забронировать</button>
+                        <button class="rounded-2xl border border-stone-300 px-4 py-3 text-sm font-semibold text-stone-700">Подробнее</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="rounded-[28px] border border-stone-300/75 bg-white/80 p-4">
+                  <div class="grid gap-4 md:grid-cols-[180px_1fr]">
+                    <div class="image-placeholder h-40 rounded-[24px]"></div>
+                    <div>
+                      <div class="flex items-start justify-between gap-4">
+                        <div>
+                          <h3 class="text-xl font-bold text-stone-900">Маяк</h3>
+                          <p class="mt-1 text-sm text-stone-500">Белая площадь, 7 этаж</p>
+                        </div>
+                        <span class="rounded-full px-3 py-1 text-xs font-semibold status-created">свободна</span>
+                      </div>
+                      <p class="mt-3 text-sm leading-6 text-stone-600">Подходит для продуктовых воркшопов. Удобное расположение и большая доска.</p>
+                      <div class="mt-4 flex flex-wrap gap-2 text-xs text-stone-600">
+                        <span class="soft-pill px-3 py-1">14 мест</span>
+                        <span class="soft-pill px-3 py-1">тв-панель</span>
+                        <span class="soft-pill px-3 py-1">видеосвязь</span>
+                        <span class="soft-pill px-3 py-1">конференц-спикер</span>
+                      </div>
+                      <div class="mt-5 flex gap-3">
+                        <button class="rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white">Забронировать</button>
+                        <button class="rounded-2xl border border-stone-300 px-4 py-3 text-sm font-semibold text-stone-700">Подробнее</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="screen-card">
+            <div class="screen-header flex items-center justify-between px-6 py-4">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-stone-500">Screen 6</p>
+                <h2 class="text-2xl font-bold text-stone-900">Детали переговорной</h2>
+              </div>
+              <span class="soft-pill px-4 py-2 text-sm text-stone-600">Комната "Север"</span>
+            </div>
+            <div class="grid gap-6 p-6 lg:grid-cols-[1.15fr_0.85fr] lg:p-8">
+              <div class="space-y-5">
+                <div class="image-placeholder h-72 rounded-[28px]"></div>
+                <div class="grid gap-4 md:grid-cols-3">
+                  <div class="image-placeholder h-28 rounded-3xl"></div>
+                  <div class="image-placeholder h-28 rounded-3xl"></div>
+                  <div class="image-placeholder h-28 rounded-3xl"></div>
+                </div>
+              </div>
+              <div class="rounded-[30px] border border-stone-300/75 bg-white/80 p-6">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 class="text-3xl font-bold text-stone-900">Север</h3>
+                    <p class="mt-2 text-sm text-stone-500">Белая площадь, 8 этаж</p>
+                  </div>
+                  <span class="rounded-full px-3 py-1 text-xs font-semibold status-created">активна</span>
+                </div>
+                <p class="mt-5 text-sm leading-7 text-stone-600">
+                  Просторная светлая переговорная для командных встреч, презентаций
+                  и интервью. Ориентирована на продуктивные рабочие сессии без
+                  визуального шума.
+                </p>
+                <div class="mt-5 flex flex-wrap gap-2 text-xs text-stone-600">
+                  <span class="soft-pill px-3 py-1">до 10 человек</span>
+                  <span class="soft-pill px-3 py-1">видеосвязь</span>
+                  <span class="soft-pill px-3 py-1">экран 65"</span>
+                  <span class="soft-pill px-3 py-1">магнитная доска</span>
+                </div>
+                <div class="mt-6 rounded-[26px] border border-stone-300/75 bg-stone-50 p-4">
+                  <h4 class="font-semibold text-stone-900">Занятость на сегодня</h4>
+                  <div class="mt-4 space-y-3">
+                    <div class="rounded-2xl bg-white px-4 py-3 text-sm text-stone-700">09:00-10:30 · Команда дизайна · занято</div>
+                    <div class="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">10:30-14:00 · свободно</div>
+                    <div class="rounded-2xl bg-white px-4 py-3 text-sm text-stone-700">14:00-15:00 · Планирование квартала · занято</div>
+                    <div class="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">15:00-19:00 · свободно</div>
+                  </div>
+                </div>
+                <button class="mt-6 w-full rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white">Создать бронирование</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="screen-card">
+            <div class="screen-header flex items-center justify-between px-6 py-4">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-stone-500">Screen 7</p>
+                <h2 class="text-2xl font-bold text-stone-900">Создать бронирование</h2>
+              </div>
+              <span class="soft-pill px-4 py-2 text-sm text-stone-600">Форма</span>
+            </div>
+            <div class="grid gap-6 p-6 lg:grid-cols-[1fr_0.7fr] lg:p-8">
+              <div class="rounded-[30px] border border-stone-300/75 bg-white/80 p-6">
+                <div class="grid gap-4 md:grid-cols-2">
+                  <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Комната: Север</div>
+                  <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Дата: 28 апреля</div>
+                  <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Начало: 15:30</div>
+                  <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Конец: 16:30</div>
+                  <div class="md:col-span-2 rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Название встречи: Ретро по релизу</div>
+                </div>
+                <button class="mt-6 rounded-2xl bg-orange-700 px-5 py-3 text-sm font-semibold text-white">Подтвердить бронь</button>
+              </div>
+              <div class="rounded-[30px] bg-stone-900 p-6 text-stone-50">
+                <p class="text-sm uppercase tracking-[0.28em] text-stone-300">Сводка</p>
+                <h3 class="mt-3 text-2xl font-bold">Проверьте параметры перед подтверждением</h3>
+                <div class="mt-5 space-y-4 text-sm leading-6 text-stone-200">
+                  <div class="rounded-3xl bg-white/10 p-4">Комната: Север, Белая площадь, 8 этаж</div>
+                  <div class="rounded-3xl bg-white/10 p-4">Интервал: 15:30-16:30, в пределах одного дня</div>
+                  <div class="rounded-3xl bg-white/10 p-4">Оснащение: экран, камера, доска</div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article id="my-bookings" class="screen-card">
+            <div class="screen-header flex items-center justify-between px-6 py-4">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-stone-500">Screen 8</p>
+                <h2 class="text-2xl font-bold text-stone-900">Мои бронирования</h2>
+              </div>
+              <span class="soft-pill px-4 py-2 text-sm text-stone-600">Текущие и прошлые</span>
+            </div>
+            <div class="space-y-4 p-6 lg:p-8">
+              <div class="rounded-[28px] border border-stone-300/75 bg-white/80 p-4">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <h3 class="text-xl font-bold text-stone-900">Планирование квартала</h3>
+                    <p class="mt-1 text-sm text-stone-500">Север · 28 апреля · 14:00-15:00</p>
+                  </div>
+                  <div class="flex flex-wrap gap-3">
+                    <span class="rounded-full px-3 py-1 text-xs font-semibold status-created">создано</span>
+                    <button class="rounded-2xl border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-700">Перенести</button>
+                    <button class="rounded-2xl border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-700">Сменить комнату</button>
+                    <button class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700">Отменить</button>
+                  </div>
+                </div>
+              </div>
+              <div class="rounded-[28px] border border-stone-300/75 bg-white/80 p-4">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <h3 class="text-xl font-bold text-stone-900">Интервью с кандидатом</h3>
+                    <p class="mt-1 text-sm text-stone-500">Форум · 25 апреля · 11:00-12:00</p>
+                  </div>
+                  <div class="flex flex-wrap gap-3">
+                    <span class="rounded-full px-3 py-1 text-xs font-semibold status-completed">завершено</span>
+                  </div>
+                </div>
+              </div>
+              <div class="rounded-[28px] border border-stone-300/75 bg-white/80 p-4">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <h3 class="text-xl font-bold text-stone-900">Презентация для партнёров</h3>
+                    <p class="mt-1 text-sm text-stone-500">Маяк · 22 апреля · 16:00-17:00</p>
+                  </div>
+                  <div class="flex flex-wrap gap-3">
+                    <span class="rounded-full px-3 py-1 text-xs font-semibold status-cancelled">отменено</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article id="profile" class="screen-card">
+            <div class="screen-header flex items-center justify-between px-6 py-4">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-stone-500">Screen 9</p>
+                <h2 class="text-2xl font-bold text-stone-900">Профиль</h2>
+              </div>
+              <span class="soft-pill px-4 py-2 text-sm text-stone-600">Личные данные</span>
+            </div>
+            <div class="grid gap-6 p-6 lg:grid-cols-[0.75fr_1.25fr] lg:p-8">
+              <div class="rounded-[30px] bg-stone-900 p-6 text-stone-50">
+                <div class="flex h-20 w-20 items-center justify-center rounded-3xl bg-white/10 text-2xl font-bold">АИ</div>
+                <h3 class="mt-5 text-2xl font-bold">Анна Иванова</h3>
+                <p class="mt-2 text-sm text-stone-300">anna.ivanova@company.ru</p>
+                <div class="mt-6 space-y-3 text-sm text-stone-200">
+                  <div class="rounded-3xl bg-white/10 p-4">Роль: сотрудник</div>
+                  <div class="rounded-3xl bg-white/10 p-4">Основной офис: Белая площадь</div>
+                </div>
+              </div>
+              <div class="rounded-[30px] border border-stone-300/75 bg-white/80 p-6">
+                <h3 class="text-xl font-bold text-stone-900">Редактирование профиля</h3>
+                <div class="mt-5 grid gap-4 md:grid-cols-2">
+                  <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Имя: Анна</div>
+                  <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Фамилия: Иванова</div>
+                  <div class="md:col-span-2 rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Email: anna.ivanova@company.ru</div>
+                </div>
+                <button class="mt-6 rounded-2xl bg-stone-900 px-5 py-3 text-sm font-semibold text-white">Сохранить изменения</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="screen-card">
+            <div class="screen-header flex items-center justify-between px-6 py-4">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-stone-500">Screen 10</p>
+                <h2 class="text-2xl font-bold text-stone-900">Админ: офисы</h2>
+              </div>
+              <span class="soft-pill px-4 py-2 text-sm text-stone-600">Операционный режим</span>
+            </div>
+            <div class="space-y-4 p-6 lg:p-8">
+              <div class="grid gap-4 rounded-[28px] border border-stone-300/75 bg-white/80 p-4 md:grid-cols-4">
+                <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Город: все</div>
+                <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Статус: все</div>
+                <button class="rounded-2xl border border-stone-300 px-4 py-3 text-sm font-semibold text-stone-700">Применить фильтры</button>
+                <button class="rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white">Создать офис</button>
+              </div>
+              <div class="space-y-3">
+                <div class="table-row rounded-[24px] border border-stone-300/75 bg-white/80 p-4 md:grid-cols-[120px_1.2fr_1fr_120px_240px]">
+                  <div class="image-placeholder h-20 rounded-2xl"></div>
+                  <div class="font-semibold text-stone-900">Белая площадь</div>
+                  <div class="text-sm text-stone-600">Москва, Лесная 5</div>
+                  <div><span class="rounded-full px-3 py-1 text-xs font-semibold status-created">активен</span></div>
+                  <div class="flex flex-wrap gap-2">
+                    <button class="rounded-2xl border border-stone-300 px-3 py-2 text-sm text-stone-700">Редактировать</button>
+                    <button class="rounded-2xl border border-stone-300 px-3 py-2 text-sm text-stone-700">Деактивировать</button>
+                  </div>
+                </div>
+                <div class="table-row rounded-[24px] border border-stone-300/75 bg-white/80 p-4 md:grid-cols-[120px_1.2fr_1fr_120px_240px]">
+                  <div class="image-placeholder h-20 rounded-2xl"></div>
+                  <div class="font-semibold text-stone-900">Невский</div>
+                  <div class="text-sm text-stone-600">Санкт-Петербург, Невский пр. 42</div>
+                  <div><span class="rounded-full px-3 py-1 text-xs font-semibold status-cancelled">неактивен</span></div>
+                  <div class="flex flex-wrap gap-2">
+                    <button class="rounded-2xl border border-stone-300 px-3 py-2 text-sm text-stone-700">Редактировать</button>
+                    <button class="rounded-2xl border border-stone-300 px-3 py-2 text-sm text-stone-700">Активировать</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="screen-card">
+            <div class="screen-header flex items-center justify-between px-6 py-4">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-stone-500">Screen 11</p>
+                <h2 class="text-2xl font-bold text-stone-900">Админ: комнаты</h2>
+              </div>
+              <span class="soft-pill px-4 py-2 text-sm text-stone-600">Каталог переговорных</span>
+            </div>
+            <div class="space-y-4 p-6 lg:p-8">
+              <div class="grid gap-4 rounded-[28px] border border-stone-300/75 bg-white/80 p-4 md:grid-cols-5">
+                <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Офис: Белая площадь</div>
+                <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Этаж: все</div>
+                <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Вместимость: 2-20</div>
+                <button class="rounded-2xl border border-stone-300 px-4 py-3 text-sm font-semibold text-stone-700">Применить</button>
+                <button class="rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white">Создать комнату</button>
+              </div>
+              <div class="space-y-3">
+                <div class="table-row rounded-[24px] border border-stone-300/75 bg-white/80 p-4 md:grid-cols-[120px_1.1fr_0.8fr_120px_150px_220px]">
+                  <div class="image-placeholder h-20 rounded-2xl"></div>
+                  <div class="font-semibold text-stone-900">Север</div>
+                  <div class="text-sm text-stone-600">Белая площадь, 8 этаж</div>
+                  <div class="text-sm text-stone-600">10 мест</div>
+                  <div><span class="rounded-full px-3 py-1 text-xs font-semibold status-created">активна</span></div>
+                  <div class="flex flex-wrap gap-2">
+                    <button class="rounded-2xl border border-stone-300 px-3 py-2 text-sm text-stone-700">Редактировать</button>
+                    <button class="rounded-2xl border border-stone-300 px-3 py-2 text-sm text-stone-700">Деактивировать</button>
+                  </div>
+                </div>
+                <div class="table-row rounded-[24px] border border-stone-300/75 bg-white/80 p-4 md:grid-cols-[120px_1.1fr_0.8fr_120px_150px_220px]">
+                  <div class="image-placeholder h-20 rounded-2xl"></div>
+                  <div class="font-semibold text-stone-900">Арка</div>
+                  <div class="text-sm text-stone-600">Белая площадь, 6 этаж</div>
+                  <div class="text-sm text-stone-600">4 места</div>
+                  <div><span class="rounded-full px-3 py-1 text-xs font-semibold status-cancelled">неактивна</span></div>
+                  <div class="flex flex-wrap gap-2">
+                    <button class="rounded-2xl border border-stone-300 px-3 py-2 text-sm text-stone-700">Редактировать</button>
+                    <button class="rounded-2xl border border-stone-300 px-3 py-2 text-sm text-stone-700">Активировать</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="screen-card">
+            <div class="screen-header flex items-center justify-between px-6 py-4">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-stone-500">Screen 12</p>
+                <h2 class="text-2xl font-bold text-stone-900">Админ: бронирования</h2>
+              </div>
+              <span class="soft-pill px-4 py-2 text-sm text-stone-600">Мониторинг загрузки</span>
+            </div>
+            <div class="space-y-4 p-6 lg:p-8">
+              <div class="grid gap-4 rounded-[28px] border border-stone-300/75 bg-white/80 p-4 md:grid-cols-5">
+                <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Статус: создано</div>
+                <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Пользователь: все</div>
+                <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Комната: все</div>
+                <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Период: эта неделя</div>
+                <button class="rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white">Обновить</button>
+              </div>
+              <div class="space-y-3">
+                <div class="table-row rounded-[24px] border border-stone-300/75 bg-white/80 p-4 md:grid-cols-[1.2fr_0.9fr_0.9fr_0.9fr_120px]">
+                  <div class="font-semibold text-stone-900">Планирование квартала</div>
+                  <div class="text-sm text-stone-600">Анна Иванова</div>
+                  <div class="text-sm text-stone-600">Север</div>
+                  <div class="text-sm text-stone-600">28.04 · 14:00-15:00</div>
+                  <div><span class="rounded-full px-3 py-1 text-xs font-semibold status-created">создано</span></div>
+                </div>
+                <div class="table-row rounded-[24px] border border-stone-300/75 bg-white/80 p-4 md:grid-cols-[1.2fr_0.9fr_0.9fr_0.9fr_120px]">
+                  <div class="font-semibold text-stone-900">Интервью с кандидатом</div>
+                  <div class="text-sm text-stone-600">Максим Орлов</div>
+                  <div class="text-sm text-stone-600">Форум</div>
+                  <div class="text-sm text-stone-600">25.04 · 11:00-12:00</div>
+                  <div><span class="rounded-full px-3 py-1 text-xs font-semibold status-completed">завершено</span></div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="screen-card">
+            <div class="screen-header flex items-center justify-between px-6 py-4">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-stone-500">Screen 13</p>
+                <h2 class="text-2xl font-bold text-stone-900">Админ: пользователи</h2>
+              </div>
+              <span class="soft-pill px-4 py-2 text-sm text-stone-600">Роли и доступ</span>
+            </div>
+            <div class="space-y-4 p-6 lg:p-8">
+              <div class="grid gap-4 rounded-[28px] border border-stone-300/75 bg-white/80 p-4 md:grid-cols-5">
+                <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Роль: все</div>
+                <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">Статус: активные</div>
+                <div class="rounded-2xl border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-700">С даты: 01.04</div>
+                <button class="rounded-2xl border border-stone-300 px-4 py-3 text-sm font-semibold text-stone-700">Применить</button>
+                <button class="rounded-2xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white">Пригласить пользователя</button>
+              </div>
+              <div class="space-y-3">
+                <div class="table-row rounded-[24px] border border-stone-300/75 bg-white/80 p-4 md:grid-cols-[1fr_1.2fr_140px_120px_320px]">
+                  <div class="font-semibold text-stone-900">Анна Иванова</div>
+                  <div class="text-sm text-stone-600">anna.ivanova@company.ru</div>
+                  <div class="text-sm text-stone-600">employee</div>
+                  <div><span class="rounded-full px-3 py-1 text-xs font-semibold status-created">активен</span></div>
+                  <div class="flex flex-wrap gap-2">
+                    <button class="rounded-2xl border border-stone-300 px-3 py-2 text-sm text-stone-700">Сделать админом</button>
+                    <button class="rounded-2xl border border-stone-300 px-3 py-2 text-sm text-stone-700">Деактивировать</button>
+                  </div>
+                </div>
+                <div class="table-row rounded-[24px] border border-stone-300/75 bg-white/80 p-4 md:grid-cols-[1fr_1.2fr_140px_120px_320px]">
+                  <div class="font-semibold text-stone-900">Егор Смирнов</div>
+                  <div class="text-sm text-stone-600">egor.smirnov@company.ru</div>
+                  <div class="text-sm text-stone-600">admin</div>
+                  <div><span class="rounded-full px-3 py-1 text-xs font-semibold status-created">активен</span></div>
+                  <div class="flex flex-wrap gap-2">
+                    <button class="rounded-2xl border border-stone-300 px-3 py-2 text-sm text-stone-700">Сделать сотрудником</button>
+                    <button class="rounded-2xl border border-stone-300 px-3 py-2 text-sm text-stone-700">Деактивировать</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
