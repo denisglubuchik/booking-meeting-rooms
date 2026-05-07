@@ -1,3 +1,4 @@
+import logging
 import uuid
 from datetime import timedelta
 
@@ -15,8 +16,14 @@ from usecases.interfaces.uow import UoWInterface
 class CreateBookingUseCase:
     def __init__(self, uow: UoWInterface) -> None:
         self.uow = uow
+        self.logger = logging.getLogger("usecases.bookings.create_booking")
 
     async def execute(self, dto: CreateBookingDTO) -> BookingResponseDTO:
+        self.logger.debug(
+            "create_booking_usecase_started room_id=%s created_by=%s",
+            dto.room_id,
+            dto.created_by,
+        )
         async with self.uow:
             start_of_day = dto.start_time.replace(
                 hour=0,
@@ -64,6 +71,10 @@ class CreateBookingUseCase:
             )
             await self.uow.booking_participants_repo.save(organizer)
             await self.uow.booking_history_repo.save(booking_history)
+            self.logger.debug(
+                "create_booking_usecase_finished booking_id=%s",
+                saved.id,
+            )
 
             return BookingResponseDTO(
                 id=saved.id,

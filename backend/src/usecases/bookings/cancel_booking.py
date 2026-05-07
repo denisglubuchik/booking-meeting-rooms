@@ -1,3 +1,5 @@
+import logging
+
 from domain.entities.user import UserRole
 from usecases.dto.booking import BookingResponseDTO, CancelBookingDTO
 from usecases.exceptions import ForbiddenError, NotFoundError
@@ -8,16 +10,28 @@ from usecases.interfaces.uow import UoWInterface
 class CancelBookingUseCase:
     def __init__(self, uow: UoWInterface) -> None:
         self.uow = uow
+        self.logger = logging.getLogger("usecases.bookings.cancel_booking")
 
     async def execute(self, dto: CancelBookingDTO) -> BookingResponseDTO:
+        self.logger.debug(
+            "cancel_booking_usecase_started booking_id=%s actor_id=%s",
+            dto.id,
+            dto.actor_id,
+        )
         async with self.uow:
             booking = await self.uow.bookings_repo.get_by_id(dto.id)
             if not booking:
+                self.logger.warning("cancel_booking_not_found booking_id=%s", dto.id)
                 raise NotFoundError(f"Booking with id {dto.id} not found")
             if (
                 dto.actor_role != UserRole.ADMIN
                 and booking.created_by != dto.actor_id
             ):
+                self.logger.warning(
+                    "cancel_booking_forbidden booking_id=%s actor_id=%s",
+                    dto.id,
+                    dto.actor_id,
+                )
                 raise ForbiddenError(
                     "Not enough permissions for booking action",
                 )
@@ -26,6 +40,7 @@ class CancelBookingUseCase:
                 uow=self.uow,
                 booking=booking,
             )
+            self.logger.debug("cancel_booking_usecase_finished booking_id=%s", saved.id)
 
             return BookingResponseDTO(
                 id=saved.id,

@@ -1,7 +1,10 @@
+import logging
+
 import aioboto3
 from botocore.client import Config
 
 from core.config import S3Config
+from infra.cache.decorators import cache, invalidate_cache
 from infra.interfaces.cache import CacheInterface
 from infra.interfaces.file_storage import FileStorageInterface
 
@@ -16,8 +19,14 @@ class S3FileStorage(FileStorageInterface):
         cache: CacheInterface | None = None,
     ) -> None:
         self._config = config
-        self._cache = cache
+        self.cache = cache
         self._session = aioboto3.Session()
+        self._logger = logging.getLogger("infra.integrations.s3storage")
+        self._logger.info(
+            "s3_storage_initialized bucket=%s region=%s",
+            config.S3_BUCKET,
+            config.S3_REGION,
+        )
 
     @staticmethod
     def _client_config() -> Config:
@@ -38,6 +47,12 @@ class S3FileStorage(FileStorageInterface):
         data: bytes,
         content_type: str,
     ) -> None:
+        self._logger.info(
+            "s3_upload_started key=%s content_type=%s size_bytes=%s",
+            key,
+            content_type,
+            len(data),
+        )
         async with self._session.client(
             "s3",
             region_name=self._config.S3_REGION,
@@ -53,14 +68,10 @@ class S3FileStorage(FileStorageInterface):
                 ContentType=content_type,
                 CacheControl=self._CACHE_CONTROL_VALUE,
             )
+        self._logger.info("s3_upload_finished key=%s", key)
 
+    @cache(key_prefix="s3", return_type=str)
     async def generate_presigned_download_url(self, *, key: str) -> str:
-        cache_key = self._presigned_url_cache_key(key)
-        if self._cache is not None:
-            cached_url = await self._cache.get(cache_key, str)
-            if cached_url:
-                return cached_url
-
         async with self._session.client(
             "s3",
             region_name=self._config.S3_REGION,
@@ -77,15 +88,12 @@ class S3FileStorage(FileStorageInterface):
                 },
                 ExpiresIn=self._config.S3_PRESIGN_EXPIRES_SECONDS,
             )
-            if self._cache is not None:
-                await self._cache.set(
-                    cache_key,
-                    presigned_url,
-                    ttl=self._config.S3_PRESIGN_EXPIRES_SECONDS - 60,
-                )
+            self._logger.info("s3_presign_finished key=%s", key)
             return presigned_url
 
+    @invalidate_cache(key_prefix="s3")
     async def delete(self, *, key: str) -> None:
+        self._logger.info("s3_delete_started key=%s", key)
         async with self._session.client(
             "s3",
             region_name=self._config.S3_REGION,
@@ -95,5 +103,4 @@ class S3FileStorage(FileStorageInterface):
             config=self._resolve_client_config(),
         ) as s3:
             await s3.delete_object(Bucket=self._config.S3_BUCKET, Key=key)
-        if self._cache is not None:
-            await self._cache.delete(self._presigned_url_cache_key(key))
+        self._logger.info("s3_delete_finished key=%s", key)

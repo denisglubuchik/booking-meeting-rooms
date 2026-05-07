@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 
 from usecases.dto.office import OfficeResponseDTO
@@ -9,18 +10,32 @@ from usecases.interfaces.uow import UoWInterface
 class DeactivateOfficeUseCase:
     def __init__(self, uow: UoWInterface) -> None:
         self.uow = uow
+        self.logger = logging.getLogger("usecases.offices.deactivate_office")
 
     async def execute(
         self,
         office_id: UUID,
         performed_by: UUID | None = None,
     ) -> OfficeResponseDTO:
+        self.logger.debug(
+            "deactivate_office_usecase_started office_id=%s",
+            office_id,
+        )
         async with self.uow:
             office = await self.uow.offices_repo.get_by_id(office_id)
             if not office:
+                self.logger.warning(
+                    "deactivate_office_usecase_not_found office_id=%s",
+                    office_id,
+                )
                 raise NotFoundError(f"Office with id {office_id} not found")
 
             rooms = await self.uow.rooms_repo.get_by_office_id(office.id)
+            self.logger.debug(
+                "deactivate_office_rooms_found office_id=%s count=%s",
+                office.id,
+                len(rooms),
+            )
             office.deactivate()
             saved = await self.uow.offices_repo.save(office)
             booking_history_items = []
@@ -47,6 +62,10 @@ class DeactivateOfficeUseCase:
 
             await self.uow.booking_history_repo.save_many(
                 booking_history_items,
+            )
+            self.logger.debug(
+                "deactivate_office_usecase_finished office_id=%s",
+                saved.id,
             )
 
             return OfficeResponseDTO(

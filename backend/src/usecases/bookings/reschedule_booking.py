@@ -1,3 +1,4 @@
+import logging
 import uuid
 from datetime import timedelta
 
@@ -13,16 +14,28 @@ from usecases.interfaces.uow import UoWInterface
 class RescheduleBookingUseCase:
     def __init__(self, uow: UoWInterface) -> None:
         self.uow = uow
+        self.logger = logging.getLogger("usecases.bookings.reschedule_booking")
 
     async def execute(self, dto: RescheduleBookingDTO) -> BookingResponseDTO:
+        self.logger.debug(
+            "reschedule_booking_usecase_started booking_id=%s actor_id=%s",
+            dto.id,
+            dto.actor_id,
+        )
         async with self.uow:
             booking = await self.uow.bookings_repo.get_by_id(dto.id)
             if not booking:
+                self.logger.warning("reschedule_booking_not_found booking_id=%s", dto.id)
                 raise NotFoundError(f"Booking with id {dto.id} not found")
             if (
                 dto.actor_role != UserRole.ADMIN
                 and booking.created_by != dto.actor_id
             ):
+                self.logger.warning(
+                    "reschedule_booking_forbidden booking_id=%s actor_id=%s",
+                    dto.id,
+                    dto.actor_id,
+                )
                 raise ForbiddenError(
                     "Not enough permissions for booking action",
                 )
@@ -68,6 +81,10 @@ class RescheduleBookingUseCase:
 
             await self.uow.bookings_repo.save(booking)
             await self.uow.booking_history_repo.save(booking_history)
+            self.logger.debug(
+                "reschedule_booking_usecase_finished booking_id=%s",
+                booking.id,
+            )
 
             return BookingResponseDTO(
                 id=booking.id,

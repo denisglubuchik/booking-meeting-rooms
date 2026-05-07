@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 
 from infra.interfaces.file_storage import FileStorageInterface
@@ -14,11 +15,20 @@ class GetOfficeDetailsUseCase:
     ) -> None:
         self.office_repo = office_repo
         self.file_storage = file_storage
+        self.logger = logging.getLogger("usecases.offices.get_office_details")
 
     async def execute(self, office_id: UUID) -> OfficeResponseDTO:
+        self.logger.debug(
+            "get_office_details_usecase_started office_id=%s",
+            office_id,
+        )
         async with self.office_repo:
             office = await self.office_repo.get_by_id(office_id)
             if not office:
+                self.logger.warning(
+                    "get_office_details_usecase_not_found office_id=%s",
+                    office_id,
+                )
                 raise NotFoundError(f"Office with id={office_id} not found")
             image_url = None
             if office.image_key:
@@ -28,6 +38,10 @@ class GetOfficeDetailsUseCase:
                     )
                 )
 
+            self.logger.debug(
+                "get_office_details_usecase_finished office_id=%s",
+                office.id,
+            )
             return OfficeResponseDTO(
                 id=office.id,
                 name=office.name,

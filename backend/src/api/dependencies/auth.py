@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated
 from uuid import UUID
 
@@ -17,6 +18,7 @@ from infra.interfaces.access_token import (
 )
 
 bearer_scheme = HTTPBearer(auto_error=False)
+logger = logging.getLogger("api.auth")
 
 
 @inject
@@ -27,6 +29,7 @@ def get_current_user(
     ),
 ) -> AuthenticatedUser:
     if credentials is None:
+        logger.warning("auth_missing_bearer_token")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing bearer token",
@@ -35,6 +38,7 @@ def get_current_user(
     try:
         payload = token_verifier.verify(credentials.credentials)
     except AccessTokenVerificationError as error:
+        logger.warning("auth_invalid_access_token")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid access token",
@@ -48,17 +52,20 @@ def get_current_user(
             is_active=bool(payload["is_active"]),
         )
     except (KeyError, TypeError, ValueError) as error:
+        logger.warning("auth_invalid_token_payload")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid access token",
         ) from error
 
     if not user.is_active:
+        logger.warning("auth_deactivated_user user_id=%s", user.id)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User is deactivated",
         )
 
+    logger.info("auth_user_resolved user_id=%s role=%s", user.id, user.role.value)
     return user
 
 
@@ -66,10 +73,16 @@ def require_admin(
     current_user: AuthenticatedUser = Depends(get_current_user),
 ) -> AuthenticatedUser:
     if current_user.role != UserRole.ADMIN:
+        logger.warning(
+            "auth_admin_access_denied user_id=%s role=%s",
+            current_user.id,
+            current_user.role.value,
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required",
         )
+    logger.info("auth_admin_access_granted user_id=%s", current_user.id)
     return current_user
 
 

@@ -15,21 +15,31 @@ class DBOfficesRepository(
 ):
     @invalidate_cache(key_prefix="office")
     async def save(self, office: Office) -> Office:
+        self._logger.debug("save_office_started office_id=%s", office.id)
         model = OfficeModel.from_domain(office)
         merged_model = await self._session.merge(model)
         await self._session.flush()
+        self._logger.debug("save_office_finished office_id=%s", merged_model.id)
         return merged_model.to_domain()
 
     @invalidate_cache(key_prefix="office")
     async def delete_office(self, office: Office) -> None:
+        self._logger.debug("delete_office_started office_id=%s", office.id)
         stmt = delete(OfficeModel).where(OfficeModel.id == office.id)
         await self._session.execute(stmt)
+        self._logger.debug("delete_office_finished office_id=%s", office.id)
 
     @cache(key_prefix="office", return_type=Office)
     async def get_by_id(self, office_id: UUID) -> Office | None:
+        self._logger.debug("get_office_by_id_started office_id=%s", office_id)
         stmt = select(OfficeModel).where(OfficeModel.id == office_id)
         result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
+        self._logger.debug(
+            "get_office_by_id_finished office_id=%s found=%s",
+            office_id,
+            model is not None,
+        )
         return model.to_domain() if model else None
 
     @cache(key_prefix="office", return_type=list[Office])
@@ -41,6 +51,7 @@ class DBOfficesRepository(
         limit: int = 100,
         offset: int = 0,
     ) -> list[Office]:
+        self._logger.debug("get_all_offices_repository_started")
         stmt = select(OfficeModel)
 
         if is_active is not None:
@@ -51,4 +62,6 @@ class DBOfficesRepository(
         stmt = stmt.limit(limit).offset(offset)
 
         result = await self._session.execute(stmt)
-        return [model.to_domain() for model in result.scalars().all()]
+        offices = [model.to_domain() for model in result.scalars().all()]
+        self._logger.debug("get_all_offices_repository_finished count=%s", len(offices))
+        return offices

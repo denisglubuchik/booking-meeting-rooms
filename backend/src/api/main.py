@@ -1,3 +1,5 @@
+import logging
+
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,6 +15,7 @@ from core.logging import setup_logging
 from infra.dependencies import container
 
 setup_logging(LoggingConfig())
+logger = logging.getLogger("api.main")
 
 app = FastAPI(title="Booking meeting rooms API")
 register_exception_handlers(app)
@@ -39,3 +42,4 @@ app.include_router(users_router, prefix="/users")
 
 
 setup_dishka(container, app)
+logger.info("application_initialized title=%s", app.title)

@@ -18,29 +18,46 @@ class DBMeetingRoomsRepository(
 ):
     @invalidate_cache(key_prefix="meeting_room")
     async def save(self, room: MeetingRoom) -> MeetingRoom:
+        self._logger.debug("save_room_started room_id=%s", room.id)
         model = MeetingRoomModel.from_domain(room)
         merged_model = await self._session.merge(model)
         await self._session.flush()
+        self._logger.debug("save_room_finished room_id=%s", merged_model.id)
         return merged_model.to_domain()
 
     @invalidate_cache(key_prefix="meeting_room")
     async def delete_room(self, room: MeetingRoom) -> None:
+        self._logger.debug("delete_room_started room_id=%s", room.id)
         stmt = delete(MeetingRoomModel).where(MeetingRoomModel.id == room.id)
         await self._session.execute(stmt)
+        self._logger.debug("delete_room_finished room_id=%s", room.id)
 
     @cache(key_prefix="meeting_room", return_type=MeetingRoom)
     async def get_by_id(self, room_id: UUID) -> MeetingRoom | None:
+        self._logger.debug("get_room_by_id_started room_id=%s", room_id)
         stmt = select(MeetingRoomModel).where(MeetingRoomModel.id == room_id)
         result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
+        self._logger.debug(
+            "get_room_by_id_finished room_id=%s found=%s",
+            room_id,
+            model is not None,
+        )
         return model.to_domain() if model else None
 
     async def get_by_office_id(self, office_id: UUID) -> list[MeetingRoom]:
+        self._logger.debug("get_rooms_by_office_started office_id=%s", office_id)
         stmt = select(MeetingRoomModel).where(
             MeetingRoomModel.office_id == office_id,
         )
         result = await self._session.execute(stmt)
-        return [model.to_domain() for model in result.scalars().all()]
+        rooms = [model.to_domain() for model in result.scalars().all()]
+        self._logger.debug(
+            "get_rooms_by_office_finished office_id=%s count=%s",
+            office_id,
+            len(rooms),
+        )
+        return rooms
 
     async def get_all(
         self,
@@ -53,6 +70,7 @@ class DBMeetingRoomsRepository(
         limit: int = 100,
         offset: int = 0,
     ) -> list[MeetingRoom]:
+        self._logger.debug("get_all_rooms_repository_started")
         stmt = select(MeetingRoomModel)
 
         if is_active is not None:
@@ -69,7 +87,9 @@ class DBMeetingRoomsRepository(
         stmt = stmt.limit(limit).offset(offset)
 
         result = await self._session.execute(stmt)
-        return [model.to_domain() for model in result.scalars().all()]
+        rooms = [model.to_domain() for model in result.scalars().all()]
+        self._logger.debug("get_all_rooms_repository_finished count=%s", len(rooms))
+        return rooms
 
     async def get_rooms_with_bookings(
         self,
@@ -82,6 +102,7 @@ class DBMeetingRoomsRepository(
         start_time_gte: datetime,
         end_time_lte: datetime,
     ) -> list[MeetingRoom]:
+        self._logger.debug("get_rooms_with_bookings_started")
         stmt = (
             select(MeetingRoomModel)
             .outerjoin(
@@ -107,7 +128,9 @@ class DBMeetingRoomsRepository(
             stmt = stmt.where(MeetingRoomModel.capacity <= capacity_lte)
 
         result = await self._session.execute(stmt)
-        return [
+        rooms = [
             model.to_domain(include_bookings=True)
             for model in result.scalars().unique().all()
         ]
+        self._logger.debug("get_rooms_with_bookings_finished count=%s", len(rooms))
+        return rooms

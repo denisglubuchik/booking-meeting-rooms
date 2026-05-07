@@ -23,8 +23,10 @@ class SQLAlchemyUOW(UoWInterface):
     ) -> None:
         self._session_factory = session_factory
         self._cache = cache
+        self._logger = logging.getLogger("infra.db.uow")
 
     async def __aenter__(self) -> Self:
+        self._logger.debug("uow_enter")
         self._session = self._session_factory()
 
         self.offices_repo = DBOfficesRepository(
@@ -51,13 +53,17 @@ class SQLAlchemyUOW(UoWInterface):
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001
         if exc_val:
+            self._logger.warning("uow_rollback_on_exception error=%s", str(exc_val))
             await self._session.rollback()
             await self._session.close()
             raise exc_val
         try:
             await self._session.commit()
-        except Exception as e:
-            logging.exception(str(e))
+            self._logger.debug("uow_commit_success")
+        except Exception:
+            self._logger.exception("uow_commit_failed")
             await self._session.rollback()
+            self._logger.debug("uow_rollback_after_commit_failure")
         finally:
             await self._session.close()
+            self._logger.debug("uow_close")

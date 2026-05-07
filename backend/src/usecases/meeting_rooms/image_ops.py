@@ -1,3 +1,4 @@
+import logging
 import uuid
 from uuid import UUID
 
@@ -20,6 +21,7 @@ class UploadRoomImageUseCase:
     ) -> None:
         self.room_repo = room_repo
         self.file_storage = file_storage
+        self.logger = logging.getLogger("usecases.meeting_rooms.image_ops")
 
     async def execute(
         self,
@@ -28,14 +30,27 @@ class UploadRoomImageUseCase:
         content_type: str,
         data: bytes,
     ) -> None:
+        self.logger.debug(
+            "upload_room_image_usecase_started room_id=%s content_type=%s size_bytes=%s",
+            room_id,
+            content_type,
+            len(data),
+        )
         if content_type not in _ALLOWED_IMAGE_CONTENT_TYPES:
+            self.logger.warning(
+                "upload_room_image_unsupported_content_type room_id=%s content_type=%s",
+                room_id,
+                content_type,
+            )
             raise BadRequest("Unsupported image content type")
         if not data:
+            self.logger.warning("upload_room_image_empty_payload room_id=%s", room_id)
             raise BadRequest("Image file is empty")
 
         async with self.room_repo:
             room = await self.room_repo.get_by_id(room_id)
             if room is None:
+                self.logger.warning("upload_room_image_not_found room_id=%s", room_id)
                 raise NotFoundError(f"Room with id={room_id} not found")
 
             ext = content_type.split("/")[1]
@@ -52,6 +67,7 @@ class UploadRoomImageUseCase:
 
             if old_image_key and old_image_key != image_key:
                 await self.file_storage.delete(key=old_image_key)
+            self.logger.debug("upload_room_image_usecase_finished room_id=%s", room_id)
 
 
 class DeleteRoomImageUseCase:
@@ -62,14 +78,18 @@ class DeleteRoomImageUseCase:
     ) -> None:
         self.room_repo = room_repo
         self.file_storage = file_storage
+        self.logger = logging.getLogger("usecases.meeting_rooms.image_ops")
 
     async def execute(self, room_id: UUID) -> None:
+        self.logger.debug("delete_room_image_usecase_started room_id=%s", room_id)
         async with self.room_repo:
             room = await self.room_repo.get_by_id(room_id)
             if room is None:
+                self.logger.warning("delete_room_image_not_found room_id=%s", room_id)
                 raise NotFoundError(f"Room with id={room_id} not found")
 
             if room.image_key:
                 await self.file_storage.delete(key=room.image_key)
                 room.image_key = None
                 await self.room_repo.save(room)
+            self.logger.debug("delete_room_image_usecase_finished room_id=%s", room_id)

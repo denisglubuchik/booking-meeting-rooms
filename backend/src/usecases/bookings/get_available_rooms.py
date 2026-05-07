@@ -1,3 +1,5 @@
+import logging
+
 from domain.entities.booking import TimeRange
 from domain.services.booking_policy import BookingPolicy
 from usecases.dto.booking import AvailableRoomsFiltersDTO
@@ -16,11 +18,13 @@ class GetAvailableRoomsUseCase:
     ) -> None:
         self.room_repo = room_repo
         self.booking_repo = booking_repo
+        self.logger = logging.getLogger("usecases.bookings.get_available_rooms")
 
     async def execute(
         self,
         filters: AvailableRoomsFiltersDTO,
     ) -> list[RoomResponseDTO]:
+        self.logger.debug("get_available_rooms_usecase_started")
         async with self.room_repo, self.booking_repo:
             rooms_with_bookings = await self.room_repo.get_rooms_with_bookings(
                 is_active=True,
@@ -33,6 +37,7 @@ class GetAvailableRoomsUseCase:
             )
 
             if not rooms_with_bookings:
+                self.logger.debug("get_available_rooms_usecase_finished count=0")
                 return []
 
             requested_time_range = TimeRange(
@@ -48,6 +53,10 @@ class GetAvailableRoomsUseCase:
                     room.bookings,
                 )
             ]
+            self.logger.debug(
+                "get_available_rooms_usecase_finished count=%s",
+                len(available_rooms),
+            )
 
             return [
                 RoomResponseDTO(

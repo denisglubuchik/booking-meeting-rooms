@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 
 from domain.entities.booking_participant import BookingParticipantRole
@@ -19,13 +20,19 @@ class GetBookingDetailsUseCase:
     ) -> None:
         self.uow = uow
         self.file_storage = file_storage
+        self.logger = logging.getLogger("usecases.bookings.get_booking_details")
 
     async def execute(self, booking_id: UUID) -> BookingDetailsResponseDTO:
+        self.logger.debug("get_booking_details_usecase_started booking_id=%s", booking_id)
         async with self.uow:
             booking_context = await self.uow.bookings_repo.get_with_room_office(
                 booking_id,
             )
             if booking_context is None:
+                self.logger.warning(
+                    "get_booking_details_usecase_not_found booking_id=%s",
+                    booking_id,
+                )
                 raise NotFoundError(f"Booking with id {booking_id} not found")
             booking, room, office = booking_context
 
@@ -33,6 +40,11 @@ class GetBookingDetailsUseCase:
                 self.uow.booking_participants_repo.get_with_users_by_booking_id(
                     booking.id,
                 )
+            )
+            self.logger.debug(
+                "get_booking_details_participants_fetched booking_id=%s count=%s",
+                booking.id,
+                len(participant_rows),
             )
             participants: list[BookingParticipantDetailsDTO] = []
             for participant, user in participant_rows:
@@ -74,6 +86,10 @@ class GetBookingDetailsUseCase:
                     )
                 )
 
+            self.logger.debug(
+                "get_booking_details_usecase_finished booking_id=%s",
+                booking.id,
+            )
             return BookingDetailsResponseDTO(
                 booking=BookingResponseDTO(
                     id=booking.id,

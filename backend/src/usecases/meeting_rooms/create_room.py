@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from domain.entities.meeting_room import MeetingRoom
@@ -20,11 +21,21 @@ class CreateRoomUseCase:
         self.room_repo = room_repo
         self.office_repo = office_repo
         self.file_storage = file_storage
+        self.logger = logging.getLogger("usecases.meeting_rooms.create_room")
 
     async def execute(self, dto: CreateRoomDTO) -> RoomResponseDTO:
+        self.logger.debug(
+            "create_room_usecase_started office_id=%s name=%s",
+            dto.office_id,
+            dto.name,
+        )
         async with self.room_repo, self.office_repo:
             office = await self.office_repo.get_by_id(dto.office_id)
             if office is None:
+                self.logger.warning(
+                    "create_room_usecase_office_not_found office_id=%s",
+                    dto.office_id,
+                )
                 raise NotFoundError(f"Office with id={dto.office_id} not found")
 
             room = MeetingRoom(
@@ -37,6 +48,7 @@ class CreateRoomUseCase:
                 equipment=dto.equipment,
             )
             saved = await self.room_repo.save(room)
+            self.logger.debug("create_room_usecase_finished room_id=%s", saved.id)
             image_url = None
             if saved.image_key:
                 image_url = await (

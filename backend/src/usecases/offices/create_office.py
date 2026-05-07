@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from domain.entities.office import Office
@@ -14,8 +15,14 @@ class CreateOfficeUseCase:
     ) -> None:
         self.office_repo = office_repo
         self.file_storage = file_storage
+        self.logger = logging.getLogger("usecases.offices.create_office")
 
     async def execute(self, dto: CreateOfficeDTO) -> OfficeResponseDTO:
+        self.logger.debug(
+            "create_office_usecase_started name=%s city=%s",
+            dto.name,
+            dto.city,
+        )
         async with self.office_repo:
             office = Office(
                 id=uuid.uuid4(),
@@ -24,6 +31,10 @@ class CreateOfficeUseCase:
                 address=dto.address,
             )
             saved = await self.office_repo.save(office)
+            self.logger.debug(
+                "create_office_usecase_finished office_id=%s",
+                saved.id,
+            )
             image_url = None
             if saved.image_key:
                 image_url = await (

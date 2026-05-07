@@ -16,28 +16,44 @@ class DBUsersRepository(
 ):
     @invalidate_cache(key_prefix="user")
     async def save(self, user: User) -> User:
+        self._logger.debug("save_user_started user_id=%s", user.id)
         model = UserModel.from_domain(user)
         merged_model = await self._session.merge(model)
         await self._session.flush()
+        self._logger.debug("save_user_finished user_id=%s", merged_model.id)
         return merged_model.to_domain()
 
     @invalidate_cache(key_prefix="user")
     async def delete_user(self, user: User) -> None:
+        self._logger.debug("delete_user_started user_id=%s", user.id)
         stmt = delete(UserModel).where(UserModel.id == user.id)
         await self._session.execute(stmt)
+        self._logger.debug("delete_user_finished user_id=%s", user.id)
 
     @cache(key_prefix="user", return_type=User)
     async def get_by_id(self, user_id: UUID) -> User | None:
+        self._logger.debug("get_user_by_id_started user_id=%s", user_id)
         stmt = select(UserModel).where(UserModel.id == user_id)
         result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
+        self._logger.debug(
+            "get_user_by_id_finished user_id=%s found=%s",
+            user_id,
+            model is not None,
+        )
         return model.to_domain() if model else None
 
     @cache(key_prefix="user", return_type=User)
     async def get_by_email(self, email: str) -> User | None:
+        self._logger.debug("get_user_by_email_started email=%s", email)
         stmt = select(UserModel).where(UserModel.email == email)
         result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
+        self._logger.debug(
+            "get_user_by_email_finished email=%s found=%s",
+            email,
+            model is not None,
+        )
         return model.to_domain() if model else None
 
     async def search_active(
@@ -46,6 +62,7 @@ class DBUsersRepository(
         query: str,
         limit: int = 20,
     ) -> list[User]:
+        self._logger.debug("search_active_users_started query=%s limit=%s", query, limit)
         pattern = f"%{query}%"
         stmt = (
             select(UserModel)
@@ -60,7 +77,9 @@ class DBUsersRepository(
             .limit(limit)
         )
         result = await self._session.execute(stmt)
-        return [model.to_domain() for model in result.scalars().all()]
+        users = [model.to_domain() for model in result.scalars().all()]
+        self._logger.debug("search_active_users_finished count=%s", len(users))
+        return users
 
     async def get_all(
         self,
@@ -72,6 +91,7 @@ class DBUsersRepository(
         limit: int = 100,
         offset: int = 0,
     ) -> list[User]:
+        self._logger.debug("get_all_users_repository_started")
         stmt = select(UserModel)
 
         if is_active is not None:
@@ -86,4 +106,6 @@ class DBUsersRepository(
         stmt = stmt.limit(limit).offset(offset)
 
         result = await self._session.execute(stmt)
-        return [model.to_domain() for model in result.scalars().all()]
+        users = [model.to_domain() for model in result.scalars().all()]
+        self._logger.debug("get_all_users_repository_finished count=%s", len(users))
+        return users
