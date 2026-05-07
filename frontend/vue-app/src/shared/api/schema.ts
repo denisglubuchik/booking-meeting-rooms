@@ -368,6 +368,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/bookings/{booking_id}/participants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Booking Participant */
+        post: operations["add_booking_participant_bookings__booking_id__participants_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/{booking_id}/participants/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Booking Participant */
+        delete: operations["remove_booking_participant_bookings__booking_id__participants__user_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users/": {
         parameters: {
             query?: never;
@@ -377,6 +411,23 @@ export interface paths {
         };
         /** Get Users */
         get: operations["get_users_users__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lookup Users */
+        get: operations["lookup_users_users_lookup_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -532,6 +583,14 @@ export interface components {
             /** Access Token */
             access_token: string;
         };
+        /** AddBookingParticipantRequest */
+        AddBookingParticipantRequest: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
         /** Body_upload_office_image_offices__office_id__image_post */
         Body_upload_office_image_offices__office_id__image_post: {
             /** Image */
@@ -542,6 +601,65 @@ export interface components {
             /** Image */
             image: string;
         };
+        /** BookingDetailsResponse */
+        BookingDetailsResponse: {
+            booking: components["schemas"]["BookingResponse"];
+            room: components["schemas"]["RoomResponse"];
+            office: components["schemas"]["OfficeResponse"];
+            /** Participants */
+            participants: components["schemas"]["BookingParticipantDetailsResponse"][];
+        };
+        /** BookingParticipantDetailsResponse */
+        BookingParticipantDetailsResponse: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Full Name */
+            full_name: string;
+            /** Email */
+            email: string;
+            role: components["schemas"]["BookingParticipantRole"];
+            /** Added By */
+            added_by: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** BookingParticipantResponse */
+        BookingParticipantResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Booking Id
+             * Format: uuid
+             */
+            booking_id: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            role: components["schemas"]["BookingParticipantRole"];
+            /** Added By */
+            added_by: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * BookingParticipantRole
+         * @enum {string}
+         */
+        BookingParticipantRole: "organizer" | "participant";
         /** BookingResponse */
         BookingResponse: {
             /**
@@ -742,6 +860,18 @@ export interface components {
         };
         /** UpdateUserRequest */
         UpdateUserRequest: {
+            /** Full Name */
+            full_name: string;
+            /** Email */
+            email: string;
+        };
+        /** UserLookupResponse */
+        UserLookupResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
             /** Full Name */
             full_name: string;
             /** Email */
@@ -1601,7 +1731,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BookingResponse"];
+                    "application/json": components["schemas"]["BookingDetailsResponse"];
                 };
             };
             /** @description Validation Error */
@@ -1716,6 +1846,71 @@ export interface operations {
             };
         };
     };
+    add_booking_participant_bookings__booking_id__participants_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                booking_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddBookingParticipantRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookingParticipantResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_booking_participant_bookings__booking_id__participants__user_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                booking_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_users_users__get: {
         parameters: {
             query?: {
@@ -1739,6 +1934,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    lookup_users_users_lookup_get: {
+        parameters: {
+            query: {
+                query: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserLookupResponse"][];
                 };
             };
             /** @description Validation Error */

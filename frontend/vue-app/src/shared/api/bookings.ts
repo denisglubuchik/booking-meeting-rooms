@@ -1,4 +1,4 @@
-import type { Booking, Room } from "../types/api";
+import type { Booking, BookingDetails, BookingParticipant, Room } from "../types/api";
 import { apiClient, unwrapData } from "./client";
 
 export async function getAvailableRooms(params: {
@@ -34,6 +34,13 @@ export async function getRoomBookings(roomId: string) {
 export async function getMyBookings() {
   const result = await apiClient.GET("/bookings/my-bookings");
   return unwrapData(result) as Promise<Booking[]>;
+}
+
+export async function getBookingDetails(bookingId: string) {
+  const result = await apiClient.GET("/bookings/{booking_id}", {
+    params: { path: { booking_id: bookingId } },
+  });
+  return unwrapData(result) as Promise<BookingDetails>;
 }
 
 export async function getAllBookings(params?: {
@@ -92,4 +99,21 @@ export async function changeBookingRoom(bookingId: string, new_room_id: string) 
     body: { new_room_id },
   });
   return unwrapData(result) as Promise<Booking>;
+}
+
+export async function addBookingParticipant(bookingId: string, user_id: string) {
+  const result = await apiClient.POST("/bookings/{booking_id}/participants", {
+    params: { path: { booking_id: bookingId } },
+    body: { user_id },
+  });
+  return unwrapData(result) as Promise<BookingParticipant>;
+}
+
+export async function removeBookingParticipant(bookingId: string, userId: string) {
+  const result = await apiClient.DELETE("/bookings/{booking_id}/participants/{user_id}", {
+    params: { path: { booking_id: bookingId, user_id: userId } },
+  });
+  if (!result.response.ok) {
+    await unwrapData(result);
+  }
 }

@@ -1,4 +1,4 @@
-import type { User } from "../types/api";
+import type { User, UserLookup } from "../types/api";
 import { apiClient, unwrapData } from "./client";
 
 export async function getUsers(params?: {
@@ -22,6 +22,13 @@ export async function getUsers(params?: {
     },
   });
   return unwrapData(result) as Promise<User[]>;
+}
+
+export async function lookupUsers(query: string, limit = 20) {
+  const result = await apiClient.GET("/users/lookup", {
+    params: { query: { query, limit } },
+  });
+  return unwrapData(result) as Promise<UserLookup[]>;
 }
 
 export async function activateUser(userId: string) {

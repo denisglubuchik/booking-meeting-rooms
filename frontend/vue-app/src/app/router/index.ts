@@ -8,6 +8,7 @@ import RoomsPage from "../../pages/rooms/index.vue";
 import FindRoomPage from "../../pages/find-room/index.vue";
 import RoomDetailsPage from "../../pages/room-details/index.vue";
 import CreateBookingPage from "../../pages/create-booking/index.vue";
+import BookingDetailsPage from "../../pages/booking-details/index.vue";
 import MyBookingsPage from "../../pages/my-bookings/index.vue";
 import ProfilePage from "../../pages/profile/index.vue";
 import AdminOfficesPage from "../../pages/admin-offices/index.vue";
@@ -26,6 +27,7 @@ const router = createRouter({
     { path: "/find-room", component: FindRoomPage },
     { path: "/rooms/:id", component: RoomDetailsPage },
     { path: "/bookings/new", component: CreateBookingPage },
+    { path: "/bookings/:id", component: BookingDetailsPage },
     { path: "/my-bookings", component: MyBookingsPage },
     { path: "/profile", component: ProfilePage },
     { path: "/admin/offices", component: AdminOfficesPage, meta: { admin: true } },

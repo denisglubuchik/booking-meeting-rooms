@@ -17,7 +17,7 @@
           </Button>
         </div>
         <nav id="main-nav" :class="{ 'sidebar-nav-hidden': !navOpen }">
-          <RouterLink to="/">Дашборд</RouterLink>
+          <RouterLink to="/">Главная</RouterLink>
           <RouterLink to="/offices">Офисы</RouterLink>
           <RouterLink to="/rooms">Комнаты</RouterLink>
           <RouterLink to="/find-room">Найти комнату</RouterLink>

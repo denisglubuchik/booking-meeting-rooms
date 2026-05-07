@@ -5,6 +5,7 @@ import { login, me, setApiToken } from "../../shared/api";
 export const useAuthStore = defineStore("auth", {
   state: () => ({
     isAuthenticated: Boolean(localStorage.getItem("booking_token")),
+    id: "",
     role: "employee" as Role,
     fullName: "",
     email: "",
@@ -23,6 +24,7 @@ export const useAuthStore = defineStore("auth", {
     },
     applyUser(user: User) {
       this.isAuthenticated = true;
+      this.id = user.id;
       this.role = user.role;
       this.fullName = user.full_name;
       this.email = user.email;
@@ -45,6 +47,7 @@ export const useAuthStore = defineStore("auth", {
     logout() {
       setApiToken("");
       this.isAuthenticated = false;
+      this.id = "";
       this.role = "employee";
       this.fullName = "";
       this.email = "";

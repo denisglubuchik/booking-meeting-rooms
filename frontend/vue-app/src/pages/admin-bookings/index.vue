@@ -88,7 +88,7 @@
     <LoadingState v-if="isLoading" />
     <ErrorState v-else-if="errorText" :message="errorText" />
     <EmptyState v-else-if="bookings.length === 0" title="Бронирования не найдены" />
-    <DataTable v-else :columns="['Встреча', 'Пользователь', 'Комната', 'Начало', 'Окончание', 'Статус']">
+    <DataTable v-else :columns="['Встреча', 'Пользователь', 'Комната', 'Начало', 'Окончание', 'Статус', 'Действия']">
       <TableRow v-for="booking in bookings" :key="booking.id">
         <TableCell>{{ booking.title || 'Без названия' }}</TableCell>
         <TableCell>{{ userName(booking.created_by) }}</TableCell>
@@ -96,6 +96,9 @@
         <TableCell>{{ fmt(booking.start_time) }}</TableCell>
         <TableCell>{{ fmt(booking.end_time) }}</TableCell>
         <TableCell><StatusBadge :status="booking.status" :label="statusLabel(booking.status)" /></TableCell>
+        <TableCell>
+          <RouterLink :to="`/bookings/${booking.id}`" class="button">Открыть</RouterLink>
+        </TableCell>
       </TableRow>
     </DataTable>
 
@@ -130,6 +133,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { RouterLink } from "vue-router";
 import { DataTable, EmptyState, ErrorState, FilterBar, LoadingState, PageHeader, StatusBadge } from "../../components/common";
 import { TableCell, TableRow } from "../../components/ui/table";
 import AppButton from "../../components/ui/button/AppButton.vue";

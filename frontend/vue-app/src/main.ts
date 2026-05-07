@@ -10,7 +10,17 @@ async function bootstrap() {
   const app = createApp(App);
   const pinia = createPinia();
   app.use(pinia);
-  app.use(VueQueryPlugin);
+  app.use(VueQueryPlugin, {
+    queryClientConfig: {
+      defaultOptions: {
+        queries: {
+          staleTime: 5 * 60 * 1000,
+          refetchOnWindowFocus: false,
+          refetchOnMount: false,
+        },
+      },
+    },
+  });
 
   const auth = useAuthStore();
   await auth.hydrate();

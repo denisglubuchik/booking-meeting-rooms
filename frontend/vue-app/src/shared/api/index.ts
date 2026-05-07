@@ -26,11 +26,14 @@ export {
   getAvailableRooms,
   getRoomBookings,
   getMyBookings,
+  getBookingDetails,
   getAllBookings,
   createBooking,
   cancelBooking,
   rescheduleBooking,
   changeBookingRoom,
+  addBookingParticipant,
+  removeBookingParticipant,
 } from "./bookings";
-export { getUsers, activateUser, deactivateUser, promoteToAdmin, demoteToEmployee } from "./users";
+export { getUsers, lookupUsers, activateUser, deactivateUser, promoteToAdmin, demoteToEmployee } from "./users";
 export { queryKeys } from "./queryKeys";
