@@ -12,6 +12,8 @@ from api.schemas.users import (
     GetUsersFilters,
     LoginUserRequest,
     UpdateUserRequest,
+    UserLookupFilters,
+    UserLookupResponse,
     UserResponse,
 )
 from infra.interfaces.access_token import AccessTokenIssuerInterface
@@ -22,6 +24,7 @@ from usecases.user.deactivate_user import DeactivateUserUseCase
 from usecases.user.get_user_details import GetUserDetailsUseCase
 from usecases.user.get_users import GetUsersUseCase
 from usecases.user.login_user import LoginUserUseCase
+from usecases.user.lookup_users import LookupUsersUseCase
 from usecases.user.update_user import UpdateUserUseCase
 
 router = APIRouter(tags=["Users"], route_class=DishkaRoute)
@@ -35,6 +38,16 @@ async def get_users(
 ) -> list[UserResponse]:
     users = await get_users_uc.execute(filters.to_dto())
     return [UserResponse.from_dto(user) for user in users]
+
+
+@router.get("/lookup")
+async def lookup_users(
+    lookup_users_uc: FromDishka[LookupUsersUseCase],
+    filters: Annotated[UserLookupFilters, Query()],
+    _: CurrentUserDep,
+) -> list[UserLookupResponse]:
+    users = await lookup_users_uc.execute(filters.to_dto())
+    return [UserLookupResponse.from_dto(user) for user in users]
 
 
 @router.post("/register")

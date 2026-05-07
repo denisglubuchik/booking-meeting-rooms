@@ -87,6 +87,7 @@ from usecases.user.deactivate_user import DeactivateUserUseCase
 from usecases.user.get_user_details import GetUserDetailsUseCase
 from usecases.user.get_users import GetUsersUseCase
 from usecases.user.login_user import LoginUserUseCase
+from usecases.user.lookup_users import LookupUsersUseCase
 from usecases.user.update_user import UpdateUserUseCase
 
 db_config = DBConfig()
@@ -267,6 +268,7 @@ class DependencyProvider(Provider):
     get_user_uc = provide(GetUserDetailsUseCase)
     update_user_uc = provide(UpdateUserUseCase)
     get_users_uc = provide(GetUsersUseCase)
+    lookup_users_uc = provide(LookupUsersUseCase)
 
     cancel_booking_uc = provide(CancelBookingUseCase)
     add_booking_participant_uc = provide(AddBookingParticipantUseCase)

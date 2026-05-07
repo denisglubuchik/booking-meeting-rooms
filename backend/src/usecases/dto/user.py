@@ -41,3 +41,16 @@ class UserResponseDTO:
     role: str
     is_active: bool
     created_at: datetime
+
+
+@dataclass(frozen=True)
+class UserLookupFiltersDTO:
+    query: str
+    limit: int = 20
+
+
+@dataclass(frozen=True)
+class UserLookupResponseDTO:
+    id: UUID
+    full_name: str
+    email: str

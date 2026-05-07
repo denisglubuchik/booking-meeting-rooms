@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from domain.entities.user import UserRole
 from usecases.dto.user import (
@@ -10,6 +10,8 @@ from usecases.dto.user import (
     LoginUserDTO,
     UpdateUserDTO,
     UserFiltersDTO,
+    UserLookupFiltersDTO,
+    UserLookupResponseDTO,
     UserResponseDTO,
 )
 
@@ -95,4 +97,29 @@ class UserResponse(BaseModel):
             role=dto.role,
             is_active=dto.is_active,
             created_at=dto.created_at,
+        )
+
+
+class UserLookupFilters(BaseModel):
+    query: str = Field(min_length=2, max_length=255)
+    limit: int = Field(default=20, ge=1, le=20)
+
+    def to_dto(self) -> UserLookupFiltersDTO:
+        return UserLookupFiltersDTO(
+            query=self.query,
+            limit=self.limit,
+        )
+
+
+class UserLookupResponse(BaseModel):
+    id: UUID
+    full_name: str
+    email: str
+
+    @classmethod
+    def from_dto(cls, dto: UserLookupResponseDTO) -> "UserLookupResponse":
+        return cls(
+            id=dto.id,
+            full_name=dto.full_name,
+            email=dto.email,
         )

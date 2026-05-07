@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select
 
 from domain.entities.user import User
 from infra.cache.decorators import cache, invalidate_cache
@@ -39,6 +39,28 @@ class DBUsersRepository(
         result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
         return model.to_domain() if model else None
+
+    async def search_active(
+        self,
+        *,
+        query: str,
+        limit: int = 20,
+    ) -> list[User]:
+        pattern = f"%{query}%"
+        stmt = (
+            select(UserModel)
+            .where(
+                UserModel.is_active.is_(True),
+                or_(
+                    UserModel.full_name.ilike(pattern),
+                    UserModel.email.ilike(pattern),
+                ),
+            )
+            .order_by(UserModel.full_name)
+            .limit(limit)
+        )
+        result = await self._session.execute(stmt)
+        return [model.to_domain() for model in result.scalars().all()]
 
     async def get_all(
         self,
