@@ -118,8 +118,12 @@ class DependencyProvider(Provider):
         return self.s3_config
 
     @provide(scope=Scope.APP)
-    def file_storage(self, s3_settings: S3Config) -> FileStorageInterface:
-        return S3FileStorage(config=s3_settings)
+    def file_storage(
+        self,
+        s3_settings: S3Config,
+        cache: CacheInterface,
+    ) -> FileStorageInterface:
+        return S3FileStorage(config=s3_settings, cache=cache)
 
     @provide(scope=Scope.APP)
     def redis_cache(self) -> CacheInterface:

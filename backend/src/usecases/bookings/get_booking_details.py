@@ -14,7 +14,9 @@ from usecases.interfaces.uow import UoWInterface
 
 
 class GetBookingDetailsUseCase:
-    def __init__(self, uow: UoWInterface, file_storage: FileStorageInterface) -> None:
+    def __init__(
+        self, uow: UoWInterface, file_storage: FileStorageInterface,
+    ) -> None:
         self.uow = uow
         self.file_storage = file_storage
 
