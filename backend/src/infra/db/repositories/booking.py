@@ -4,8 +4,12 @@ from uuid import UUID
 from sqlalchemy import delete, or_, select
 
 from domain.entities.booking import Booking, BookingStatus
+from domain.entities.meeting_room import MeetingRoom
+from domain.entities.office import Office
 from infra.db.models.booking import BookingModel
 from infra.db.models.booking_participant import BookingParticipantModel
+from infra.db.models.meeting_room import MeetingRoomModel
+from infra.db.models.office import OfficeModel
 from infra.db.repositories.base import BaseDBRepository
 from usecases.interfaces.db import DBBookingsRepositoryInterface
 
@@ -29,6 +33,27 @@ class DBBookingsRepository(
         result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
         return model.to_domain() if model else None
+
+    async def get_with_room_office(
+        self,
+        booking_id: UUID,
+    ) -> tuple[Booking, MeetingRoom, Office] | None:
+        stmt = (
+            select(BookingModel, MeetingRoomModel, OfficeModel)
+            .join(MeetingRoomModel, MeetingRoomModel.id == BookingModel.room_id)
+            .join(OfficeModel, OfficeModel.id == MeetingRoomModel.office_id)
+            .where(BookingModel.id == booking_id)
+        )
+        result = await self._session.execute(stmt)
+        row = result.first()
+        if row is None:
+            return None
+        booking_model, room_model, office_model = row
+        return (
+            booking_model.to_domain(),
+            room_model.to_domain(),
+            office_model.to_domain(),
+        )
 
     async def get_active_by_room_id(self, room_id: UUID) -> list[Booking]:
         stmt = select(BookingModel).where(

@@ -3,7 +3,9 @@ from uuid import UUID
 from sqlalchemy import delete, func, select
 
 from domain.entities.booking_participant import BookingParticipant
+from domain.entities.user import User
 from infra.db.models.booking_participant import BookingParticipantModel
+from infra.db.models.user import UserModel
 from infra.db.repositories.base import BaseDBRepository
 from usecases.interfaces.db import DBBookingParticipantsRepositoryInterface
 
@@ -60,6 +62,22 @@ class DBBookingParticipantsRepository(
         )
         result = await self._session.execute(stmt)
         return [model.to_domain() for model in result.scalars().all()]
+
+    async def get_with_users_by_booking_id(
+        self,
+        booking_id: UUID,
+    ) -> list[tuple[BookingParticipant, User]]:
+        stmt = (
+            select(BookingParticipantModel, UserModel)
+            .join(UserModel, UserModel.id == BookingParticipantModel.user_id)
+            .where(BookingParticipantModel.booking_id == booking_id)
+        )
+        result = await self._session.execute(stmt)
+        rows = result.all()
+        return [
+            (participant_model.to_domain(), user_model.to_domain())
+            for participant_model, user_model in rows
+        ]
 
     async def count_by_booking_id(self, booking_id: UUID) -> int:
         stmt = select(func.count(BookingParticipantModel.id)).where(

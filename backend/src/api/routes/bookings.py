@@ -8,6 +8,7 @@ from fastapi import APIRouter, Query
 from api.dependencies.auth import AdminUserDep, CurrentUserDep
 from api.schemas.bookings import (
     AddBookingParticipantRequest,
+    BookingDetailsResponse,
     BookingParticipantResponse,
     BookingResponse,
     ChangeRoomBookingRequest,
@@ -24,9 +25,6 @@ from usecases.bookings.create_booking import CreateBookingUseCase
 from usecases.bookings.get_all_bookings import GetAllBookingsUseCase
 from usecases.bookings.get_available_rooms import GetAvailableRoomsUseCase
 from usecases.bookings.get_booking_details import GetBookingDetailsUseCase
-from usecases.bookings.get_booking_participants import (
-    GetBookingParticipantsUseCase,
-)
 from usecases.bookings.get_my_bookings import GetMyBookingsUseCase
 from usecases.bookings.get_room_bookings import GetRoomBookingsUseCase
 from usecases.bookings.remove_participant import (
@@ -100,9 +98,9 @@ async def get_my_bookings(
 async def get_booking(
     booking_id: UUID,
     get_booking_uc: FromDishka[GetBookingDetailsUseCase],
-) -> BookingResponse:
+) -> BookingDetailsResponse:
     booking = await get_booking_uc.execute(booking_id)
-    return BookingResponse.from_dto(booking)
+    return BookingDetailsResponse.from_dto(booking)
 
 
 @router.post("/")
@@ -165,19 +163,6 @@ async def cancel_booking(
         ),
     )
     return BookingResponse.from_dto(booking)
-
-
-@router.get("/{booking_id}/participants")
-async def get_booking_participants(
-    booking_id: UUID,
-    get_booking_participants_uc: FromDishka[GetBookingParticipantsUseCase],
-    _: CurrentUserDep,
-) -> list[BookingParticipantResponse]:
-    participants = await get_booking_participants_uc.execute(booking_id)
-    return [
-        BookingParticipantResponse.from_dto(participant)
-        for participant in participants
-    ]
 
 
 @router.post("/{booking_id}/participants")

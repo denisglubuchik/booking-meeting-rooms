@@ -1,21 +1,36 @@
 from datetime import datetime
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
+from api.schemas.offices import OfficeResponse
+from api.schemas.rooms import RoomResponse
 from domain.entities.booking import BookingStatus
 from domain.entities.booking_participant import BookingParticipantRole
 from domain.entities.user import UserRole
 from usecases.dto.booking import (
     AddBookingParticipantDTO,
     AvailableRoomsFiltersDTO,
+    BookingDetailsResponseDTO,
     BookingFiltersDTO,
+    BookingParticipantDetailsDTO,
     BookingParticipantResponseDTO,
     BookingResponseDTO,
     ChangeRoomBookingDTO,
     CreateBookingDTO,
     RescheduleBookingDTO,
 )
+
+MOSCOW_TZ = ZoneInfo("Europe/Moscow")
+
+
+def _as_moscow_datetime(value: datetime | None) -> datetime | None:
+    if value is None:
+        return None
+    if value.tzinfo is None or value.utcoffset() is None:
+        return value.replace(tzinfo=MOSCOW_TZ)
+    return value.astimezone(MOSCOW_TZ)
 
 
 class GetBookingsFilters(BaseModel):
@@ -26,6 +41,11 @@ class GetBookingsFilters(BaseModel):
     end_time_lte: datetime | None = None
     limit: int = 100
     offset: int = 0
+
+    @field_validator("start_time_gte", "end_time_lte")
+    @classmethod
+    def normalize_datetime(cls, value: datetime | None) -> datetime | None:
+        return _as_moscow_datetime(value)
 
     def to_dto(
         self,
@@ -52,6 +72,15 @@ class GetAvailableRoomsFilters(BaseModel):
     capacity_gte: int | None = None
     capacity_lte: int | None = None
 
+    @field_validator("start_time", "end_time")
+    @classmethod
+    def normalize_datetime(cls, value: datetime) -> datetime:
+        normalized = _as_moscow_datetime(value)
+        if normalized is None:
+            msg = "Datetime is required"
+            raise ValueError(msg)
+        return normalized
+
     def to_dto(self) -> AvailableRoomsFiltersDTO:
         return AvailableRoomsFiltersDTO(
             start_time=self.start_time,
@@ -69,6 +98,15 @@ class CreateBookingRequest(BaseModel):
     end_time: datetime
     title: str | None = None
 
+    @field_validator("start_time", "end_time")
+    @classmethod
+    def normalize_datetime(cls, value: datetime) -> datetime:
+        normalized = _as_moscow_datetime(value)
+        if normalized is None:
+            msg = "Datetime is required"
+            raise ValueError(msg)
+        return normalized
+
     def to_dto(self, created_by: UUID) -> CreateBookingDTO:
         return CreateBookingDTO(
             room_id=self.room_id,
@@ -82,6 +120,15 @@ class CreateBookingRequest(BaseModel):
 class RescheduleBookingRequest(BaseModel):
     new_start_time: datetime
     new_end_time: datetime
+
+    @field_validator("new_start_time", "new_end_time")
+    @classmethod
+    def normalize_datetime(cls, value: datetime) -> datetime:
+        normalized = _as_moscow_datetime(value)
+        if normalized is None:
+            msg = "Datetime is required"
+            raise ValueError(msg)
+        return normalized
 
     def to_dto(
         self,
@@ -178,4 +225,49 @@ class BookingParticipantResponse(BaseModel):
             role=dto.role,
             added_by=dto.added_by,
             created_at=dto.created_at,
+        )
+
+
+class BookingParticipantDetailsResponse(BaseModel):
+    user_id: UUID
+    full_name: str
+    email: str
+    role: BookingParticipantRole
+    added_by: UUID | None
+    created_at: datetime
+
+    @classmethod
+    def from_dto(
+        cls,
+        dto: BookingParticipantDetailsDTO,
+    ) -> "BookingParticipantDetailsResponse":
+        return cls(
+            user_id=dto.user_id,
+            full_name=dto.full_name,
+            email=dto.email,
+            role=dto.role,
+            added_by=dto.added_by,
+            created_at=dto.created_at,
+        )
+
+
+class BookingDetailsResponse(BaseModel):
+    booking: BookingResponse
+    room: RoomResponse
+    office: OfficeResponse
+    participants: list[BookingParticipantDetailsResponse]
+
+    @classmethod
+    def from_dto(
+        cls,
+        dto: BookingDetailsResponseDTO,
+    ) -> "BookingDetailsResponse":
+        return cls(
+            booking=BookingResponse.from_dto(dto.booking),
+            room=RoomResponse.from_dto(dto.room),
+            office=OfficeResponse.from_dto(dto.office),
+            participants=[
+                BookingParticipantDetailsResponse.from_dto(participant)
+                for participant in dto.participants
+            ],
         )
