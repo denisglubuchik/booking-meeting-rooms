@@ -1,4 +1,5 @@
 #  ruff: noqa: PLR6301
+from collections.abc import AsyncIterator
 
 from dishka import (
     BaseScope,
@@ -126,8 +127,12 @@ class DependencyProvider(Provider):
         return S3FileStorage(config=s3_settings, cache=cache)
 
     @provide(scope=Scope.APP)
-    def redis_cache(self) -> CacheInterface:
-        return RedisCacheService(self.redis_config)
+    async def redis_cache(self) -> AsyncIterator[CacheInterface]:
+        cache = RedisCacheService(self.redis_config)
+        try:
+            yield cache
+        finally:
+            await cache.close()
 
     @provide(scope=Scope.APP)
     def hasher(self) -> PasswordHasherInterface:
@@ -148,14 +153,18 @@ class DependencyProvider(Provider):
         return JWTAccessTokenVerifier(config=auth_settings)
 
     @provide(scope=Scope.APP)
-    def db_engine(self) -> AsyncEngine:
-        return create_async_engine(
+    async def db_engine(self) -> AsyncIterator[AsyncEngine]:
+        engine = create_async_engine(
             self.db_config.DATABASE_URL,
             echo=False,
             pool_size=7,
             max_overflow=20,
             pool_pre_ping=True,
         )
+        try:
+            yield engine
+        finally:
+            await engine.dispose()
 
     @provide(scope=Scope.APP)
     def session_factory(

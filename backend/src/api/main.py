@@ -1,4 +1,6 @@
 import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
@@ -17,7 +19,18 @@ from infra.dependencies import container
 setup_logging(LoggingConfig())
 logger = logging.getLogger("api.main")
 
-app = FastAPI(title="Booking meeting rooms API")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    yield
+    await container.close()
+    logger.info("application_shutdown_finished")
+
+
+app = FastAPI(
+    title="Booking meeting rooms API",
+    lifespan=lifespan,
+)
 register_exception_handlers(app)
 register_middlewares(app)
 

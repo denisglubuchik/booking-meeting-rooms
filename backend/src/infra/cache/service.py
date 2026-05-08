@@ -84,3 +84,8 @@ class RedisCacheService(CacheInterface):
             prefix,
             len(keys),
         )
+
+    async def close(self) -> None:
+        self._logger.debug("redis_close_started")
+        await self.redis.aclose()
+        self._logger.debug("redis_close_finished")

@@ -4,4 +4,7 @@ cd /code
 uv run alembic upgrade head
 
 cd /code/src
-uv run uvicorn api.main:app --host 0.0.0.0 --reload
+uv run uvicorn api.main:app \
+  --host 0.0.0.0 \
+  --reload \
+  --timeout-graceful-shutdown "${UVICORN_TIMEOUT_GRACEFUL_SHUTDOWN:-60}"
