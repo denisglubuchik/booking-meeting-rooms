@@ -59,6 +59,7 @@ class RescheduleBookingUseCase:
                 raise ForbiddenError(
                     "Not enough permissions for booking action",
                 )
+            BookingPolicy.validate_booking_is_mutable(booking)
 
             old_time_range = booking.time_range
             start_of_day = dto.new_start_time.replace(

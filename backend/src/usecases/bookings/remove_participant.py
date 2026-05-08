@@ -1,8 +1,8 @@
 import logging
 
-from domain.entities.booking import BookingStatus
 from domain.entities.booking_participant import BookingParticipantRole
 from domain.entities.user import UserRole
+from domain.services.booking_policy import BookingPolicy
 from usecases.dto.booking import RemoveBookingParticipantDTO
 from usecases.exceptions import BadRequest, ForbiddenError, NotFoundError
 from usecases.interfaces.uow import UoWInterface
@@ -33,14 +33,7 @@ class RemoveBookingParticipantUseCase:
                     f"Booking with id={dto.booking_id} not found",
                 )
 
-            if booking.status != BookingStatus.CREATED:
-                self.logger.warning(
-                    "remove_booking_participant_invalid_state "
-                    "booking_id=%s status=%s",
-                    booking.id,
-                    booking.status,
-                )
-                raise BadRequest("Only active bookings can be updated")
+            BookingPolicy.validate_booking_is_mutable(booking)
 
             if dto.actor_role != UserRole.ADMIN:
                 actor_participant = await (

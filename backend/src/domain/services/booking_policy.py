@@ -1,10 +1,11 @@
 from calendar import monthrange
 from datetime import datetime
 
-from domain.entities.booking import Booking, TimeRange
+from domain.entities.booking import Booking, BookingStatus, TimeRange
 from domain.exceptions import (
     BookingHorizonExceededError,
     BookingTimeInPastError,
+    InvalidBookingStateError,
     RoomUnavailableError,
 )
 from domain.time import moscow_now
@@ -27,6 +28,13 @@ class BookingPolicy:
             time_range,
             existing_bookings,
         )
+
+    @staticmethod
+    def validate_booking_is_mutable(booking: Booking) -> None:
+        if booking.status != BookingStatus.CREATED:
+            raise InvalidBookingStateError(
+                f"Cannot modify booking in {booking.status} state",
+            )
 
     @staticmethod
     def _is_room_available(

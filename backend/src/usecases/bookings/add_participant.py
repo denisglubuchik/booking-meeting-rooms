@@ -2,13 +2,13 @@ import logging
 import uuid
 from uuid import UUID
 
-from domain.entities.booking import BookingStatus
 from domain.entities.booking_participant import (
     BookingParticipant,
     BookingParticipantRole,
 )
 from domain.entities.notification import NotificationType
 from domain.entities.user import UserRole
+from domain.services.booking_policy import BookingPolicy
 from usecases.dto.booking import (
     AddBookingParticipantDTO,
     AddBookingParticipantResultDTO,
@@ -61,14 +61,7 @@ class AddBookingParticipantUseCase:
                     f"Booking with id={dto.booking_id} not found",
                 )
 
-            if booking.status != BookingStatus.CREATED:
-                self.logger.warning(
-                    "add_booking_participant_invalid_state "
-                    "booking_id=%s status=%s",
-                    booking.id,
-                    booking.status,
-                )
-                raise BadRequest("Only active bookings can be updated")
+            BookingPolicy.validate_booking_is_mutable(booking)
 
             if dto.actor_role != UserRole.ADMIN:
                 actor_participant = await (

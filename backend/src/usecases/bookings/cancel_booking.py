@@ -4,6 +4,7 @@ from uuid import UUID
 from domain.entities.notification import NotificationType
 from domain.entities.booking_history import HistoryAction
 from domain.entities.user import UserRole
+from domain.services.booking_policy import BookingPolicy
 from usecases.dto.booking import BookingResponseDTO, CancelBookingDTO
 from usecases.dto.notification import CreateNotificationDispatchDTO
 from usecases.exceptions import (
@@ -56,6 +57,7 @@ class CancelBookingUseCase:
                 raise ForbiddenError(
                     "Not enough permissions for booking action",
                 )
+            BookingPolicy.validate_booking_is_mutable(booking)
 
             booking.cancel()
             participants_with_users = (

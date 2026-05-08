@@ -60,6 +60,7 @@ class ChangeRoomBookingUseCase:
                 raise ForbiddenError(
                     "Not enough permissions for booking action",
                 )
+            BookingPolicy.validate_booking_is_mutable(booking)
 
             old_room_id = booking.room_id
 
