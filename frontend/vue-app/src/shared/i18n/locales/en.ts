@@ -31,4 +31,10 @@ export const en = {
       "validation.request_invalid": "Please check the filled fields.",
     },
   },
+  notifications: {
+    warnings: {
+      room_capacity_exceeded: "The number of participants exceeds the room capacity: {count} out of {capacity}.",
+      room_capacity_exceeded_generic: "The number of participants exceeds the room capacity.",
+    },
+  },
 } as const;

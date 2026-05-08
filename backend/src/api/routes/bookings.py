@@ -8,9 +8,9 @@ from fastapi import APIRouter, Query
 
 from api.dependencies.auth import AdminUserDep, CurrentUserDep
 from api.schemas.bookings import (
+    AddBookingParticipantResponse,
     AddBookingParticipantRequest,
     BookingDetailsResponse,
-    BookingParticipantResponse,
     BookingResponse,
     ChangeRoomBookingRequest,
     CreateBookingRequest,
@@ -129,7 +129,7 @@ async def get_booking(
 ) -> BookingDetailsResponse:
     logger.info("get_booking_started booking_id=%s", booking_id)
     booking = await get_booking_uc.execute(booking_id)
-    logger.info("get_booking_finished booking_id=%s", booking.id)
+    logger.info("get_booking_finished booking_id=%s", booking_id)
     return BookingDetailsResponse.from_dto(booking)
 
 
@@ -229,7 +229,7 @@ async def add_booking_participant(
     payload: AddBookingParticipantRequest,
     add_booking_participant_uc: FromDishka[AddBookingParticipantUseCase],
     current_user: CurrentUserDep,
-) -> BookingParticipantResponse:
+) -> AddBookingParticipantResponse:
     logger.info(
         "add_booking_participant_started booking_id=%s actor_id=%s user_id=%s",
         booking_id,
@@ -246,9 +246,9 @@ async def add_booking_participant(
     logger.info(
         "add_booking_participant_finished booking_id=%s user_id=%s",
         booking_id,
-        participant.user_id,
+        participant.participant.user_id,
     )
-    return BookingParticipantResponse.from_dto(participant)
+    return AddBookingParticipantResponse.from_dto(participant)
 
 
 @router.delete("/{booking_id}/participants/{user_id}", status_code=204)

@@ -9,8 +9,10 @@ from domain.entities.booking_participant import (
 )
 from domain.entities.user import UserRole
 from usecases.dto.booking import (
+    AddBookingParticipantResultDTO,
     AddBookingParticipantDTO,
     BookingParticipantResponseDTO,
+    OperationWarningDTO,
 )
 from usecases.exceptions import BadRequest, ForbiddenError, NotFoundError
 from usecases.interfaces.uow import UoWInterface
@@ -24,7 +26,7 @@ class AddBookingParticipantUseCase:
     async def execute(
         self,
         dto: AddBookingParticipantDTO,
-    ) -> BookingParticipantResponseDTO:
+    ) -> AddBookingParticipantResultDTO:
         self.logger.debug(
             "add_booking_participant_usecase_started "
             "booking_id=%s actor_id=%s user_id=%s",
@@ -112,7 +114,7 @@ class AddBookingParticipantUseCase:
                     participant,
                 )
 
-            await self._handle_capacity_exceeded(
+            warning = await self._handle_capacity_exceeded(
                 booking_id=booking.id,
                 created_by=booking.created_by,
                 room_id=booking.room_id,
@@ -123,13 +125,18 @@ class AddBookingParticipantUseCase:
                 booking.id,
                 participant.id,
             )
-            return BookingParticipantResponseDTO(
+            participant_dto = BookingParticipantResponseDTO(
                 id=participant.id,
                 booking_id=participant.booking_id,
                 user_id=participant.user_id,
                 role=participant.role,
                 added_by=participant.added_by,
                 created_at=participant.created_at,
+            )
+            warnings = [warning] if warning is not None else []
+            return AddBookingParticipantResultDTO(
+                participant=participant_dto,
+                warnings=warnings,
             )
 
     async def _handle_capacity_exceeded(
@@ -138,7 +145,7 @@ class AddBookingParticipantUseCase:
         booking_id: UUID,
         created_by: UUID,
         room_id: UUID,
-    ) -> None:
+    ) -> OperationWarningDTO | None:
         participants_count = (
             await self.uow.booking_participants_repo.count_by_booking_id(
                 booking_id,
@@ -155,8 +162,15 @@ class AddBookingParticipantUseCase:
 
         room = await self.uow.rooms_repo.get_by_id(room_id)
         if room is None:
-            return
+            return None
         if participants_count <= room.capacity:
-            return
-        # Placeholder for future notifications implementation.
-        return
+            return None
+
+        return OperationWarningDTO(
+            code="room_capacity_exceeded",
+            severity="warning",
+            message=(
+                "The number of participants exceeds the room capacity: "
+                f"{participants_count} out of {room.capacity}."
+            ),
+        )

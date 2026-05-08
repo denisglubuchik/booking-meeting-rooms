@@ -2,6 +2,7 @@ import { computed, reactive, ref } from "vue";
 import dayjs from "dayjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { useRoute } from "vue-router";
+import { useI18n } from "vue-i18n";
 import {
   addBookingParticipant,
   cancelBooking,
@@ -24,6 +25,7 @@ export function useBookingDetails() {
   const toast = useToast();
   const confirm = useConfirm();
   const queryClient = useQueryClient();
+  const { t } = useI18n();
 
   const bookingId = computed(() => String(route.params.id ?? ""));
   const userSearch = ref("");
@@ -70,10 +72,16 @@ export function useBookingDetails() {
 
   const addParticipantMutation = useMutation({
     mutationFn: (userId: string) => addBookingParticipant(bookingId.value, userId),
-    onSuccess: async () => {
+    onSuccess: async (result) => {
       selectedUserId.value = "";
       userSearch.value = "";
-      toast.success("Участник добавлен.");
+      toast.success("Участник добавлен.", { duration: 1400 });
+      for (const [index, warning] of result.warnings.entries()) {
+        const delayMs = 1500 + index * 250;
+        setTimeout(() => {
+          toast.info(formatWarningMessage(warning.code, warning.message));
+        }, delayMs);
+      }
       await queryClient.invalidateQueries({ queryKey: queryKeys.bookingDetails(bookingId.value) });
       await queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
       await queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
@@ -197,6 +205,20 @@ export function useBookingDetails() {
 
   function selectUser(userId: string) {
     selectedUserId.value = userId;
+  }
+
+  function formatWarningMessage(code: string, fallbackMessage: string) {
+    if (code === "room_capacity_exceeded") {
+      const match = fallbackMessage.match(/(\d+)\D+(\d+)/);
+      if (match) {
+        return t("notifications.warnings.room_capacity_exceeded", {
+          count: match[1],
+          capacity: match[2],
+        });
+      }
+      return t("notifications.warnings.room_capacity_exceeded_generic");
+    }
+    return fallbackMessage;
   }
 
   function addSelectedUser() {

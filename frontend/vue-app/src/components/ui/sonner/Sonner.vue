@@ -15,7 +15,13 @@ import { computed } from 'vue'
 
 const props = defineProps<ToasterProps>()
 const forwardedProps = computed(() => {
-  const { toastOptions: _toastOptions, ...rest } = props
+  const {
+    toastOptions: _toastOptions,
+    expand: _expand,
+    visibleToasts: _visibleToasts,
+    gap: _gap,
+    ...rest
+  } = props
   return rest
 })
 const mergedToastOptions = computed(() => ({
@@ -30,10 +36,13 @@ const mergedToastOptions = computed(() => ({
 <template>
   <Sonner
     :class="cn('toaster group', props.class)"
+    :expand="props.expand ?? true"
+    :visible-toasts="props.visibleToasts ?? 5"
+    :gap="props.gap ?? 10"
     :style="{
-      '--normal-bg': 'var(--popover)',
-      '--normal-text': 'var(--popover-foreground)',
-      '--normal-border': 'var(--border)',
+      '--normal-bg': '#fffaf2',
+      '--normal-text': '#2f241d',
+      '--normal-border': '#bfa281',
       '--border-radius': 'var(--radius)',
     }"
     :toast-options="mergedToastOptions"

@@ -103,6 +103,19 @@ class BookingParticipantResponseDTO:
 
 
 @dataclass(frozen=True)
+class OperationWarningDTO:
+    code: str
+    severity: str
+    message: str
+
+
+@dataclass(frozen=True)
+class AddBookingParticipantResultDTO:
+    participant: BookingParticipantResponseDTO
+    warnings: list[OperationWarningDTO]
+
+
+@dataclass(frozen=True)
 class BookingParticipantDetailsDTO:
     user_id: UUID
     full_name: str

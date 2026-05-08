@@ -11,3 +11,14 @@ export type BookingParticipant = components["schemas"]["BookingParticipantRespon
 export type BookingParticipantDetails = components["schemas"]["BookingParticipantDetailsResponse"];
 export type UserLookup = components["schemas"]["UserLookupResponse"];
 export type User = Omit<components["schemas"]["UserResponse"], "role"> & { role: Role };
+
+export type OperationWarning = {
+  code: string;
+  severity: string;
+  message: string;
+};
+
+export type AddBookingParticipantResult = {
+  participant: BookingParticipant;
+  warnings: OperationWarning[];
+};

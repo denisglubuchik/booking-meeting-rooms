@@ -96,7 +96,7 @@
             <strong>{{ participant.full_name }}</strong>
             <span class="muted">{{ participant.email }}</span>
           </div>
-          <div class="row">
+          <div class="booking-participant-actions">
             <span class="kv">{{ participant.role === "organizer" ? "организатор" : "участник" }}</span>
             <button
               v-if="canManageParticipants && participant.role !== 'organizer'"
@@ -232,12 +232,21 @@ const officeAddress = computed(() => {
 .booking-participant-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: #fffdf9;
+}
+
+.booking-participant-actions {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
 }
 
 .booking-user-option {

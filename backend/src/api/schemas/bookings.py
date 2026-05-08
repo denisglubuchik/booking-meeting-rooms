@@ -10,6 +10,7 @@ from domain.entities.booking import BookingStatus
 from domain.entities.booking_participant import BookingParticipantRole
 from domain.entities.user import UserRole
 from usecases.dto.booking import (
+    AddBookingParticipantResultDTO,
     AddBookingParticipantDTO,
     AvailableRoomsFiltersDTO,
     BookingDetailsResponseDTO,
@@ -225,6 +226,34 @@ class BookingParticipantResponse(BaseModel):
             role=dto.role,
             added_by=dto.added_by,
             created_at=dto.created_at,
+        )
+
+
+class OperationWarningResponse(BaseModel):
+    code: str
+    severity: str
+    message: str
+
+
+class AddBookingParticipantResponse(BaseModel):
+    participant: BookingParticipantResponse
+    warnings: list[OperationWarningResponse]
+
+    @classmethod
+    def from_dto(
+        cls,
+        dto: AddBookingParticipantResultDTO,
+    ) -> "AddBookingParticipantResponse":
+        return cls(
+            participant=BookingParticipantResponse.from_dto(dto.participant),
+            warnings=[
+                OperationWarningResponse(
+                    code=warning.code,
+                    severity=warning.severity,
+                    message=warning.message,
+                )
+                for warning in dto.warnings
+            ],
         )
 
 

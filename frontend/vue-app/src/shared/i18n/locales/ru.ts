@@ -31,4 +31,10 @@ export const ru = {
       "validation.request_invalid": "Проверьте корректность заполненных полей.",
     },
   },
+  notifications: {
+    warnings: {
+      room_capacity_exceeded: "Количество участников превышает вместимость комнаты: {count} из {capacity}.",
+      room_capacity_exceeded_generic: "Количество участников превышает вместимость комнаты.",
+    },
+  },
 } as const;

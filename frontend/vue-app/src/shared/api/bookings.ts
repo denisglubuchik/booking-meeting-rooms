@@ -1,4 +1,10 @@
-import type { Booking, BookingDetails, BookingParticipant, Room } from "../types/api";
+import type {
+  AddBookingParticipantResult,
+  Booking,
+  BookingDetails,
+  BookingParticipant,
+  Room,
+} from "../types/api";
 import { apiClient, unwrapData } from "./client";
 
 export async function getAvailableRooms(params: {
@@ -106,7 +112,7 @@ export async function addBookingParticipant(bookingId: string, user_id: string) 
     params: { path: { booking_id: bookingId } },
     body: { user_id },
   });
-  return unwrapData(result) as Promise<BookingParticipant>;
+  return unwrapData(result) as unknown as Promise<AddBookingParticipantResult>;
 }
 
 export async function removeBookingParticipant(bookingId: string, userId: string) {
