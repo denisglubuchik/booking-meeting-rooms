@@ -1,18 +1,33 @@
 import logging
 import uuid
 from datetime import timedelta
+from uuid import UUID
 
 from domain.entities.booking_history import BookingHistory, HistoryAction
+from domain.entities.notification import NotificationType
 from domain.entities.user import UserRole
 from domain.services.booking_policy import BookingPolicy
 from usecases.dto.booking import BookingResponseDTO, ChangeRoomBookingDTO
-from usecases.exceptions import ForbiddenError, NotFoundError
+from usecases.dto.notification import CreateNotificationDispatchDTO
+from usecases.exceptions import (
+    ForbiddenError,
+    NotFoundError,
+    NotificationEnqueueError,
+)
+from usecases.notifications.create_dispatch import (
+    CreateNotificationDispatchUseCase,
+)
 from usecases.interfaces.uow import UoWInterface
 
 
 class ChangeRoomBookingUseCase:
-    def __init__(self, uow: UoWInterface) -> None:
+    def __init__(
+        self,
+        uow: UoWInterface,
+        create_notification_dispatch_uc: CreateNotificationDispatchUseCase,
+    ) -> None:
         self.uow = uow
+        self.create_notification_dispatch_uc = create_notification_dispatch_uc
         self.logger = logging.getLogger("usecases.bookings.change_room")
 
     async def execute(self, dto: ChangeRoomBookingDTO) -> BookingResponseDTO:
@@ -23,6 +38,8 @@ class ChangeRoomBookingUseCase:
             dto.actor_id,
             dto.new_room_id,
         )
+        notify_targets: list[tuple[UUID, str]] = []
+        response: BookingResponseDTO | None = None
         async with self.uow:
             booking = await self.uow.bookings_repo.get_by_id(dto.id)
             if not booking:
@@ -66,6 +83,16 @@ class ChangeRoomBookingUseCase:
             )
 
             booking.change_room(dto.new_room_id)
+            participants_with_users = (
+                await self.uow.booking_participants_repo.get_with_users_by_booking_id(  # noqa: E501
+                    booking.id,
+                )
+            )
+            notify_targets = [
+                (user.id, user.email)
+                for _, user in participants_with_users
+                if user.email
+            ]
 
             booking_history = BookingHistory(
                 id=uuid.uuid4(),
@@ -84,7 +111,7 @@ class ChangeRoomBookingUseCase:
                 booking.room_id,
             )
 
-            return BookingResponseDTO(
+            response = BookingResponseDTO(
                 id=booking.id,
                 room_id=booking.room_id,
                 created_by=booking.created_by,
@@ -95,3 +122,29 @@ class ChangeRoomBookingUseCase:
                 created_at=booking.created_at,
                 updated_at=booking.updated_at,
             )
+        for user_id, recipient in notify_targets:
+            try:
+                await self.create_notification_dispatch_uc.execute(
+                    CreateNotificationDispatchDTO(
+                        user_id=user_id,
+                        recipient=recipient,
+                        notification_type=NotificationType.BOOKING_ROOM_CHANGED,
+                        payload={
+                            "booking_id": str(booking.id),
+                            "booking_title": booking.title,
+                            "start_time": booking.time_range.start.isoformat(),
+                            "old_room_id": str(old_room_id),
+                            "new_room_id": str(booking.room_id),
+                        },
+                    ),
+                )
+            except NotificationEnqueueError:
+                self.logger.exception(
+                    "change_room_notification_failed booking_id=%s "
+                    "user_id=%s",
+                    dto.id,
+                    user_id,
+                )
+        if response is None:
+            raise RuntimeError("change_room_response_missing")
+        return response

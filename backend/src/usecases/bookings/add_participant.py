@@ -16,7 +16,12 @@ from usecases.dto.booking import (
     OperationWarningDTO,
 )
 from usecases.dto.notification import CreateNotificationDispatchDTO
-from usecases.exceptions import BadRequest, ForbiddenError, NotFoundError
+from usecases.exceptions import (
+    BadRequest,
+    ForbiddenError,
+    NotFoundError,
+    NotificationEnqueueError,
+)
 from usecases.interfaces.uow import UoWInterface
 from usecases.notifications.create_dispatch import (
     CreateNotificationDispatchUseCase,
@@ -172,7 +177,7 @@ class AddBookingParticipantUseCase:
                         payload=payload,
                     ),
                 )
-            except Exception:
+            except NotificationEnqueueError:
                 self.logger.exception(
                     "add_booking_participant_notification_failed booking_id=%s "
                     "user_id=%s",

@@ -32,3 +32,8 @@ class ForbiddenError(ApplicationError):
 class UnauthorizedError(ApplicationError):
     default_code = "invalid_credentials"
     default_status_code = 401
+
+
+class NotificationEnqueueError(ApplicationError):
+    default_code = "notification_enqueue_failed"
+    default_status_code = 500

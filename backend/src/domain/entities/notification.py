@@ -13,7 +13,6 @@ class NotificationType(StrEnum):
     BOOKING_RESCHEDULED = "booking_rescheduled"
     BOOKING_ROOM_CHANGED = "booking_room_changed"
     BOOKING_START_REMINDER = "booking_start_reminder"
-    ROOM_CAPACITY_EXCEEDED = "room_capacity_exceeded"
 
 
 class NotificationChannel(StrEnum):
