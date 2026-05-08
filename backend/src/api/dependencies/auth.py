@@ -4,7 +4,7 @@ from uuid import UUID
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from fastapi.security import (
     HTTPAuthorizationCredentials,
     HTTPBearer,
@@ -15,6 +15,10 @@ from domain.entities.user import UserRole
 from infra.interfaces.access_token import (
     AccessTokenVerificationError,
     AccessTokenVerifierInterface,
+)
+from usecases.exceptions import (
+    ForbiddenError,
+    UnauthorizedError,
 )
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -30,18 +34,18 @@ def get_current_user(
 ) -> AuthenticatedUser:
     if credentials is None:
         logger.warning("auth_missing_bearer_token")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing bearer token",
+        raise UnauthorizedError(
+            "Missing bearer token",
+            code="auth.missing_bearer_token",
         )
 
     try:
         payload = token_verifier.verify(credentials.credentials)
     except AccessTokenVerificationError as error:
         logger.warning("auth_invalid_access_token")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid access token",
+        raise UnauthorizedError(
+            "Invalid access token",
+            code="auth.invalid_access_token",
         ) from error
 
     try:
@@ -53,16 +57,16 @@ def get_current_user(
         )
     except (KeyError, TypeError, ValueError) as error:
         logger.warning("auth_invalid_token_payload")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid access token",
+        raise UnauthorizedError(
+            "Invalid access token",
+            code="auth.invalid_access_token",
         ) from error
 
     if not user.is_active:
         logger.warning("auth_deactivated_user user_id=%s", user.id)
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User is deactivated",
+        raise ForbiddenError(
+            "User is deactivated",
+            code="auth.user_deactivated",
         )
 
     logger.info(
@@ -82,9 +86,9 @@ def require_admin(
             current_user.id,
             current_user.role.value,
         )
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required",
+        raise ForbiddenError(
+            "Admin access required",
+            code="auth.admin_access_required",
         )
     logger.info("auth_admin_access_granted user_id=%s", current_user.id)
     return current_user
