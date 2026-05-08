@@ -232,6 +232,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/bookings/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Booking History */
+        get: operations["get_booking_history_bookings_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/bookings/available-rooms": {
         parameters: {
             query?: never;
@@ -591,6 +608,12 @@ export interface components {
              */
             user_id: string;
         };
+        /** AddBookingParticipantResponse */
+        AddBookingParticipantResponse: {
+            participant: components["schemas"]["BookingParticipantResponse"];
+            /** Warnings */
+            warnings: components["schemas"]["OperationWarningResponse"][];
+        };
         /** Body_upload_office_image_offices__office_id__image_post */
         Body_upload_office_image_offices__office_id__image_post: {
             /** Image */
@@ -608,6 +631,32 @@ export interface components {
             office: components["schemas"]["OfficeResponse"];
             /** Participants */
             participants: components["schemas"]["BookingParticipantDetailsResponse"][];
+        };
+        /** BookingHistoryResponse */
+        BookingHistoryResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Booking Id
+             * Format: uuid
+             */
+            booking_id: string;
+            action: components["schemas"]["HistoryAction"];
+            /**
+             * Performed By
+             * Format: uuid
+             */
+            performed_by: string;
+            /** Details */
+            details: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /** BookingParticipantDetailsResponse */
         BookingParticipantDetailsResponse: {
@@ -775,6 +824,11 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /**
+         * HistoryAction
+         * @enum {string}
+         */
+        HistoryAction: "created" | "cancelled" | "completed" | "updated" | "rescheduled";
         /** LoginUserRequest */
         LoginUserRequest: {
             /** Email */
@@ -799,6 +853,15 @@ export interface components {
             image_url: string | null;
             /** Is Active */
             is_active: boolean;
+        };
+        /** OperationWarningResponse */
+        OperationWarningResponse: {
+            /** Code */
+            code: string;
+            /** Severity */
+            severity: string;
+            /** Message */
+            message: string;
         };
         /** RescheduleBookingRequest */
         RescheduleBookingRequest: {
@@ -1563,6 +1626,43 @@ export interface operations {
             };
         };
     };
+    get_booking_history_bookings_history_get: {
+        parameters: {
+            query?: {
+                booking_id?: string | null;
+                action?: components["schemas"]["HistoryAction"] | null;
+                performed_by?: string | null;
+                created_at_gte?: string | null;
+                created_at_lte?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookingHistoryResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_available_rooms_bookings_available_rooms_get: {
         parameters: {
             query: {
@@ -1867,7 +1967,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BookingParticipantResponse"];
+                    "application/json": components["schemas"]["AddBookingParticipantResponse"];
                 };
             };
             /** @description Validation Error */

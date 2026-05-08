@@ -2,6 +2,7 @@ import type {
   AddBookingParticipantResult,
   Booking,
   BookingDetails,
+  BookingHistory,
   BookingParticipant,
   Room,
 } from "../types/api";
@@ -72,6 +73,31 @@ export async function getAllBookings(params?: {
     },
   });
   return unwrapData(result) as Promise<Booking[]>;
+}
+
+export async function getBookingHistory(params?: {
+  booking_id?: string;
+  action?: "created" | "cancelled" | "completed" | "updated" | "rescheduled";
+  performed_by?: string;
+  created_at_gte?: string;
+  created_at_lte?: string;
+  limit?: number;
+  offset?: number;
+}) {
+  const result = await apiClient.GET("/bookings/history", {
+    params: {
+      query: {
+        booking_id: params?.booking_id,
+        action: params?.action,
+        performed_by: params?.performed_by,
+        created_at_gte: params?.created_at_gte,
+        created_at_lte: params?.created_at_lte,
+        limit: params?.limit,
+        offset: params?.offset,
+      },
+    },
+  });
+  return unwrapData(result) as Promise<BookingHistory[]>;
 }
 
 export async function createBooking(payload: {

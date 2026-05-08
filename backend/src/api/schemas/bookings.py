@@ -7,6 +7,7 @@ from pydantic import BaseModel, field_validator
 from api.schemas.offices import OfficeResponse
 from api.schemas.rooms import RoomResponse
 from domain.entities.booking import BookingStatus
+from domain.entities.booking_history import HistoryAction
 from domain.entities.booking_participant import BookingParticipantRole
 from domain.entities.user import UserRole
 from usecases.dto.booking import (
@@ -15,6 +16,8 @@ from usecases.dto.booking import (
     AvailableRoomsFiltersDTO,
     BookingDetailsResponseDTO,
     BookingFiltersDTO,
+    BookingHistoryFiltersDTO,
+    BookingHistoryResponseDTO,
     BookingParticipantDetailsDTO,
     BookingParticipantResponseDTO,
     BookingResponseDTO,
@@ -60,6 +63,32 @@ class GetBookingsFilters(BaseModel):
             status=self.status,
             start_time_gte=self.start_time_gte,
             end_time_lte=self.end_time_lte,
+            limit=self.limit,
+            offset=self.offset,
+        )
+
+
+class GetBookingHistoryFilters(BaseModel):
+    booking_id: UUID | None = None
+    action: HistoryAction | None = None
+    performed_by: UUID | None = None
+    created_at_gte: datetime | None = None
+    created_at_lte: datetime | None = None
+    limit: int = 100
+    offset: int = 0
+
+    @field_validator("created_at_gte", "created_at_lte")
+    @classmethod
+    def normalize_datetime(cls, value: datetime | None) -> datetime | None:
+        return _as_moscow_datetime(value)
+
+    def to_dto(self) -> BookingHistoryFiltersDTO:
+        return BookingHistoryFiltersDTO(
+            booking_id=self.booking_id,
+            action=self.action,
+            performed_by=self.performed_by,
+            created_at_gte=self.created_at_gte,
+            created_at_lte=self.created_at_lte,
             limit=self.limit,
             offset=self.offset,
         )
@@ -203,6 +232,29 @@ class BookingResponse(BaseModel):
             status=dto.status,
             created_at=dto.created_at,
             updated_at=dto.updated_at,
+        )
+
+
+class BookingHistoryResponse(BaseModel):
+    id: UUID
+    booking_id: UUID
+    action: HistoryAction
+    performed_by: UUID
+    details: str
+    created_at: datetime
+
+    @classmethod
+    def from_dto(
+        cls,
+        dto: BookingHistoryResponseDTO,
+    ) -> "BookingHistoryResponse":
+        return cls(
+            id=dto.id,
+            booking_id=dto.booking_id,
+            action=dto.action,
+            performed_by=dto.performed_by,
+            details=dto.details,
+            created_at=dto.created_at,
         )
 
 

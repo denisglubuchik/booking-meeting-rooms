@@ -28,6 +28,7 @@ export {
   getMyBookings,
   getBookingDetails,
   getAllBookings,
+  getBookingHistory,
   createBooking,
   cancelBooking,
   rescheduleBooking,

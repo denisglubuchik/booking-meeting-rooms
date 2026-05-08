@@ -4,7 +4,7 @@
     <div class="container">
       <aside class="sidebar card">
         <div class="row row-between-start">
-          <h1>RoomFlow</h1>
+          <h1>Booking</h1>
           <Button
             variant="outline"
             class="sidebar-toggle"
@@ -27,6 +27,7 @@
             <RouterLink to="/admin/offices">Админ: офисы</RouterLink>
             <RouterLink to="/admin/rooms">Админ: комнаты</RouterLink>
             <RouterLink to="/admin/bookings">Админ: бронирования</RouterLink>
+            <RouterLink to="/admin/booking-history">Админ: история</RouterLink>
             <RouterLink to="/admin/users">Админ: пользователи</RouterLink>
           </template>
         </nav>

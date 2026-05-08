@@ -7,6 +7,7 @@ export type Office = components["schemas"]["OfficeResponse"];
 export type Room = components["schemas"]["RoomResponse"];
 export type Booking = components["schemas"]["BookingResponse"];
 export type BookingDetails = components["schemas"]["BookingDetailsResponse"];
+export type BookingHistory = components["schemas"]["BookingHistoryResponse"];
 export type BookingParticipant = components["schemas"]["BookingParticipantResponse"];
 export type BookingParticipantDetails = components["schemas"]["BookingParticipantDetailsResponse"];
 export type UserLookup = components["schemas"]["UserLookupResponse"];

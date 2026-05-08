@@ -11,10 +11,12 @@ from api.schemas.bookings import (
     AddBookingParticipantRequest,
     AddBookingParticipantResponse,
     BookingDetailsResponse,
+    BookingHistoryResponse,
     BookingResponse,
     ChangeRoomBookingRequest,
     CreateBookingRequest,
     GetAvailableRoomsFilters,
+    GetBookingHistoryFilters,
     GetBookingsFilters,
     RescheduleBookingRequest,
 )
@@ -26,6 +28,7 @@ from usecases.bookings.create_booking import CreateBookingUseCase
 from usecases.bookings.get_all_bookings import GetAllBookingsUseCase
 from usecases.bookings.get_available_rooms import GetAvailableRoomsUseCase
 from usecases.bookings.get_booking_details import GetBookingDetailsUseCase
+from usecases.bookings.get_booking_history import GetBookingHistoryUseCase
 from usecases.bookings.get_my_bookings import GetMyBookingsUseCase
 from usecases.bookings.get_room_bookings import GetRoomBookingsUseCase
 from usecases.bookings.remove_participant import (
@@ -52,6 +55,22 @@ async def get_bookings(
     bookings = await get_bookings_uc.execute(filters.to_dto())
     logger.info("get_bookings_finished count=%s", len(bookings))
     return [BookingResponse.from_dto(booking) for booking in bookings]
+
+
+@router.get("/history")
+async def get_booking_history(
+    get_booking_history_uc: FromDishka[GetBookingHistoryUseCase],
+    filters: Annotated[GetBookingHistoryFilters, Query()],
+    _: AdminUserDep,
+) -> list[BookingHistoryResponse]:
+    logger.info(
+        "get_booking_history_started limit=%s offset=%s",
+        filters.limit,
+        filters.offset,
+    )
+    history = await get_booking_history_uc.execute(filters.to_dto())
+    logger.info("get_booking_history_finished count=%s", len(history))
+    return [BookingHistoryResponse.from_dto(item) for item in history]
 
 
 @router.get("/available-rooms")

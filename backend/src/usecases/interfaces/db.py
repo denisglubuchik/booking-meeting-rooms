@@ -3,7 +3,7 @@ from typing import Protocol, Self
 from uuid import UUID
 
 from domain.entities.booking import Booking, BookingStatus
-from domain.entities.booking_history import BookingHistory
+from domain.entities.booking_history import BookingHistory, HistoryAction
 from domain.entities.booking_participant import BookingParticipant
 from domain.entities.meeting_room import MeetingRoom
 from domain.entities.office import Office
@@ -109,7 +109,17 @@ class DBBookingHistoryRepositoryInterface(
         self,
         booking_history_id: UUID,
     ) -> BookingHistory | None: ...
-    async def get_all(self) -> list[BookingHistory]: ...
+    async def get_all(
+        self,
+        *,
+        booking_id: UUID | None = None,
+        action: HistoryAction | None = None,
+        performed_by: UUID | None = None,
+        created_at_gte: datetime | None = None,
+        created_at_lte: datetime | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[BookingHistory]: ...
 
 
 class DBUsersRepositoryInterface(AsyncContextManagerInterface, Protocol):

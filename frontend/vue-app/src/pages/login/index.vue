@@ -2,7 +2,7 @@
   <div class="stack auth-shell">
     <div class="grid grid-2-cols auth-grid">
       <div class="panel auth-side">
-        <p class="auth-eyebrow">RoomFlow</p>
+        <p class="auth-eyebrow">Booking</p>
         <h3 class="auth-title">Добро пожаловать</h3>
         <p class="muted auth-copy">Единая точка для офисов, переговорных и встреч.</p>
       </div>

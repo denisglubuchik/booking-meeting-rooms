@@ -3,6 +3,7 @@ from datetime import datetime
 from uuid import UUID
 
 from domain.entities.booking import BookingStatus
+from domain.entities.booking_history import HistoryAction
 from domain.entities.booking_participant import BookingParticipantRole
 from domain.entities.user import UserRole
 from usecases.dto.meeting_room import RoomResponseDTO
@@ -54,6 +55,17 @@ class BookingFiltersDTO:
 
 
 @dataclass(frozen=True)
+class BookingHistoryFiltersDTO:
+    booking_id: UUID | None = None
+    action: HistoryAction | None = None
+    performed_by: UUID | None = None
+    created_at_gte: datetime | None = None
+    created_at_lte: datetime | None = None
+    limit: int = 100
+    offset: int = 0
+
+
+@dataclass(frozen=True)
 class AvailableRoomsFiltersDTO:
     start_time: datetime
     end_time: datetime
@@ -74,6 +86,16 @@ class BookingResponseDTO:
     status: BookingStatus
     created_at: datetime
     updated_at: datetime
+
+
+@dataclass(frozen=True)
+class BookingHistoryResponseDTO:
+    id: UUID
+    booking_id: UUID
+    action: HistoryAction
+    performed_by: UUID
+    details: str
+    created_at: datetime
 
 
 @dataclass(frozen=True)

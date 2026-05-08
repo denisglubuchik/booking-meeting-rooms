@@ -14,6 +14,7 @@ import ProfilePage from "../../pages/profile/index.vue";
 import AdminOfficesPage from "../../pages/admin-offices/index.vue";
 import AdminRoomsPage from "../../pages/admin-rooms/index.vue";
 import AdminBookingsPage from "../../pages/admin-bookings/index.vue";
+import AdminBookingHistoryPage from "../../pages/admin-booking-history/index.vue";
 import AdminUsersPage from "../../pages/admin-users/index.vue";
 
 const router = createRouter({
@@ -33,6 +34,7 @@ const router = createRouter({
     { path: "/admin/offices", component: AdminOfficesPage, meta: { admin: true } },
     { path: "/admin/rooms", component: AdminRoomsPage, meta: { admin: true } },
     { path: "/admin/bookings", component: AdminBookingsPage, meta: { admin: true } },
+    { path: "/admin/booking-history", component: AdminBookingHistoryPage, meta: { admin: true } },
     { path: "/admin/users", component: AdminUsersPage, meta: { admin: true } },
     {
       path: "/:pathMatch(.*)*",

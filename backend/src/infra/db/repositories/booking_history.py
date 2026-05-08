@@ -1,8 +1,9 @@
+from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, desc, select
 
-from domain.entities.booking_history import BookingHistory
+from domain.entities.booking_history import BookingHistory, HistoryAction
 from infra.db.models.booking_history import BookingHistoryModel
 from infra.db.repositories.base import BaseDBRepository
 from usecases.interfaces.db import DBBookingHistoryRepositoryInterface
@@ -87,9 +88,41 @@ class DBBookingHistoryRepository(
         )
         return model.to_domain() if model else None
 
-    async def get_all(self) -> list[BookingHistory]:
-        self._logger.debug("get_all_booking_history_started")
+    async def get_all(
+        self,
+        *,
+        booking_id: UUID | None = None,
+        action: HistoryAction | None = None,
+        performed_by: UUID | None = None,
+        created_at_gte: datetime | None = None,
+        created_at_lte: datetime | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[BookingHistory]:
+        self._logger.debug(
+            "get_all_booking_history_started "
+            "booking_id=%s action=%s performed_by=%s limit=%s offset=%s",
+            booking_id,
+            action,
+            performed_by,
+            limit,
+            offset,
+        )
         stmt = select(BookingHistoryModel)
+        if booking_id:
+            stmt = stmt.where(BookingHistoryModel.booking_id == booking_id)
+        if action:
+            stmt = stmt.where(BookingHistoryModel.action == action.value)
+        if performed_by:
+            stmt = stmt.where(
+                BookingHistoryModel.performed_by_user_id == performed_by,
+            )
+        if created_at_gte:
+            stmt = stmt.where(BookingHistoryModel.created_at >= created_at_gte)
+        if created_at_lte:
+            stmt = stmt.where(BookingHistoryModel.created_at <= created_at_lte)
+        stmt = stmt.order_by(desc(BookingHistoryModel.created_at))
+        stmt = stmt.limit(limit).offset(offset)
         result = await self._session.execute(stmt)
         history = [model.to_domain() for model in result.scalars().all()]
         self._logger.debug(

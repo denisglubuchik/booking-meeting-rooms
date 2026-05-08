@@ -7,5 +7,6 @@ export const queryKeys = {
   adminOffices: (filters: Record<string, unknown>) => ["admin-offices", filters] as const,
   adminRooms: (filters: Record<string, unknown>) => ["admin-rooms", filters] as const,
   adminBookings: (filters: Record<string, unknown>) => ["admin-bookings", filters] as const,
+  adminBookingHistory: (filters: Record<string, unknown>) => ["admin-booking-history", filters] as const,
   adminUsers: (filters: Record<string, unknown>) => ["admin-users", filters] as const,
 };

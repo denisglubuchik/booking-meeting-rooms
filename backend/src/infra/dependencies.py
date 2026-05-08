@@ -60,6 +60,7 @@ from usecases.bookings.create_booking import CreateBookingUseCase
 from usecases.bookings.get_all_bookings import GetAllBookingsUseCase
 from usecases.bookings.get_available_rooms import GetAvailableRoomsUseCase
 from usecases.bookings.get_booking_details import GetBookingDetailsUseCase
+from usecases.bookings.get_booking_history import GetBookingHistoryUseCase
 from usecases.bookings.get_my_bookings import GetMyBookingsUseCase
 from usecases.bookings.get_room_bookings import GetRoomBookingsUseCase
 from usecases.bookings.remove_participant import RemoveBookingParticipantUseCase
@@ -351,6 +352,7 @@ class DependencyProvider(Provider):
     get_all_bookings_uc = provide(GetAllBookingsUseCase)
     get_available_rooms_uc = provide(GetAvailableRoomsUseCase)
     get_booking_uc = provide(GetBookingDetailsUseCase)
+    get_booking_history_uc = provide(GetBookingHistoryUseCase)
     get_my_bookings_uc = provide(GetMyBookingsUseCase)
     get_room_bookings_uc = provide(GetRoomBookingsUseCase)
     remove_booking_participant_uc = provide(RemoveBookingParticipantUseCase)
