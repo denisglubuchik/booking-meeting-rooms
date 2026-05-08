@@ -1,0 +1,127 @@
+name: booking-prod
+
+volumes:
+  postgres_data:
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-booking_db}
+      POSTGRES_USER: ${POSTGRES_USER:-booking_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-booking_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-booking_user} -d ${POSTGRES_DB:-booking_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  pgbouncer:
+    image: edoburu/pgbouncer:v1.24.1-p1
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_USER: ${POSTGRES_USER:-booking_user}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-booking_password}
+      DB_HOST: postgres
+      DB_NAME: ${POSTGRES_DB:-booking_db}
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 1000
+      DEFAULT_POOL_SIZE: 20
+      AUTH_TYPE: scram-sha-256
+      AUTH_USER: ${POSTGRES_USER:-booking_user}
+      ADMIN_USERS: ${POSTGRES_USER:-booking_user}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 -U ${POSTGRES_USER:-booking_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    command:
+      [
+        "sh",
+        "-c",
+        "uv run alembic upgrade head && cd /code/src && uv run uvicorn api.main:app --host 0.0.0.0 --port 8000"
+      ]
+    env_file:
+      - ./backend/.env.prod
+    environment:
+      PG_DB: ${POSTGRES_DB:-booking_db}
+      PG_USER: ${POSTGRES_USER:-booking_user}
+      PG_PASS: ${POSTGRES_PASSWORD:-booking_password}
+      PG_HOST: pgbouncer
+      PG_PORT: 5432
+      REDIS_HOST: redis
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-false}
+      SMTP_HOST: ${SMTP_HOST:-smtp.example.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-false}
+      SMTP_USE_STARTTLS: ${SMTP_USE_STARTTLS:-true}
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    expose:
+      - "8000"
+
+  worker:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    command: ["sh", "./start-worker.sh"]
+    env_file:
+      - ./backend/.env.prod
+    environment:
+      PG_DB: ${POSTGRES_DB:-booking_db}
+      PG_USER: ${POSTGRES_USER:-booking_user}
+      PG_PASS: ${POSTGRES_PASSWORD:-booking_password}
+      PG_HOST: pgbouncer
+      PG_PORT: 5432
+      REDIS_HOST: redis
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-false}
+      SMTP_HOST: ${SMTP_HOST:-smtp.example.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-false}
+      SMTP_USE_STARTTLS: ${SMTP_USE_STARTTLS:-true}
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  nginx:
+    build:
+      context: ./frontend/vue-app
+      dockerfile: Dockerfile.prod
+      args:
+        VITE_API_BASE_URL: /api
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "80:80"
