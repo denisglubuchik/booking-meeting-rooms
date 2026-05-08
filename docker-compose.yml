@@ -64,20 +64,6 @@ services:
       ]
     env_file:
       - ./backend/.env.prod
-    environment:
-      PG_DB: ${POSTGRES_DB:-booking_db}
-      PG_USER: ${POSTGRES_USER:-booking_user}
-      PG_PASS: ${POSTGRES_PASSWORD:-booking_password}
-      PG_HOST: pgbouncer
-      PG_PORT: 5432
-      REDIS_HOST: redis
-      EMAIL_ENABLED: ${EMAIL_ENABLED:-false}
-      SMTP_HOST: ${SMTP_HOST:-smtp.example.com}
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_USERNAME: ${SMTP_USERNAME:-}
-      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
-      SMTP_USE_TLS: ${SMTP_USE_TLS:-false}
-      SMTP_USE_STARTTLS: ${SMTP_USE_STARTTLS:-true}
     depends_on:
       pgbouncer:
         condition: service_healthy
@@ -93,20 +79,6 @@ services:
     command: ["sh", "./start-worker.sh"]
     env_file:
       - ./backend/.env.prod
-    environment:
-      PG_DB: ${POSTGRES_DB:-booking_db}
-      PG_USER: ${POSTGRES_USER:-booking_user}
-      PG_PASS: ${POSTGRES_PASSWORD:-booking_password}
-      PG_HOST: pgbouncer
-      PG_PORT: 5432
-      REDIS_HOST: redis
-      EMAIL_ENABLED: ${EMAIL_ENABLED:-false}
-      SMTP_HOST: ${SMTP_HOST:-smtp.example.com}
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_USERNAME: ${SMTP_USERNAME:-}
-      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
-      SMTP_USE_TLS: ${SMTP_USE_TLS:-false}
-      SMTP_USE_STARTTLS: ${SMTP_USE_STARTTLS:-true}
     depends_on:
       pgbouncer:
         condition: service_healthy
