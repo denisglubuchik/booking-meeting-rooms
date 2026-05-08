@@ -9,6 +9,10 @@ from infra.db.repositories.booking_participant import (
     DBBookingParticipantsRepository,
 )
 from infra.db.repositories.meeting_room import DBMeetingRoomsRepository
+from infra.db.repositories.notification import DBNotificationRepository
+from infra.db.repositories.notification_dispatch import (
+    DBNotificationDispatchRepository,
+)
 from infra.db.repositories.office import DBOfficesRepository
 from infra.db.repositories.user import DBUsersRepository
 from infra.interfaces.cache import CacheInterface
@@ -47,6 +51,12 @@ class SQLAlchemyUOW(UoWInterface):
         self.users_repo = DBUsersRepository(
             session=self._session,
             cache=self._cache,
+        )
+        self.notifications_repo = DBNotificationRepository(
+            session=self._session,
+        )
+        self.notification_dispatch_repo = DBNotificationDispatchRepository(
+            session=self._session,
         )
 
         return self

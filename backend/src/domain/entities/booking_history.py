@@ -9,6 +9,7 @@ from domain.time import moscow_now
 class HistoryAction(StrEnum):
     CREATED = "created"
     CANCELLED = "cancelled"
+    COMPLETED = "completed"
     UPDATED = "updated"
     RESCHEDULED = "rescheduled"
 

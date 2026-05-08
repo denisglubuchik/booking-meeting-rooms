@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from infra.db.models.booking import BookingModel
     from infra.db.models.booking_history import BookingHistoryModel
     from infra.db.models.booking_participant import BookingParticipantModel
+    from infra.db.models.notification import NotificationModel
 
 
 class UserModel(Base):
@@ -37,6 +38,10 @@ class UserModel(Base):
             cascade="all, delete-orphan",
             foreign_keys="BookingParticipantModel.user_id",
         )
+    )
+    notifications: Mapped[list["NotificationModel"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
 
     def to_domain(self) -> User:

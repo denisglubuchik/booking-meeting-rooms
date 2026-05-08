@@ -43,6 +43,32 @@ class LoggingConfig(Settings):
     LOG_FORMAT: Literal["console", "json"] = "console"
 
 
+class WorkerConfig(Settings):
+    DISPATCH_POLL_INTERVAL_SECONDS: int = 60
+    DISPATCH_MAX_ATTEMPTS: int = 5
+    DISPATCH_RETRY_BASE_SECONDS: int = 60
+    DISPATCH_RETRY_MAX_BACKOFF_SECONDS: int = 3600
+    REMINDER_SELECTOR_INTERVAL_SECONDS: int = 60
+    BOOKING_COMPLETION_INTERVAL_SECONDS: int = 600
+    BOOKING_COMPLETION_SCAN_LIMIT: int = 500
+    REMINDER_LEAD_MINUTES: int = 10
+    REMINDER_SCAN_LIMIT: int = 500
+    WORKER_TIMEZONE: str = "Europe/Moscow"
+    WORKER_MISFIRE_GRACE_TIME_SECONDS: int = 30
+
+
+class EmailConfig(Settings):
+    EMAIL_ENABLED: bool = False
+    EMAIL_FROM: str = "noreply@booking.local"
+    SMTP_HOST: str = "localhost"
+    SMTP_PORT: int = 1025
+    SMTP_USERNAME: str | None = None
+    SMTP_PASSWORD: str | None = None
+    SMTP_USE_TLS: bool = False
+    SMTP_USE_STARTTLS: bool = False
+    SMTP_TIMEOUT_SECONDS: int = 10
+
+
 class S3Config(Settings):
     S3_ENDPOINT_URL: str
     S3_REGION: str

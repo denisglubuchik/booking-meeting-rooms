@@ -1,9 +1,10 @@
 import logging
 
+from domain.entities.booking_history import HistoryAction
 from domain.entities.user import UserRole
 from usecases.dto.booking import BookingResponseDTO, CancelBookingDTO
 from usecases.exceptions import ForbiddenError, NotFoundError
-from usecases.helpers.booking_lifecycle import cancel_booking_with_history
+from usecases.helpers.booking_lifecycle import save_booking_with_history
 from usecases.interfaces.uow import UoWInterface
 
 
@@ -39,9 +40,11 @@ class CancelBookingUseCase:
                     "Not enough permissions for booking action",
                 )
 
-            saved = await cancel_booking_with_history(
+            booking.cancel()
+            saved = await save_booking_with_history(
                 uow=self.uow,
                 booking=booking,
+                action=HistoryAction.CANCELLED,
             )
             self.logger.debug(
                 "cancel_booking_usecase_finished booking_id=%s",

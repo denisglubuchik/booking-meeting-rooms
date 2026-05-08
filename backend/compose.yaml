@@ -17,6 +17,19 @@ services:
       - "./pyproject.toml:/code/pyproject.toml"
     tty: true
 
+  worker:
+    build: .
+    command: "sh ./start-worker.sh"
+    env_file: .env
+    depends_on:
+      - db
+      - redis
+      - mailhog
+    volumes:
+      - "./src:/code/src"
+      - "./pyproject.toml:/code/pyproject.toml"
+    tty: true
+
   db:
     image: postgres:17-alpine
     container_name: booking_db
@@ -34,3 +47,9 @@ services:
     image: redis:alpine
     ports:
       - "6379:6379"
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - "1025:1025"
+      - "8025:8025"

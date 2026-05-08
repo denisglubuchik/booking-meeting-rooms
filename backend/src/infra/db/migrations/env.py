@@ -6,14 +6,20 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from core.config import DBConfig  # NOQA
-from infra.db.models.base import Base  # NOQA
-from infra.db.models.booking import BookingModel  # NOQA
-from infra.db.models.booking_history import BookingHistoryModel  # NOQA
-from infra.db.models.booking_participant import BookingParticipantModel  # NOQA
-from infra.db.models.meeting_room import MeetingRoomModel  # NOQA
-from infra.db.models.office import OfficeModel  # NOQA
-from infra.db.models.user import UserModel  # NOQA
+from core.config import DBConfig
+from infra.db.models.base import Base
+from infra.db.models.booking import BookingModel  # noqa: F401
+from infra.db.models.booking_history import BookingHistoryModel  # noqa: F401
+from infra.db.models.booking_participant import (  # noqa: F401
+    BookingParticipantModel,
+)
+from infra.db.models.meeting_room import MeetingRoomModel  # noqa: F401
+from infra.db.models.notification import NotificationModel  # noqa: F401
+from infra.db.models.notification_dispatch import (  # noqa: F401
+    NotificationDispatchModel,
+)
+from infra.db.models.office import OfficeModel  # noqa: F401
+from infra.db.models.user import UserModel  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -25,16 +31,7 @@ config.set_main_option("sqlalchemy.url", DBConfig().DATABASE_URL)
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
-
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
 
 
 def run_migrations_offline() -> None:

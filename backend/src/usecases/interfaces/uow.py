@@ -8,6 +8,10 @@ from usecases.interfaces.db import (
     DBOfficesRepositoryInterface,
     DBUsersRepositoryInterface,
 )
+from usecases.interfaces.notifications import (
+    NotificationDispatchRepositoryInterface,
+    NotificationRepositoryInterface,
+)
 
 
 class UoWInterface(Protocol):
@@ -17,6 +21,8 @@ class UoWInterface(Protocol):
     booking_participants_repo: DBBookingParticipantsRepositoryInterface
     booking_history_repo: DBBookingHistoryRepositoryInterface
     users_repo: DBUsersRepositoryInterface
+    notifications_repo: NotificationRepositoryInterface
+    notification_dispatch_repo: NotificationDispatchRepositoryInterface
 
     async def __aenter__(self) -> Self: ...
 

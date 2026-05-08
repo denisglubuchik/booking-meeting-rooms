@@ -7,20 +7,30 @@ from domain.entities.booking_participant import (
     BookingParticipant,
     BookingParticipantRole,
 )
+from domain.entities.notification import NotificationType
 from domain.entities.user import UserRole
 from usecases.dto.booking import (
-    AddBookingParticipantResultDTO,
     AddBookingParticipantDTO,
+    AddBookingParticipantResultDTO,
     BookingParticipantResponseDTO,
     OperationWarningDTO,
 )
+from usecases.dto.notification import CreateNotificationDispatchDTO
 from usecases.exceptions import BadRequest, ForbiddenError, NotFoundError
 from usecases.interfaces.uow import UoWInterface
+from usecases.notifications.create_dispatch import (
+    CreateNotificationDispatchUseCase,
+)
 
 
 class AddBookingParticipantUseCase:
-    def __init__(self, uow: UoWInterface) -> None:
+    def __init__(
+        self,
+        uow: UoWInterface,
+        create_notification_dispatch_uc: CreateNotificationDispatchUseCase,
+    ) -> None:
         self.uow = uow
+        self.create_notification_dispatch_uc = create_notification_dispatch_uc
         self.logger = logging.getLogger("usecases.bookings.add_participant")
 
     async def execute(
@@ -34,6 +44,7 @@ class AddBookingParticipantUseCase:
             dto.actor_id,
             dto.user_id,
         )
+        notify_data: tuple[UUID, str, dict] | None = None
         async with self.uow:
             booking = await self.uow.bookings_repo.get_by_id(dto.booking_id)
             if not booking:
@@ -89,6 +100,16 @@ class AddBookingParticipantUseCase:
                     dto.user_id,
                 )
                 raise BadRequest("User is deactivated")
+            notify_data = (
+                user.id,
+                user.email,
+                {
+                    "booking_id": str(booking.id),
+                    "booking_title": booking.title,
+                    "start_time": booking.time_range.start.isoformat(),
+                    "room_id": str(booking.room_id),
+                },
+            )
 
             participant = await (
                 self.uow.booking_participants_repo.get_by_booking_and_user(
@@ -134,10 +155,31 @@ class AddBookingParticipantUseCase:
                 created_at=participant.created_at,
             )
             warnings = [warning] if warning is not None else []
-            return AddBookingParticipantResultDTO(
+            result = AddBookingParticipantResultDTO(
                 participant=participant_dto,
                 warnings=warnings,
             )
+        if notify_data is not None:
+            user_id, recipient, payload = notify_data
+            try:
+                await self.create_notification_dispatch_uc.execute(
+                    CreateNotificationDispatchDTO(
+                        user_id=user_id,
+                        recipient=recipient,
+                        notification_type=(
+                            NotificationType.BOOKING_PARTICIPANT_ADDED
+                        ),
+                        payload=payload,
+                    ),
+                )
+            except Exception:
+                self.logger.exception(
+                    "add_booking_participant_notification_failed booking_id=%s "
+                    "user_id=%s",
+                    dto.booking_id,
+                    user_id,
+                )
+        return result
 
     async def _handle_capacity_exceeded(
         self,

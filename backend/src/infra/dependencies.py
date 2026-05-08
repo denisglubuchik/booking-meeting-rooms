@@ -16,7 +16,14 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from core.config import AuthConfig, DBConfig, RedisConfig, S3Config
+from core.config import (
+    AuthConfig,
+    DBConfig,
+    EmailConfig,
+    RedisConfig,
+    S3Config,
+    WorkerConfig,
+)
 from infra.auth.access_token import JWTAccessTokenIssuer, JWTAccessTokenVerifier
 from infra.cache.service import RedisCacheService
 from infra.db.repositories.booking import DBBookingsRepository
@@ -25,9 +32,16 @@ from infra.db.repositories.booking_participant import (
     DBBookingParticipantsRepository,
 )
 from infra.db.repositories.meeting_room import DBMeetingRoomsRepository
+from infra.db.repositories.notification import DBNotificationRepository
+from infra.db.repositories.notification_dispatch import (
+    DBNotificationDispatchRepository,
+)
 from infra.db.repositories.office import DBOfficesRepository
 from infra.db.repositories.user import DBUsersRepository
 from infra.db.uow import SQLAlchemyUOW
+from infra.integrations.notifications.email import (
+    SMTPEmailNotificationSender,
+)
 from infra.integrations.s3storage.s3 import S3FileStorage
 from infra.interfaces.access_token import (
     AccessTokenIssuerInterface,
@@ -39,6 +53,9 @@ from infra.password_hasher import PasswordHasher
 from usecases.bookings.add_participant import AddBookingParticipantUseCase
 from usecases.bookings.cancel_booking import CancelBookingUseCase
 from usecases.bookings.change_room import ChangeRoomBookingUseCase
+from usecases.bookings.complete_expired_bookings import (
+    CompleteExpiredBookingsUseCase,
+)
 from usecases.bookings.create_booking import CreateBookingUseCase
 from usecases.bookings.get_all_bookings import GetAllBookingsUseCase
 from usecases.bookings.get_available_rooms import GetAvailableRoomsUseCase
@@ -55,6 +72,12 @@ from usecases.interfaces.db import (
     DBOfficesRepositoryInterface,
     DBUsersRepositoryInterface,
 )
+from usecases.interfaces.notifications import (
+    NotificationDispatchRepositoryInterface,
+    NotificationRepositoryInterface,
+    NotificationSenderInterface,
+    NotificationTemplateRendererInterface,
+)
 from usecases.interfaces.password_hasher import PasswordHasherInterface
 from usecases.interfaces.uow import UoWInterface
 from usecases.meeting_rooms.activate_room import ActivateRoomUseCase
@@ -68,6 +91,18 @@ from usecases.meeting_rooms.image_ops import (
     UploadRoomImageUseCase,
 )
 from usecases.meeting_rooms.update_room import UpdateRoomUseCase
+from usecases.notifications.create_dispatch import (
+    CreateNotificationDispatchUseCase,
+)
+from usecases.notifications.process_dispatch import (
+    ProcessNotificationDispatchUseCase,
+)
+from usecases.notifications.select_reminders import (
+    SelectBookingStartRemindersUseCase,
+)
+from usecases.notifications.template_renderer import (
+    NotificationTemplateRenderer,
+)
 from usecases.offices.activate_office import ActivateOfficeUseCase
 from usecases.offices.create_office import CreateOfficeUseCase
 from usecases.offices.deactivate_office import DeactivateOfficeUseCase
@@ -92,6 +127,8 @@ db_config = DBConfig()
 redis_config = RedisConfig()
 auth_config = AuthConfig()
 s3_config = S3Config()
+email_config = EmailConfig()
+worker_config = WorkerConfig()
 
 
 class DependencyProvider(Provider):
@@ -251,6 +288,34 @@ class DependencyProvider(Provider):
             session_factory=session_factory,
         )
 
+    @provide(scope=Scope.REQUEST)
+    def db_notifications_repository(
+        self,
+        session_factory: async_sessionmaker[AsyncSession],
+    ) -> NotificationRepositoryInterface:
+        return DBNotificationRepository(
+            session=None,
+            session_factory=session_factory,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def db_notification_dispatch_repository(
+        self,
+        session_factory: async_sessionmaker[AsyncSession],
+    ) -> NotificationDispatchRepositoryInterface:
+        return DBNotificationDispatchRepository(
+            session=None,
+            session_factory=session_factory,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def notification_template_renderer(
+        self,
+    ) -> NotificationTemplateRendererInterface:
+        return NotificationTemplateRenderer()
+
+    create_notification_dispatch_uc = provide(CreateNotificationDispatchUseCase)
+
     activate_office_uc = provide(ActivateOfficeUseCase)
     create_office_uc = provide(CreateOfficeUseCase)
     deactivate_office_uc = provide(DeactivateOfficeUseCase)
@@ -299,6 +364,162 @@ container = make_async_container(
         redis_config=redis_config,
         auth_config=auth_config,
         s3_config=s3_config,
+        scope=Scope.REQUEST,
+    ),
+)
+
+
+class WorkerDependencyProvider(Provider):
+    def __init__(
+        self,
+        db_config: DBConfig,
+        email_config: EmailConfig,
+        worker_config: WorkerConfig,
+        scope: BaseScope | None = None,
+        component: Component | None = None,
+    ) -> None:
+        super().__init__(scope=scope, component=component)
+        self.db_config = db_config
+        self.email_config = email_config
+        self.worker_config = worker_config
+
+    @provide(scope=Scope.APP)
+    async def db_engine(self) -> AsyncIterator[AsyncEngine]:
+        engine = create_async_engine(
+            self.db_config.DATABASE_URL,
+            echo=False,
+            pool_size=7,
+            max_overflow=20,
+            pool_pre_ping=True,
+        )
+        try:
+            yield engine
+        finally:
+            await engine.dispose()
+
+    @provide(scope=Scope.APP)
+    def session_factory(
+        self,
+        engine: AsyncEngine,
+    ) -> async_sessionmaker[AsyncSession]:
+        return async_sessionmaker(
+            autocommit=False,
+            autoflush=False,
+            bind=engine,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def sql_alchemy_uow(
+        self,
+        session_factory: async_sessionmaker[AsyncSession],
+    ) -> UoWInterface:
+        return SQLAlchemyUOW(session_factory=session_factory, cache=None)
+
+    @provide(scope=Scope.REQUEST)
+    def db_notification_dispatch_repository(
+        self,
+        session_factory: async_sessionmaker[AsyncSession],
+    ) -> NotificationDispatchRepositoryInterface:
+        return DBNotificationDispatchRepository(
+            session=None,
+            session_factory=session_factory,
+        )
+
+    @provide(scope=Scope.APP)
+    def email_settings(self) -> EmailConfig:
+        return self.email_config
+
+    @provide(scope=Scope.APP)
+    def worker_settings(self) -> WorkerConfig:
+        return self.worker_config
+
+    @provide(scope=Scope.REQUEST)
+    def db_bookings_repository(
+        self,
+        session_factory: async_sessionmaker[AsyncSession],
+    ) -> DBBookingsRepositoryInterface:
+        return DBBookingsRepository(
+            session=None,
+            session_factory=session_factory,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def db_users_repository(
+        self,
+        session_factory: async_sessionmaker[AsyncSession],
+    ) -> DBUsersRepositoryInterface:
+        return DBUsersRepository(
+            session=None,
+            session_factory=session_factory,
+            cache=None,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def db_notifications_repository(
+        self,
+        session_factory: async_sessionmaker[AsyncSession],
+    ) -> NotificationRepositoryInterface:
+        return DBNotificationRepository(
+            session=None,
+            session_factory=session_factory,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def notification_template_renderer(
+        self,
+    ) -> NotificationTemplateRendererInterface:
+        return NotificationTemplateRenderer()
+
+    create_notification_dispatch_uc = provide(CreateNotificationDispatchUseCase)
+
+    @provide(scope=Scope.APP)
+    def email_notification_sender(
+        self,
+        email_settings: EmailConfig,
+    ) -> NotificationSenderInterface:
+        return SMTPEmailNotificationSender(config=email_settings)
+
+    @provide(scope=Scope.APP)
+    def notification_senders(
+        self,
+        email_settings: EmailConfig,
+        email_notification_sender: NotificationSenderInterface,
+    ) -> list[NotificationSenderInterface]:
+        if not email_settings.EMAIL_ENABLED:
+            return []
+        return [
+            email_notification_sender,
+        ]
+
+    @provide(scope=Scope.REQUEST)
+    def process_notification_dispatch_uc(
+        self,
+        dispatch_repo: NotificationDispatchRepositoryInterface,
+        notification_senders: list[NotificationSenderInterface],
+        worker_settings: WorkerConfig,
+    ) -> ProcessNotificationDispatchUseCase:
+        return ProcessNotificationDispatchUseCase(
+            dispatch_repo=dispatch_repo,
+            senders=notification_senders,
+            max_attempts=worker_settings.DISPATCH_MAX_ATTEMPTS,
+            batch_size=100,
+            retry_base_seconds=worker_settings.DISPATCH_RETRY_BASE_SECONDS,
+            retry_max_backoff_seconds=(
+                worker_settings.DISPATCH_RETRY_MAX_BACKOFF_SECONDS
+            ),
+        )
+
+    select_booking_start_reminders_uc = provide(
+        SelectBookingStartRemindersUseCase,
+    )
+    complete_expired_bookings_uc = provide(CompleteExpiredBookingsUseCase)
+
+
+worker_container = make_async_container(
+    WorkerDependencyProvider(
+        db_config=db_config,
+        email_config=email_config,
+        worker_config=worker_config,
         scope=Scope.REQUEST,
     ),
 )

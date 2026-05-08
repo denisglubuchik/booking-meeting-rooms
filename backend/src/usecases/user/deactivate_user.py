@@ -1,9 +1,10 @@
 import logging
 from uuid import UUID
 
+from domain.entities.booking_history import HistoryAction
 from usecases.dto.user import UserResponseDTO
 from usecases.exceptions import NotFoundError
-from usecases.helpers.booking_lifecycle import build_cancellation_history
+from usecases.helpers.booking_lifecycle import build_booking_history
 from usecases.interfaces.uow import UoWInterface
 
 
@@ -43,8 +44,9 @@ class DeactivateUserUseCase:
                 booking.cancel()
                 saved_booking = await self.uow.bookings_repo.save(booking)
                 booking_history_items.append(
-                    build_cancellation_history(
+                    build_booking_history(
                         booking=saved_booking,
+                        action=HistoryAction.CANCELLED,
                         performed_by=performed_by or user.id,
                         details=f"user_deactivated:{user.id}",
                     ),

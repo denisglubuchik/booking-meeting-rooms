@@ -8,8 +8,8 @@ from fastapi import APIRouter, Query
 
 from api.dependencies.auth import AdminUserDep, CurrentUserDep
 from api.schemas.bookings import (
-    AddBookingParticipantResponse,
     AddBookingParticipantRequest,
+    AddBookingParticipantResponse,
     BookingDetailsResponse,
     BookingResponse,
     ChangeRoomBookingRequest,
