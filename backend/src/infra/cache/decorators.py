@@ -7,7 +7,11 @@ from typing import Any
 logger = logging.getLogger("infra.cache.decorators")
 
 
-def cache(key_prefix: str, return_type: type, expire: int = 3600) -> Callable:
+def cache(
+    key_prefix: str,
+    return_type: type,
+    expire: int | Callable[[Any], int] = 3600,
+) -> Callable:
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         async def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
@@ -40,11 +44,12 @@ def cache(key_prefix: str, return_type: type, expire: int = 3600) -> Callable:
 
             # Save to cache if result is not None
             if result is not None:
-                await cache_service.set(key, result, ttl=expire)
+                ttl = expire(self) if callable(expire) else expire
+                await cache_service.set(key, result, ttl=ttl)
                 logger.info(
                     "cache_set key_prefix=%s ttl=%s",
                     key_prefix,
-                    expire,
+                    ttl,
                 )
 
             return result

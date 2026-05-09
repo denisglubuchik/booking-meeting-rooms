@@ -10,7 +10,6 @@ from infra.interfaces.file_storage import FileStorageInterface
 
 
 class S3FileStorage(FileStorageInterface):
-    _PRESIGNED_URL_CACHE_PREFIX = "s3:presign"
     _CACHE_CONTROL_VALUE = "public, max-age=31536000, immutable"
 
     def __init__(
@@ -36,9 +35,6 @@ class S3FileStorage(FileStorageInterface):
         if self._config.S3_USE_PATH_STYLE:
             return self._client_config()
         return None
-
-    def _presigned_url_cache_key(self, key: str) -> str:
-        return f"{self._PRESIGNED_URL_CACHE_PREFIX}:{key}"
 
     async def upload(
         self,
