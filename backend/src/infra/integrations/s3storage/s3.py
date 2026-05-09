@@ -70,7 +70,11 @@ class S3FileStorage(FileStorageInterface):
             )
         self._logger.info("s3_upload_finished key=%s", key)
 
-    @cache(key_prefix="s3", return_type=str)
+    @cache(
+        key_prefix="s3",
+        return_type=str,
+        expire=lambda self: max(1, self._config.S3_PRESIGN_EXPIRES_SECONDS - 30),
+    )
     async def generate_presigned_download_url(self, *, key: str) -> str:
         async with self._session.client(
             "s3",
