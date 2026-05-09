@@ -98,6 +98,7 @@ class AddBookingParticipantUseCase:
                     dto.user_id,
                 )
                 raise BadRequest("User is deactivated")
+            room = await self.uow.rooms_repo.get_by_id(booking.room_id)
             notify_data = (
                 user.id,
                 user.email,
@@ -105,7 +106,9 @@ class AddBookingParticipantUseCase:
                     "booking_id": str(booking.id),
                     "booking_title": booking.title,
                     "start_time": booking.time_range.start.isoformat(),
+                    "end_time": booking.time_range.end.isoformat(),
                     "room_id": str(booking.room_id),
+                    "room_name": room.name if room else str(booking.room_id),
                 },
             )
 

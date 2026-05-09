@@ -1,3 +1,6 @@
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 from domain.entities.notification import NotificationType
 from usecases.interfaces.notifications import (
     NotificationTemplateRendererInterface,
@@ -5,6 +8,29 @@ from usecases.interfaces.notifications import (
 
 
 class NotificationTemplateRenderer(NotificationTemplateRendererInterface):
+    _MSK_TZ = ZoneInfo("Europe/Moscow")
+
+    def _format_dt(self, value: str | None) -> str:
+        if not value:
+            return "-"
+        try:
+            dt = datetime.fromisoformat(value)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=self._MSK_TZ)
+            else:
+                dt = dt.astimezone(self._MSK_TZ)
+            return dt.strftime("%d.%m.%Y %H:%M")
+        except ValueError:
+            return value
+
+    def _format_range(
+        self,
+        *,
+        start_time: str | None,
+        end_time: str | None,
+    ) -> str:
+        return f"{self._format_dt(start_time)} - {self._format_dt(end_time)}"
+
     def render_title(
         self,
         *,
@@ -35,50 +61,74 @@ class NotificationTemplateRenderer(NotificationTemplateRendererInterface):
         _ = locale
         if notification_type == NotificationType.BOOKING_PARTICIPANT_ADDED:
             booking_title = payload.get("booking_title") or "Без названия"
-            start_time = payload.get("start_time") or "-"
+            time_range = self._format_range(
+                start_time=payload.get("start_time"),
+                end_time=payload.get("end_time"),
+            )
+            room_name = payload.get("room_name") or "-"
             return (
                 "Вы добавлены как участник бронирования.\n"
                 f"Тема: {booking_title}\n"
-                f"Начало: {start_time}"
+                f"Переговорная: {room_name}\n"
+                f"Интервал: {time_range}"
             )
         if notification_type == NotificationType.BOOKING_START_REMINDER:
             booking_title = payload.get("booking_title") or "Без названия"
-            start_time = payload.get("start_time") or "-"
+            time_range = self._format_range(
+                start_time=payload.get("start_time"),
+                end_time=payload.get("end_time"),
+            )
+            room_name = payload.get("room_name") or "-"
             return (
                 "Скоро начнется бронирование.\n"
                 f"Тема: {booking_title}\n"
-                f"Начало: {start_time}"
+                f"Переговорная: {room_name}\n"
+                f"Интервал: {time_range}"
             )
         if notification_type == NotificationType.BOOKING_CANCELLED:
             booking_title = payload.get("booking_title") or "Без названия"
-            start_time = payload.get("start_time") or "-"
+            time_range = self._format_range(
+                start_time=payload.get("start_time"),
+                end_time=payload.get("end_time"),
+            )
+            room_name = payload.get("room_name") or "-"
             return (
                 "Бронирование было отменено.\n"
                 f"Тема: {booking_title}\n"
-                f"Планировалось на: {start_time}"
+                f"Переговорная: {room_name}\n"
+                f"Планировалось: {time_range}"
             )
         if notification_type == NotificationType.BOOKING_RESCHEDULED:
             booking_title = payload.get("booking_title") or "Без названия"
-            old_start_time = payload.get("old_start_time") or "-"
-            old_end_time = payload.get("old_end_time") or "-"
-            new_start_time = payload.get("new_start_time") or "-"
-            new_end_time = payload.get("new_end_time") or "-"
+            old_range = self._format_range(
+                start_time=payload.get("old_start_time"),
+                end_time=payload.get("old_end_time"),
+            )
+            new_range = self._format_range(
+                start_time=payload.get("new_start_time"),
+                end_time=payload.get("new_end_time"),
+            )
+            room_name = payload.get("room_name") or "-"
             return (
                 "Время бронирования изменено.\n"
                 f"Тема: {booking_title}\n"
-                f"Было: {old_start_time} - {old_end_time}\n"
-                f"Стало: {new_start_time} - {new_end_time}"
+                f"Переговорная: {room_name}\n"
+                f"Было: {old_range}\n"
+                f"Стало: {new_range}"
             )
         if notification_type == NotificationType.BOOKING_ROOM_CHANGED:
             booking_title = payload.get("booking_title") or "Без названия"
-            start_time = payload.get("start_time") or "-"
-            old_room_id = payload.get("old_room_id") or "-"
-            new_room_id = payload.get("new_room_id") or "-"
+            time_range = self._format_range(
+                start_time=payload.get("start_time"),
+                end_time=payload.get("end_time"),
+            )
+            old_room_name = payload.get("old_room_name") or "-"
+            new_room_name = payload.get("new_room_name") or "-"
             return (
                 "Для бронирования выбрана другая переговорная.\n"
                 f"Тема: {booking_title}\n"
-                f"Начало: {start_time}\n"
-                f"Было room_id: {old_room_id}\n"
-                f"Стало room_id: {new_room_id}"
+                f"Интервал: {time_range}\n"
+                f"Было: {old_room_name}\n"
+                f"Стало: {new_room_name}"
             )
         return "У вас новое уведомление."

@@ -5,6 +5,7 @@ import { useForm } from "vee-validate";
 import { z } from "zod";
 import { useRoute } from "vue-router";
 import { getAvailableRooms, getOffices, humanizeApiError } from "../../shared/api";
+import { isValidTime24h } from "../../shared/lib/time";
 
 function minutesFromTime(timeStr: string) {
   const [hours = "0", minutes = "0"] = timeStr.split(":");
@@ -51,6 +52,14 @@ export function useFindRoom() {
         floor: z.number().int().min(0).optional(),
         capacity_gte: z.number().int().min(1).optional(),
         capacity_lte: z.number().int().min(1).optional(),
+      })
+      .refine((v) => isValidTime24h(v.startTime), {
+        path: ["startTime"],
+        message: "Введите время в формате 24 часа, например 15:30.",
+      })
+      .refine((v) => isValidTime24h(v.endTime), {
+        path: ["endTime"],
+        message: "Введите время в формате 24 часа, например 16:30.",
       })
       .refine((v) => v.startTime !== v.endTime, {
         path: ["endTime"],

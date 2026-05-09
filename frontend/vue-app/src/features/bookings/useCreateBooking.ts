@@ -5,6 +5,7 @@ import { useForm } from "vee-validate";
 import { useRoute, useRouter } from "vue-router";
 import { z } from "zod";
 import { createBooking, getOffices, getRooms, humanizeApiError } from "../../shared/api";
+import { isValidTime24h } from "../../shared/lib/time";
 import { useToast } from "../ui/toast";
 
 function toIso(date: string, time: string) {
@@ -26,6 +27,14 @@ export function useCreateBooking() {
         start: z.string().min(1, "Выберите время начала."),
         end: z.string().min(1, "Выберите время окончания."),
         title: z.string().optional(),
+      })
+      .refine((v) => isValidTime24h(v.start), {
+        path: ["start"],
+        message: "Введите время в формате 24 часа, например 15:30.",
+      })
+      .refine((v) => isValidTime24h(v.end), {
+        path: ["end"],
+        message: "Введите время в формате 24 часа, например 16:30.",
       })
       .refine((v) => v.start < v.end, {
         path: ["end"],

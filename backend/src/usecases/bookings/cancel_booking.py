@@ -58,6 +58,7 @@ class CancelBookingUseCase:
                     "Not enough permissions for booking action",
                 )
             BookingPolicy.validate_booking_is_mutable(booking)
+            room = await self.uow.rooms_repo.get_by_id(booking.room_id)
 
             booking.cancel()
             participants_with_users = (
@@ -102,7 +103,9 @@ class CancelBookingUseCase:
                             "booking_id": str(dto.id),
                             "booking_title": saved.title,
                             "start_time": saved.time_range.start.isoformat(),
+                            "end_time": saved.time_range.end.isoformat(),
                             "room_id": str(saved.room_id),
+                            "room_name": room.name if room else str(saved.room_id),
                         },
                     ),
                 )

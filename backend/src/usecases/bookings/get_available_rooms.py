@@ -2,6 +2,7 @@ import logging
 
 from domain.entities.booking import TimeRange
 from domain.services.booking_policy import BookingPolicy
+from infra.interfaces.file_storage import FileStorageInterface
 from usecases.dto.booking import AvailableRoomsFiltersDTO
 from usecases.dto.meeting_room import RoomResponseDTO
 from usecases.interfaces.db import (
@@ -15,9 +16,11 @@ class GetAvailableRoomsUseCase:
         self,
         room_repo: DBMeetingRoomsRepositoryInterface,
         booking_repo: DBBookingsRepositoryInterface,
+        file_storage: FileStorageInterface,
     ) -> None:
         self.room_repo = room_repo
         self.booking_repo = booking_repo
+        self.file_storage = file_storage
         self.logger = logging.getLogger("usecases.bookings.get_available_rooms")
 
     async def execute(
@@ -60,17 +63,26 @@ class GetAvailableRoomsUseCase:
                 len(available_rooms),
             )
 
-            return [
-                RoomResponseDTO(
-                    id=room.id,
-                    office_id=room.office_id,
-                    name=room.name,
-                    floor=room.floor,
-                    capacity=room.capacity,
-                    description=room.description,
-                    equipment=room.equipment,
-                    image_url=None,
-                    is_active=room.is_active,
+            output: list[RoomResponseDTO] = []
+            for room in available_rooms:
+                image_url = None
+                if room.image_key:
+                    image_url = (
+                        await self.file_storage.generate_presigned_download_url(
+                            key=room.image_key,
+                        )
+                    )
+                output.append(
+                    RoomResponseDTO(
+                        id=room.id,
+                        office_id=room.office_id,
+                        name=room.name,
+                        floor=room.floor,
+                        capacity=room.capacity,
+                        description=room.description,
+                        equipment=room.equipment,
+                        image_url=image_url,
+                        is_active=room.is_active,
+                    ),
                 )
-                for room in available_rooms
-            ]
+            return output

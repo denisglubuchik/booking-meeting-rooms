@@ -457,6 +457,17 @@ class WorkerDependencyProvider(Provider):
         )
 
     @provide(scope=Scope.REQUEST)
+    def db_rooms_repository(
+        self,
+        session_factory: async_sessionmaker[AsyncSession],
+    ) -> DBMeetingRoomsRepositoryInterface:
+        return DBMeetingRoomsRepository(
+            session=None,
+            session_factory=session_factory,
+            cache=None,
+        )
+
+    @provide(scope=Scope.REQUEST)
     def db_notifications_repository(
         self,
         session_factory: async_sessionmaker[AsyncSession],

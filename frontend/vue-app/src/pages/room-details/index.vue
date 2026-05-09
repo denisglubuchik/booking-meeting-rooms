@@ -39,7 +39,7 @@
         <p class="muted">Показано на {{ selectedDateLabel }}</p>
         <div class="stack">
           <div v-for="booking in bookingsForDate" :key="booking.id" class="kv">
-            {{ fmt(booking.start_time) }}-{{ fmt(booking.end_time) }} · {{ booking.status }}
+            {{ fmt(booking.start_time) }}-{{ fmt(booking.end_time) }} · <StatusBadge :status="booking.status" />
           </div>
           <div v-if="bookingsForDate.length === 0" class="kv">На выбранную дату бронирований нет</div>
         </div>
@@ -54,7 +54,7 @@ import { computed, ref } from "vue";
 import dayjs from "dayjs";
 import { useQuery } from "@tanstack/vue-query";
 import { RouterLink, useRoute } from "vue-router";
-import { EmptyState, ErrorState, LoadingState, PageHeader } from "../../components/common";
+import { EmptyState, ErrorState, LoadingState, PageHeader, StatusBadge } from "../../components/common";
 import { Input } from "../../components/ui/input";
 import { getOfficeById, getRoomBookings, getRoomById, humanizeApiError } from "../../shared/api";
 import { formatDateRu, formatTimeRu } from "../../shared/lib/datetime";

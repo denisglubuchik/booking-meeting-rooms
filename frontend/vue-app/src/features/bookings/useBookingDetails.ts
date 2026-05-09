@@ -15,6 +15,7 @@ import {
   removeBookingParticipant,
   rescheduleBooking,
 } from "../../shared/api";
+import { isValidTime24h } from "../../shared/lib/time";
 import { useAuthStore } from "../auth/store";
 import { useConfirm } from "../ui/confirm";
 import { useToast } from "../ui/toast";
@@ -248,6 +249,10 @@ export function useBookingDetails() {
     rescheduleError.value = "";
     if (!rescheduleDraft.date || !rescheduleDraft.start || !rescheduleDraft.end) {
       rescheduleError.value = "Заполните дату и время для переноса.";
+      return;
+    }
+    if (!isValidTime24h(rescheduleDraft.start) || !isValidTime24h(rescheduleDraft.end)) {
+      rescheduleError.value = "Введите время в формате 24 часа, например 15:30.";
       return;
     }
     if (rescheduleDraft.start >= rescheduleDraft.end) {

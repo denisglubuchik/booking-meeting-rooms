@@ -63,6 +63,16 @@ class ChangeRoomBookingUseCase:
             BookingPolicy.validate_booking_is_mutable(booking)
 
             old_room_id = booking.room_id
+            old_room = await self.uow.rooms_repo.get_by_id(old_room_id)
+            new_room = await self.uow.rooms_repo.get_by_id(dto.new_room_id)
+            if not new_room:
+                self.logger.warning(
+                    "change_room_new_room_not_found room_id=%s",
+                    dto.new_room_id,
+                )
+                raise NotFoundError(
+                    f"Room with id {dto.new_room_id} not found",
+                )
 
             start_of_day = booking.time_range.start.replace(
                 hour=0,
@@ -134,8 +144,11 @@ class ChangeRoomBookingUseCase:
                             "booking_id": str(booking.id),
                             "booking_title": booking.title,
                             "start_time": booking.time_range.start.isoformat(),
-                            "old_room_id": str(old_room_id),
-                            "new_room_id": str(booking.room_id),
+                            "end_time": booking.time_range.end.isoformat(),
+                            "old_room_name": (
+                                old_room.name if old_room else str(old_room_id)
+                            ),
+                            "new_room_name": new_room.name,
                         },
                     ),
                 )

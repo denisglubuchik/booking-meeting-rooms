@@ -60,6 +60,7 @@ class RescheduleBookingUseCase:
                     "Not enough permissions for booking action",
                 )
             BookingPolicy.validate_booking_is_mutable(booking)
+            room = await self.uow.rooms_repo.get_by_id(booking.room_id)
 
             old_time_range = booking.time_range
             start_of_day = dto.new_start_time.replace(
@@ -143,6 +144,9 @@ class RescheduleBookingUseCase:
                             "new_start_time": booking.time_range.start.isoformat(),  # noqa: E501
                             "new_end_time": booking.time_range.end.isoformat(),
                             "room_id": str(booking.room_id),
+                            "room_name": (
+                                room.name if room else str(booking.room_id)
+                            ),
                         },
                     ),
                 )

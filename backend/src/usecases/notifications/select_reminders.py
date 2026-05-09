@@ -8,6 +8,7 @@ from domain.time import moscow_now
 from usecases.dto.notification import CreateNotificationDispatchDTO
 from usecases.interfaces.db import (
     DBBookingsRepositoryInterface,
+    DBMeetingRoomsRepositoryInterface,
     DBUsersRepositoryInterface,
 )
 from usecases.notifications.create_dispatch import (
@@ -26,10 +27,12 @@ class SelectBookingStartRemindersUseCase:
     def __init__(
         self,
         bookings_repo: DBBookingsRepositoryInterface,
+        rooms_repo: DBMeetingRoomsRepositoryInterface,
         users_repo: DBUsersRepositoryInterface,
         create_dispatch_uc: CreateNotificationDispatchUseCase,
     ) -> None:
         self.bookings_repo = bookings_repo
+        self.rooms_repo = rooms_repo
         self.users_repo = users_repo
         self.create_dispatch_uc = create_dispatch_uc
         self.logger = logging.getLogger(
@@ -48,7 +51,7 @@ class SelectBookingStartRemindersUseCase:
         reminder_from = run_at + timedelta(minutes=lead_minutes)
         reminder_to = reminder_from + timedelta(seconds=window_seconds)
 
-        async with self.bookings_repo, self.users_repo:
+        async with self.bookings_repo, self.rooms_repo, self.users_repo:
             candidate_bookings = await self.bookings_repo.get_all(
                 status=BookingStatus.CREATED,
                 start_time_gte=reminder_from,
@@ -67,6 +70,7 @@ class SelectBookingStartRemindersUseCase:
                 if user is None or not user.is_active:
                     skipped += 1
                     continue
+                room = await self.rooms_repo.get_by_id(booking.room_id)
 
                 dispatch = await self.create_dispatch_uc.execute(
                     CreateNotificationDispatchDTO(
@@ -79,7 +83,11 @@ class SelectBookingStartRemindersUseCase:
                             "booking_id": str(booking.id),
                             "booking_title": booking.title,
                             "start_time": booking.time_range.start.isoformat(),
+                            "end_time": booking.time_range.end.isoformat(),
                             "room_id": str(booking.room_id),
+                            "room_name": (
+                                room.name if room else str(booking.room_id)
+                            ),
                         },
                         # Stable dedup point for reminder notifications.
                         scheduled_for=booking.time_range.start,
