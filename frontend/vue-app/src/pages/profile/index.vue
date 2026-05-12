@@ -19,6 +19,31 @@
         <AppButton variant="dark" type="submit" :disabled="updateMutation.isPending.value">{{ updateMutation.isPending.value ? 'Сохраняем...' : 'Сохранить изменения' }}</AppButton>
       </form>
     </div>
+
+    <div v-if="!isLoading && !errorText" class="panel stack">
+      <h3>Активные сессии</h3>
+      <LoadingState v-if="sessionsLoading" />
+      <ErrorState v-else-if="sessionsErrorText" :message="sessionsErrorText" />
+      <div v-else-if="sessions.length === 0" class="muted">Сессий пока нет.</div>
+      <div v-else class="stack">
+        <div v-for="session in sessions" :key="session.id" class="panel stack">
+          <div class="kv">Создана: {{ formatDateTimeRu(session.created_at) }}</div>
+          <div class="kv">Истекает: {{ formatDateTimeRu(session.expires_at) }}</div>
+          <div class="kv">IP: {{ session.ip || "—" }}</div>
+          <div class="kv">User-Agent: {{ session.user_agent || "—" }}</div>
+          <div class="kv">
+            Статус: {{ session.revoked_at ? `отозвана (${formatDateTimeRu(session.revoked_at)})` : "активна" }}
+          </div>
+          <AppButton
+            variant="outline"
+            :disabled="Boolean(session.revoked_at) || revokeSessionMutation.isPending.value"
+            @click="revokeUserSession(session.id)"
+          >
+            Отозвать
+          </AppButton>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -27,7 +52,22 @@ import { ErrorState, LoadingState, PageHeader } from "../../components/common";
 import AppButton from "../../components/ui/button/AppButton.vue";
 import { Input } from "../../components/ui/input";
 import { useProfile } from "../../features/profile";
+import { formatDateTimeRu } from "../../shared/lib/datetime";
 
-const { user, isLoading, errorText, userRoleLabel, fullName, email, firstError, updateMutation, onSubmit } =
-  useProfile();
+const {
+  user,
+  isLoading,
+  errorText,
+  userRoleLabel,
+  fullName,
+  email,
+  firstError,
+  updateMutation,
+  onSubmit,
+  sessions,
+  sessionsLoading,
+  sessionsErrorText,
+  revokeSessionMutation,
+  revokeUserSession,
+} = useProfile();
 </script>

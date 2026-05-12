@@ -1,6 +1,14 @@
-export { ApiError, humanizeApiError, setApiToken } from "./client";
+export { ApiError, clearAuthTokens, humanizeApiError, setApiToken, setAuthTokens } from "./client";
 
-export { login, register, me, updateMe } from "./auth";
+export {
+  getSessions,
+  login,
+  logout,
+  me,
+  register,
+  revokeSession,
+  updateMe,
+} from "./auth";
 export {
   getOffices,
   getOfficeById,

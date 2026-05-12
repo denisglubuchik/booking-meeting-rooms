@@ -3,14 +3,14 @@ import logging
 from usecases.dto.user import LoginUserDTO, UserResponseDTO
 from usecases.exceptions import UnauthorizedError
 from usecases.interfaces.db import DBUsersRepositoryInterface
-from usecases.interfaces.password_hasher import PasswordHasherInterface
+from usecases.interfaces.hasher import HasherInterface
 
 
 class LoginUserUseCase:
     def __init__(
         self,
         user_repo: DBUsersRepositoryInterface,
-        hasher: PasswordHasherInterface,
+        hasher: HasherInterface,
     ) -> None:
         self.user_repo = user_repo
         self.hasher = hasher

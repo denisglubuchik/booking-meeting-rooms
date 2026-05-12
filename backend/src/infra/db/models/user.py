@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from infra.db.models.booking_history import BookingHistoryModel
     from infra.db.models.booking_participant import BookingParticipantModel
     from infra.db.models.notification import NotificationModel
+    from infra.db.models.user_session import UserSessionModel
 
 
 class UserModel(Base):
@@ -40,6 +41,10 @@ class UserModel(Base):
         )
     )
     notifications: Mapped[list["NotificationModel"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    sessions: Mapped[list["UserSessionModel"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
     )

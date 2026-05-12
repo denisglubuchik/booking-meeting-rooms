@@ -20,6 +20,7 @@ from infra.db.models.notification_dispatch import (  # noqa: F401
 )
 from infra.db.models.office import OfficeModel  # noqa: F401
 from infra.db.models.user import UserModel  # noqa: F401
+from infra.db.models.user_session import UserSessionModel  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

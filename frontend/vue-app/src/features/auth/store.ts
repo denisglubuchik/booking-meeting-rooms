@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import type { Role, User } from "../../shared/types/api";
-import { login, me, setApiToken } from "../../shared/api";
+import { clearAuthTokens, login, logout, me, setAuthTokens } from "../../shared/api";
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
@@ -34,7 +34,7 @@ export const useAuthStore = defineStore("auth", {
       this.error = "";
       try {
         const auth = await login(email, password);
-        setApiToken(auth.access_token);
+        setAuthTokens(auth.access_token);
         const user = await me();
         this.applyUser(user);
       } catch (err) {
@@ -45,7 +45,8 @@ export const useAuthStore = defineStore("auth", {
       }
     },
     logout() {
-      setApiToken("");
+      void logout().catch(() => undefined);
+      clearAuthTokens();
       this.isAuthenticated = false;
       this.id = "";
       this.role = "employee";

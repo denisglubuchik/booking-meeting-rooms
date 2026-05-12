@@ -35,7 +35,14 @@ class RedisConfig(Settings):
 class AuthConfig(Settings):
     JWT_ACCESS_SECRET: str = "change-me-in-env"
     JWT_ACCESS_EXPIRES_MINUTES: int = 15
+    JWT_REFRESH_SECRET: str = "change-me-in-env-refresh"
+    JWT_REFRESH_EXPIRES_DAYS: int = 14
     JWT_ISSUER: str = "booking-backend"
+    REFRESH_COOKIE_NAME: str = "booking_refresh_token"
+    REFRESH_COOKIE_SECURE: bool = False
+    REFRESH_COOKIE_SAMESITE: Literal["lax", "strict", "none"] = "lax"
+    REFRESH_COOKIE_PATH: str = "/auth"
+    CORS_ALLOW_ORIGINS: str = "http://localhost:5173"
 
 
 class LoggingConfig(Settings):

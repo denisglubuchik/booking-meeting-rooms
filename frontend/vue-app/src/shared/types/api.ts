@@ -23,3 +23,12 @@ export type AddBookingParticipantResult = {
   participant: BookingParticipant;
   warnings: OperationWarning[];
 };
+
+export type UserSession = {
+  id: string;
+  expires_at: string;
+  revoked_at: string | null;
+  created_at: string;
+  user_agent: string | null;
+  ip: string | null;
+};

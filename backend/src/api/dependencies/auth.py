@@ -10,11 +10,11 @@ from fastapi.security import (
     HTTPBearer,
 )
 
-from api.schemas.users import AuthenticatedUser
+from api.schemas.auth import AuthenticatedUser
 from domain.entities.user import UserRole
-from infra.interfaces.access_token import (
-    AccessTokenVerificationError,
-    AccessTokenVerifierInterface,
+from infra.interfaces.jwt_tokens import (
+    JWTTokenServiceInterface,
+    JWTTokenVerificationError,
 )
 from usecases.exceptions import (
     ForbiddenError,
@@ -27,7 +27,7 @@ logger = logging.getLogger("api.auth")
 
 @inject
 def get_current_user(
-    token_verifier: FromDishka[AccessTokenVerifierInterface],
+    jwt_tokens: FromDishka[JWTTokenServiceInterface],
     credentials: HTTPAuthorizationCredentials | None = Depends(
         bearer_scheme,
     ),
@@ -40,8 +40,8 @@ def get_current_user(
         )
 
     try:
-        payload = token_verifier.verify(credentials.credentials)
-    except AccessTokenVerificationError as error:
+        payload = jwt_tokens.verify_access(credentials.credentials)
+    except JWTTokenVerificationError as error:
         logger.warning("auth_invalid_access_token")
         raise UnauthorizedError(
             "Invalid access token",

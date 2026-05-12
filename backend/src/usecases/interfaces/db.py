@@ -8,6 +8,7 @@ from domain.entities.booking_participant import BookingParticipant
 from domain.entities.meeting_room import MeetingRoom
 from domain.entities.office import Office
 from domain.entities.user import User
+from domain.entities.user_session import UserSession
 
 
 class AsyncContextManagerInterface(Protocol):
@@ -144,6 +145,31 @@ class DBUsersRepositoryInterface(AsyncContextManagerInterface, Protocol):
         limit: int = 100,
         offset: int = 0,
     ) -> list[User]: ...
+
+
+class DBUserSessionsRepositoryInterface(
+    AsyncContextManagerInterface,
+    Protocol,
+):
+    async def save(self, session: UserSession) -> UserSession: ...
+    async def get_active_by_id(
+        self,
+        session_id: UUID,
+    ) -> UserSession | None: ...
+    async def revoke(self, session_id: UUID, revoked_at: datetime) -> None: ...
+    async def list_by_user(
+        self,
+        *,
+        user_id: UUID,
+        is_active: bool | None = None,
+    ) -> list[UserSession]: ...
+    async def revoke_for_user(
+        self,
+        *,
+        user_id: UUID,
+        session_id: UUID,
+        revoked_at: datetime,
+    ) -> None: ...
 
 
 class DBBookingParticipantsRepositoryInterface(

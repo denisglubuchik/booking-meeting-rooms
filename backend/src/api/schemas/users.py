@@ -1,13 +1,10 @@
-from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from domain.entities.user import UserRole
 from usecases.dto.user import (
     CreateUserDTO,
-    LoginUserDTO,
     UpdateUserDTO,
     UserFiltersDTO,
     UserLookupFiltersDTO,
@@ -58,26 +55,6 @@ class UpdateUserRequest(BaseModel):
             full_name=self.full_name,
             email=self.email,
         )
-
-
-class LoginUserRequest(BaseModel):
-    email: str
-    password: str
-
-    def to_dto(self) -> LoginUserDTO:
-        return LoginUserDTO(email=self.email, password=self.password)
-
-
-class AccessTokenResponse(BaseModel):
-    access_token: str
-
-
-@dataclass(frozen=True)
-class AuthenticatedUser:
-    id: UUID
-    email: str
-    role: UserRole
-    is_active: bool
 
 
 class UserResponse(BaseModel):

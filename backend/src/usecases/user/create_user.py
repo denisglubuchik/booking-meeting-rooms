@@ -4,14 +4,14 @@ import uuid
 from domain.entities.user import User
 from usecases.dto.user import CreateUserDTO, UserResponseDTO
 from usecases.interfaces.db import DBUsersRepositoryInterface
-from usecases.interfaces.password_hasher import PasswordHasherInterface
+from usecases.interfaces.hasher import HasherInterface
 
 
 class CreateUserUseCase:
     def __init__(
         self,
         user_repo: DBUsersRepositoryInterface,
-        hasher: PasswordHasherInterface,
+        hasher: HasherInterface,
     ) -> None:
         self.user_repo = user_repo
         self.hasher = hasher

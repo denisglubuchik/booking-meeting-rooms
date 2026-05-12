@@ -3,14 +3,14 @@ import logging
 from argon2 import PasswordHasher as Argon2Hasher
 from argon2.exceptions import VerifyMismatchError
 
-from usecases.interfaces.password_hasher import PasswordHasherInterface
+from usecases.interfaces.hasher import HasherInterface
 
 
-class PasswordHasher(PasswordHasherInterface):
+class ArgonHasher(HasherInterface):
     def __init__(self) -> None:
         self._hasher = Argon2Hasher()
-        self._logger = logging.getLogger("infra.password_hasher")
-        self._logger.debug("password_hasher_initialized")
+        self._logger = logging.getLogger("infra.argon_hasher")
+        self._logger.debug("argon_hasher_initialized")
 
     def hash(self, password: str) -> str:
         self._logger.debug("password_hash_started")

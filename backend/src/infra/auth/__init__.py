@@ -1,1 +1,1 @@
-"""Access token services."""
+"""JWT token services."""

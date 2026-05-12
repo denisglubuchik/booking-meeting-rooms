@@ -8,23 +8,19 @@ from fastapi import APIRouter, Query
 
 from api.dependencies.auth import AdminUserDep, CurrentUserDep
 from api.schemas.users import (
-    AccessTokenResponse,
     CreateUserRequest,
     GetUsersFilters,
-    LoginUserRequest,
     UpdateUserRequest,
     UserLookupFilters,
     UserLookupResponse,
     UserResponse,
 )
-from infra.interfaces.access_token import AccessTokenIssuerInterface
 from usecases.user.activate_user import ActivateUserUseCase
 from usecases.user.change_role import ChangeUserRoleUseCase
 from usecases.user.create_user import CreateUserUseCase
 from usecases.user.deactivate_user import DeactivateUserUseCase
 from usecases.user.get_user_details import GetUserDetailsUseCase
 from usecases.user.get_users import GetUsersUseCase
-from usecases.user.login_user import LoginUserUseCase
 from usecases.user.lookup_users import LookupUsersUseCase
 from usecases.user.update_user import UpdateUserUseCase
 
@@ -69,26 +65,6 @@ async def create_user(
     user = await create_user_uc.execute(payload.to_dto())
     logger.info("create_user_finished user_id=%s", user.id)
     return UserResponse.from_dto(user)
-
-
-@router.post("/login")
-async def login_user(
-    payload: LoginUserRequest,
-    login_user_uc: FromDishka[LoginUserUseCase],
-    token_issuer: FromDishka[AccessTokenIssuerInterface],
-) -> AccessTokenResponse:
-    logger.info("login_user_started email=%s", payload.email)
-    user = await login_user_uc.execute(payload.to_dto())
-    token = token_issuer.issue(
-        subject=str(user.id),
-        claims={
-            "email": user.email,
-            "role": user.role,
-            "is_active": user.is_active,
-        },
-    )
-    logger.info("login_user_finished user_id=%s", user.id)
-    return AccessTokenResponse(access_token=token)
 
 
 @router.get("/me")

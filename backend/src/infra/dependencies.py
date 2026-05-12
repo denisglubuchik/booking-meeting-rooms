@@ -24,7 +24,8 @@ from core.config import (
     S3Config,
     WorkerConfig,
 )
-from infra.auth.access_token import JWTAccessTokenIssuer, JWTAccessTokenVerifier
+from infra.argon_hasher import ArgonHasher
+from infra.auth.tokens import JWTTokenService
 from infra.cache.service import RedisCacheService
 from infra.db.repositories.booking import DBBookingsRepository
 from infra.db.repositories.booking_history import DBBookingHistoryRepository
@@ -38,18 +39,22 @@ from infra.db.repositories.notification_dispatch import (
 )
 from infra.db.repositories.office import DBOfficesRepository
 from infra.db.repositories.user import DBUsersRepository
+from infra.db.repositories.user_session import DBUserSessionsRepository
 from infra.db.uow import SQLAlchemyUOW
 from infra.integrations.notifications.email import (
     SMTPEmailNotificationSender,
 )
 from infra.integrations.s3storage.s3 import S3FileStorage
-from infra.interfaces.access_token import (
-    AccessTokenIssuerInterface,
-    AccessTokenVerifierInterface,
-)
 from infra.interfaces.cache import CacheInterface
 from infra.interfaces.file_storage import FileStorageInterface
-from infra.password_hasher import PasswordHasher
+from infra.interfaces.jwt_tokens import JWTTokenServiceInterface
+from usecases.auth.tokens import (
+    GetUserSessionsUseCase,
+    LoginWithSessionUseCase,
+    LogoutUseCase,
+    RefreshTokensUseCase,
+    RevokeUserSessionUseCase,
+)
 from usecases.bookings.add_participant import AddBookingParticipantUseCase
 from usecases.bookings.cancel_booking import CancelBookingUseCase
 from usecases.bookings.change_room import ChangeRoomBookingUseCase
@@ -71,15 +76,16 @@ from usecases.interfaces.db import (
     DBBookingsRepositoryInterface,
     DBMeetingRoomsRepositoryInterface,
     DBOfficesRepositoryInterface,
+    DBUserSessionsRepositoryInterface,
     DBUsersRepositoryInterface,
 )
+from usecases.interfaces.hasher import HasherInterface
 from usecases.interfaces.notifications import (
     NotificationDispatchRepositoryInterface,
     NotificationRepositoryInterface,
     NotificationSenderInterface,
     NotificationTemplateRendererInterface,
 )
-from usecases.interfaces.password_hasher import PasswordHasherInterface
 from usecases.interfaces.uow import UoWInterface
 from usecases.meeting_rooms.activate_room import ActivateRoomUseCase
 from usecases.meeting_rooms.create_room import CreateRoomUseCase
@@ -173,22 +179,15 @@ class DependencyProvider(Provider):
             await cache.close()
 
     @provide(scope=Scope.APP)
-    def hasher(self) -> PasswordHasherInterface:
-        return PasswordHasher()
+    def hasher(self) -> HasherInterface:
+        return ArgonHasher()
 
     @provide(scope=Scope.APP)
-    def access_token_issuer(
+    def jwt_tokens(
         self,
         auth_settings: AuthConfig,
-    ) -> AccessTokenIssuerInterface:
-        return JWTAccessTokenIssuer(config=auth_settings)
-
-    @provide(scope=Scope.APP)
-    def access_token_verifier(
-        self,
-        auth_settings: AuthConfig,
-    ) -> AccessTokenVerifierInterface:
-        return JWTAccessTokenVerifier(config=auth_settings)
+    ) -> JWTTokenServiceInterface:
+        return JWTTokenService(config=auth_settings)
 
     @provide(scope=Scope.APP)
     async def db_engine(self) -> AsyncIterator[AsyncEngine]:
@@ -233,6 +232,16 @@ class DependencyProvider(Provider):
             session=None,
             session_factory=session_factory,
             cache=cache,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def db_user_sessions_repository(
+        self,
+        session_factory: async_sessionmaker[AsyncSession],
+    ) -> DBUserSessionsRepositoryInterface:
+        return DBUserSessionsRepository(
+            session=None,
+            session_factory=session_factory,
         )
 
     @provide(scope=Scope.REQUEST)
@@ -345,6 +354,11 @@ class DependencyProvider(Provider):
     update_user_uc = provide(UpdateUserUseCase)
     get_users_uc = provide(GetUsersUseCase)
     lookup_users_uc = provide(LookupUsersUseCase)
+    login_with_session_uc = provide(LoginWithSessionUseCase)
+    refresh_tokens_uc = provide(RefreshTokensUseCase)
+    logout_uc = provide(LogoutUseCase)
+    get_user_sessions_uc = provide(GetUserSessionsUseCase)
+    revoke_user_session_uc = provide(RevokeUserSessionUseCase)
 
     cancel_booking_uc = provide(CancelBookingUseCase)
     add_booking_participant_uc = provide(AddBookingParticipantUseCase)

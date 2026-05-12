@@ -3,7 +3,13 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { useMutation, useQuery } from "@tanstack/vue-query";
 import { useForm } from "vee-validate";
 import { z } from "zod";
-import { me, updateMe, humanizeApiError } from "../../shared/api";
+import {
+  getSessions,
+  humanizeApiError,
+  me,
+  revokeSession,
+  updateMe,
+} from "../../shared/api";
 import { useAuthStore } from "../auth/store";
 import { useToast } from "../ui/toast";
 
@@ -68,6 +74,34 @@ export function useProfile() {
     updateMutation.mutate(values);
   });
 
+  const sessionsQuery = useQuery({
+    queryKey: ["profile-sessions"],
+    queryFn: () => getSessions(),
+  });
+
+  const sessions = computed(() => sessionsQuery.data.value ?? []);
+  const sessionsLoading = computed(
+    () => sessionsQuery.isLoading.value || sessionsQuery.isFetching.value,
+  );
+  const sessionsErrorText = computed(() =>
+    sessionsQuery.error.value ? humanizeApiError(sessionsQuery.error.value) : "",
+  );
+
+  const revokeSessionMutation = useMutation({
+    mutationFn: (sessionId: string) => revokeSession(sessionId),
+    onSuccess: () => {
+      sessionsQuery.refetch();
+      toast.success("Сессия отозвана.");
+    },
+    onError: (err) => {
+      toast.error(humanizeApiError(err));
+    },
+  });
+
+  function revokeUserSession(sessionId: string) {
+    revokeSessionMutation.mutate(sessionId);
+  }
+
   return {
     user,
     isLoading,
@@ -78,5 +112,10 @@ export function useProfile() {
     firstError,
     updateMutation,
     onSubmit,
+    sessions,
+    sessionsLoading,
+    sessionsErrorText,
+    revokeSessionMutation,
+    revokeUserSession,
   };
 }

@@ -5,6 +5,7 @@ import type { paths } from "./schema";
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") || "http://localhost:8000";
 
 let token = localStorage.getItem("booking_token") || "";
+let refreshPromise: Promise<string | null> | null = null;
 
 export class ApiError extends Error {
   status: number;
@@ -31,18 +32,71 @@ export function setApiToken(nextToken: string) {
   else localStorage.removeItem("booking_token");
 }
 
+export function setAuthTokens(nextAccessToken: string) {
+  setApiToken(nextAccessToken);
+}
+
+export function clearAuthTokens() {
+  setApiToken("");
+}
+
 export const apiClient = createClient<paths>({
   baseUrl: API_BASE_URL,
 });
 
 const authMiddleware: Middleware = {
   async onRequest({ request }) {
+    const requestWithCredentials = new Request(request, {
+      credentials: "include",
+    });
     if (token) request.headers.set("Authorization", `Bearer ${token}`);
-    return request;
+    if (token) {
+      requestWithCredentials.headers.set("Authorization", `Bearer ${token}`);
+    }
+    return requestWithCredentials;
   },
 };
 
 apiClient.use(authMiddleware);
+
+async function refreshAccessToken(): Promise<string | null> {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        clearAuthTokens();
+        return null;
+      }
+      const payload = (await response.json()) as { access_token: string };
+      setAuthTokens(payload.access_token);
+      return payload.access_token;
+    })().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
+}
+
+const refreshMiddleware = {
+  async onResponse({ request, response }: { request: Request; response: Response }) {
+    if (response.status !== 401 || request.headers.get("x-auth-retry") === "1") {
+      return response;
+    }
+    const nextAccessToken = await refreshAccessToken();
+    if (!nextAccessToken) return response;
+
+    const headers = new Headers(request.headers);
+    headers.set("Authorization", `Bearer ${nextAccessToken}`);
+    headers.set("x-auth-retry", "1");
+
+    return fetch(new Request(request, { headers, credentials: "include" }));
+  },
+} as Middleware;
+
+apiClient.use(refreshMiddleware);
 
 function parseErrorMessage(status: number, body: unknown) {
   if (body && typeof body === "object") {

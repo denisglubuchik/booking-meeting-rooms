@@ -8,16 +8,18 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.errors import register_exception_handlers
 from api.middleware import register_middlewares
+from api.routes.auth import router as auth_router
 from api.routes.bookings import router as bookings_router
 from api.routes.offices import router as offices_router
 from api.routes.rooms import router as rooms_router
 from api.routes.users import router as users_router
-from core.config import LoggingConfig
+from core.config import AuthConfig, LoggingConfig
 from core.logging import setup_logging
 from infra.dependencies import container
 
 setup_logging(LoggingConfig())
 logger = logging.getLogger("api.main")
+auth_config = AuthConfig()
 
 
 @asynccontextmanager
@@ -36,8 +38,12 @@ register_middlewares(app)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=[
+        origin.strip()
+        for origin in auth_config.CORS_ALLOW_ORIGINS.split(",")
+        if origin.strip()
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -52,6 +58,7 @@ app.include_router(offices_router, prefix="/offices")
 app.include_router(rooms_router, prefix="/rooms")
 app.include_router(bookings_router, prefix="/bookings")
 app.include_router(users_router, prefix="/users")
+app.include_router(auth_router, prefix="/auth")
 
 
 setup_dishka(container, app)
