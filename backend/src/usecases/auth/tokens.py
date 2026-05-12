@@ -112,7 +112,11 @@ class RefreshTokensUseCase:
                 raise UnauthorizedError("User is inactive")
 
             now = moscow_now()
-            await self.user_sessions_repo.revoke(session_id, now)
+            await self.user_sessions_repo.revoke_for_user(
+                user_id=user_id,
+                session_id=session_id,
+                revoked_at=moscow_now(),
+            )
 
             next_session_id = uuid4()
             next_refresh_token = self.jwt_tokens.issue_refresh(
@@ -161,9 +165,14 @@ class LogoutUseCase:
         except JWTTokenVerificationError as error:
             raise UnauthorizedError("Invalid refresh token") from error
 
+        user_id = UUID(str(payload["sub"]))
         session_id = UUID(str(payload["sid"]))
         async with self.user_sessions_repo:
-            await self.user_sessions_repo.revoke(session_id, moscow_now())
+            await self.user_sessions_repo.revoke_for_user(
+                user_id=user_id,
+                session_id=session_id,
+                revoked_at=moscow_now(),
+            )
 
 
 class GetUserSessionsUseCase:

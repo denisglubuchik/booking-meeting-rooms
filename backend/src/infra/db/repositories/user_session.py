@@ -39,18 +39,6 @@ class DBUserSessionsRepository(
         model = result.scalar_one_or_none()
         return model.to_domain() if model else None
 
-    async def revoke(self, session_id: UUID, revoked_at: datetime) -> None:
-        self._logger.debug("revoke_session_started session_id=%s", session_id)
-        stmt = select(UserSessionModel).where(UserSessionModel.id == session_id)
-        result = await self._session.execute(stmt)
-        model = result.scalar_one_or_none()
-        if model is None:
-            return
-        model.revoked_at = revoked_at
-        model.updated_at = revoked_at
-        await self._session.flush()
-        self._logger.debug("revoke_session_finished session_id=%s", session_id)
-
     async def list_by_user(
         self,
         *,

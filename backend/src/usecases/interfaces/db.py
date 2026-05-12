@@ -156,7 +156,6 @@ class DBUserSessionsRepositoryInterface(
         self,
         session_id: UUID,
     ) -> UserSession | None: ...
-    async def revoke(self, session_id: UUID, revoked_at: datetime) -> None: ...
     async def list_by_user(
         self,
         *,
