@@ -1,8 +1,8 @@
 import logging
 from uuid import UUID
 
-from domain.entities.notification import NotificationType
 from domain.entities.booking_history import HistoryAction
+from domain.entities.notification import NotificationType
 from domain.entities.user import UserRole
 from domain.services.booking_policy import BookingPolicy
 from usecases.dto.booking import BookingResponseDTO, CancelBookingDTO
@@ -13,10 +13,10 @@ from usecases.exceptions import (
     NotificationEnqueueError,
 )
 from usecases.helpers.booking_lifecycle import save_booking_with_history
+from usecases.interfaces.uow import UoWInterface
 from usecases.notifications.create_dispatch import (
     CreateNotificationDispatchUseCase,
 )
-from usecases.interfaces.uow import UoWInterface
 
 
 class CancelBookingUseCase:
@@ -61,10 +61,8 @@ class CancelBookingUseCase:
             room = await self.uow.rooms_repo.get_by_id(booking.room_id)
 
             booking.cancel()
-            participants_with_users = (
-                await self.uow.booking_participants_repo.get_with_users_by_booking_id(  # noqa: E501
-                    booking.id,
-                )
+            participants_with_users = await self.uow.booking_participants_repo.get_with_users_by_booking_id(  # noqa: E501
+                booking.id,
             )
             notify_targets = [
                 (user.id, user.email)
@@ -105,7 +103,9 @@ class CancelBookingUseCase:
                             "start_time": saved.time_range.start.isoformat(),
                             "end_time": saved.time_range.end.isoformat(),
                             "room_id": str(saved.room_id),
-                            "room_name": room.name if room else str(saved.room_id),
+                            "room_name": room.name
+                            if room
+                            else str(saved.room_id),
                         },
                     ),
                 )

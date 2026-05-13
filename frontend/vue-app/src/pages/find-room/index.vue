@@ -12,8 +12,8 @@
         </SelectContent>
       </Select>
       <Input v-model="draft.date" type="date" aria-label="Дата бронирования" />
-      <Input v-model="draft.startTime" type="text" inputmode="numeric" placeholder="ЧЧ:ММ (24ч)" aria-label="Время начала" />
-      <Input v-model="draft.endTime" type="text" inputmode="numeric" placeholder="ЧЧ:ММ (24ч)" aria-label="Время окончания" />
+      <Input v-model="draft.startTime" type="time" step="300" aria-label="Время начала" />
+      <Input v-model="draft.endTime" type="time" step="300" aria-label="Время окончания" />
       <Input v-model.number="draft.floor" class="w-[140px]" type="number" min="0" placeholder="Этаж" aria-label="Этаж" />
       <Input v-model.number="draft.capacity_gte" class="w-[170px]" type="number" min="1" placeholder="Вместимость от" aria-label="Минимальная вместимость" />
       <Input v-model.number="draft.capacity_lte" class="w-[170px]" type="number" min="1" placeholder="Вместимость до" aria-label="Максимальная вместимость" />

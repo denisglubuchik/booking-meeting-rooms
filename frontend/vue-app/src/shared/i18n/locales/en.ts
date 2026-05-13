@@ -15,6 +15,7 @@ export const en = {
       not_found: "Resource not found.",
       forbidden: "You do not have permission for this action.",
       bad_request: "Bad request.",
+      user_email_already_exists: "A user with this email is already registered.",
       invalid_credentials: "Invalid email or password.",
       booking_time_in_past: "Booking in the past is not allowed.",
       booking_horizon_exceeded: "Booking date is too far in the future.",

@@ -5,11 +5,13 @@ from usecases.dto.booking import (
     BookingHistoryResponseDTO,
 )
 from usecases.interfaces.db import DBBookingHistoryRepositoryInterface
-from usecases.interfaces.uow import UoWInterface
 
 
 class GetBookingHistoryUseCase:
-    def __init__(self, booking_history_repo: DBBookingHistoryRepositoryInterface) -> None:
+    def __init__(
+        self,
+        booking_history_repo: DBBookingHistoryRepositoryInterface,
+    ) -> None:
         self.booking_history_repo = booking_history_repo
         self._logger = logging.getLogger(
             "usecases.bookings.get_booking_history",

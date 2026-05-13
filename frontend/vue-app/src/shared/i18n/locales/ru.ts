@@ -15,6 +15,7 @@ export const ru = {
       not_found: "Ресурс не найден.",
       forbidden: "Недостаточно прав для выполнения действия.",
       bad_request: "Некорректный запрос.",
+      user_email_already_exists: "Пользователь с таким email уже зарегистрирован.",
       invalid_credentials: "Неверный email или пароль.",
       booking_time_in_past: "Нельзя создать бронирование в прошлом.",
       booking_horizon_exceeded: "Слишком дальняя дата бронирования.",

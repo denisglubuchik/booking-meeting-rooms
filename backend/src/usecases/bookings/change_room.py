@@ -14,10 +14,10 @@ from usecases.exceptions import (
     NotFoundError,
     NotificationEnqueueError,
 )
+from usecases.interfaces.uow import UoWInterface
 from usecases.notifications.create_dispatch import (
     CreateNotificationDispatchUseCase,
 )
-from usecases.interfaces.uow import UoWInterface
 
 
 class ChangeRoomBookingUseCase:
@@ -94,10 +94,8 @@ class ChangeRoomBookingUseCase:
             )
 
             booking.change_room(dto.new_room_id)
-            participants_with_users = (
-                await self.uow.booking_participants_repo.get_with_users_by_booking_id(  # noqa: E501
-                    booking.id,
-                )
+            participants_with_users = await self.uow.booking_participants_repo.get_with_users_by_booking_id(  # noqa: E501
+                booking.id,
             )
             notify_targets = [
                 (user.id, user.email)
@@ -154,8 +152,7 @@ class ChangeRoomBookingUseCase:
                 )
             except NotificationEnqueueError:
                 self.logger.exception(
-                    "change_room_notification_failed booking_id=%s "
-                    "user_id=%s",
+                    "change_room_notification_failed booking_id=%s user_id=%s",
                     dto.id,
                     user_id,
                 )

@@ -3,6 +3,7 @@ import uuid
 
 from domain.entities.user import User
 from usecases.dto.user import CreateUserDTO, UserResponseDTO
+from usecases.exceptions import UserEmailAlreadyExistsError
 from usecases.interfaces.db import DBUsersRepositoryInterface
 from usecases.interfaces.hasher import HasherInterface
 
@@ -20,6 +21,12 @@ class CreateUserUseCase:
     async def execute(self, dto: CreateUserDTO) -> UserResponseDTO:
         self.logger.debug("create_user_started email=%s", dto.email)
         async with self.user_repo:
+            existing_user = await self.user_repo.get_by_email(dto.email)
+            if existing_user is not None:
+                raise UserEmailAlreadyExistsError(
+                    f"User with email={dto.email} already exists",
+                )
+
             hashed_password = self.hasher.hash(dto.password)
 
             user = User(

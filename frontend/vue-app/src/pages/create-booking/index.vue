@@ -18,8 +18,8 @@
           </SelectContent>
         </Select>
         <Input v-model="date" type="date" aria-label="Дата встречи" />
-        <Input v-model="start" type="text" inputmode="numeric" placeholder="ЧЧ:ММ (24ч)" aria-label="Время начала встречи" />
-        <Input v-model="end" type="text" inputmode="numeric" placeholder="ЧЧ:ММ (24ч)" aria-label="Время окончания встречи" />
+        <Input v-model="start" type="time" step="300" aria-label="Время начала встречи" />
+        <Input v-model="end" type="time" step="300" aria-label="Время окончания встречи" />
         <Input v-model="title" placeholder="Название встречи" aria-label="Название встречи" />
         <ErrorState v-if="firstError" :message="firstError" />
         <AppButton variant="dark" type="submit" :disabled="createMutation.isPending.value">{{ createMutation.isPending.value ? 'Создаем...' : 'Подтвердить бронь' }}</AppButton>

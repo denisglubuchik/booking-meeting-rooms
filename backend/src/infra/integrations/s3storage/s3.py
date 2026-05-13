@@ -69,7 +69,10 @@ class S3FileStorage(FileStorageInterface):
     @cache(
         key_prefix="s3",
         return_type=str,
-        expire=lambda self: max(1, self._config.S3_PRESIGN_EXPIRES_SECONDS - 30),
+        expire=lambda self: max(
+            1,
+            self._config.S3_PRESIGN_EXPIRES_SECONDS - 30,
+        ),
     )
     async def generate_presigned_download_url(self, *, key: str) -> str:
         async with self._session.client(

@@ -15,10 +15,10 @@ from usecases.exceptions import (
     NotFoundError,
     NotificationEnqueueError,
 )
+from usecases.interfaces.uow import UoWInterface
 from usecases.notifications.create_dispatch import (
     CreateNotificationDispatchUseCase,
 )
-from usecases.interfaces.uow import UoWInterface
 
 
 class RescheduleBookingUseCase:
@@ -89,10 +89,8 @@ class RescheduleBookingUseCase:
             )
 
             booking.reschedule(new_time_range)
-            participants_with_users = (
-                await self.uow.booking_participants_repo.get_with_users_by_booking_id(  # noqa: E501
-                    booking.id,
-                )
+            participants_with_users = await self.uow.booking_participants_repo.get_with_users_by_booking_id(  # noqa: E501
+                booking.id,
             )
             notify_targets = [
                 (user.id, user.email)

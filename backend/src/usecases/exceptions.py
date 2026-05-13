@@ -34,6 +34,11 @@ class UnauthorizedError(ApplicationError):
     default_status_code = 401
 
 
+class UserEmailAlreadyExistsError(ApplicationError):
+    default_code = "user_email_already_exists"
+    default_status_code = 409
+
+
 class NotificationEnqueueError(ApplicationError):
     default_code = "notification_enqueue_failed"
     default_status_code = 500

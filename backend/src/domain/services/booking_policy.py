@@ -24,7 +24,20 @@ class BookingPolicy:
         time_range: TimeRange,
         existing_bookings: list[Booking],
     ) -> None:
-        BookingPolicy._ensure_room_is_available(
+        if not BookingPolicy.is_room_available(
+            time_range,
+            existing_bookings,
+        ):
+            raise RoomUnavailableError(
+                "The room is not available for the requested time range",
+            )
+
+    @staticmethod
+    def is_room_available(
+        time_range: TimeRange,
+        existing_bookings: list[Booking],
+    ) -> bool:
+        return BookingPolicy._is_room_available(
             time_range,
             existing_bookings,
         )
@@ -61,19 +74,6 @@ class BookingPolicy:
         if time_range.start > horizon_limit:
             raise BookingHorizonExceededError(
                 "Cannot create or update booking more than one month ahead",
-            )
-
-    @staticmethod
-    def _ensure_room_is_available(
-        time_range: TimeRange,
-        existing_bookings: list[Booking],
-    ) -> None:
-        if not BookingPolicy._is_room_available(
-            time_range,
-            existing_bookings,
-        ):
-            raise RoomUnavailableError(
-                "The room is not available for the requested time range",
             )
 
     @staticmethod
