@@ -78,11 +78,11 @@ from usecases.interfaces.db import (
     DBOfficesRepositoryInterface,
     DBUserSessionsRepositoryInterface,
     DBUsersRepositoryInterface,
+    NotificationDispatchRepositoryInterface,
+    NotificationRepositoryInterface,
 )
 from usecases.interfaces.hasher import HasherInterface
 from usecases.interfaces.notifications import (
-    NotificationDispatchRepositoryInterface,
-    NotificationRepositoryInterface,
     NotificationSenderInterface,
     NotificationTemplateRendererInterface,
 )

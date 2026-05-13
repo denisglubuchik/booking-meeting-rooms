@@ -8,8 +8,8 @@ from domain.entities.notification import (
 )
 from domain.time import moscow_now
 from usecases.dto.notification import ProcessNotificationDispatchResultDTO
+from usecases.interfaces.db import NotificationDispatchRepositoryInterface
 from usecases.interfaces.notifications import (
-    NotificationDispatchRepositoryInterface,
     NotificationSenderInterface,
 )
 

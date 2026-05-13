@@ -5,7 +5,7 @@ from sqlalchemy import select
 from domain.entities.notification import Notification
 from infra.db.models.notification import NotificationModel
 from infra.db.repositories.base import BaseDBRepository
-from usecases.interfaces.notifications import NotificationRepositoryInterface
+from usecases.interfaces.db import NotificationRepositoryInterface
 
 
 class DBNotificationRepository(

@@ -7,8 +7,6 @@ from usecases.interfaces.db import (
     DBMeetingRoomsRepositoryInterface,
     DBOfficesRepositoryInterface,
     DBUsersRepositoryInterface,
-)
-from usecases.interfaces.notifications import (
     NotificationDispatchRepositoryInterface,
     NotificationRepositoryInterface,
 )

@@ -31,7 +31,7 @@ class NotificationTemplateRenderer(NotificationTemplateRendererInterface):
     ) -> str:
         return f"{self._format_dt(start_time)} - {self._format_dt(end_time)}"
 
-    def render_title(
+    def render_title(  # noqa: PLR6301
         self,
         *,
         notification_type: NotificationType,

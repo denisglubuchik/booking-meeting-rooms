@@ -6,6 +6,13 @@ from domain.entities.booking import Booking, BookingStatus
 from domain.entities.booking_history import BookingHistory, HistoryAction
 from domain.entities.booking_participant import BookingParticipant
 from domain.entities.meeting_room import MeetingRoom
+from domain.entities.notification import (
+    Notification,
+    NotificationChannel,
+    NotificationDispatch,
+    NotificationDispatchStatus,
+    NotificationType,
+)
 from domain.entities.office import Office
 from domain.entities.user import User
 from domain.entities.user_session import UserSession
@@ -198,3 +205,56 @@ class DBBookingParticipantsRepositoryInterface(
         booking_id: UUID,
     ) -> list[tuple[BookingParticipant, User]]: ...
     async def count_by_booking_id(self, booking_id: UUID) -> int: ...
+
+
+class NotificationRepositoryInterface(AsyncContextManagerInterface, Protocol):
+    async def save(self, notification: Notification) -> Notification: ...
+    async def get_by_id(self, notification_id: UUID) -> Notification | None: ...
+    async def get_user_notifications(
+        self,
+        *,
+        user_id: UUID,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[Notification]: ...
+
+
+class NotificationDispatchRepositoryInterface(
+    AsyncContextManagerInterface, Protocol,
+):
+    async def save(
+        self,
+        dispatch: NotificationDispatch,
+    ) -> NotificationDispatch: ...
+    async def get_pending(
+        self,
+        *,
+        now: datetime,
+        limit: int = 100,
+        channels: list[NotificationChannel] | None = None,
+    ) -> list[NotificationDispatch]: ...
+    async def get_for_retry(
+        self,
+        *,
+        now: datetime,
+        max_attempts: int,
+        limit: int = 100,
+        channels: list[NotificationChannel] | None = None,
+    ) -> list[NotificationDispatch]: ...
+    async def update_status(
+        self,
+        *,
+        dispatch_id: UUID,
+        status: NotificationDispatchStatus,
+        last_error: str | None = None,
+        sent_at: datetime | None = None,
+    ) -> None: ...
+    async def exists_dedup_key(
+        self,
+        *,
+        user_id: UUID,
+        notification_type: NotificationType,
+        channel: NotificationChannel,
+        recipient: str,
+        scheduled_for: datetime,
+    ) -> bool: ...

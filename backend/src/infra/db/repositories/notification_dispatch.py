@@ -12,9 +12,7 @@ from domain.entities.notification import (
 from domain.time import moscow_now
 from infra.db.models.notification_dispatch import NotificationDispatchModel
 from infra.db.repositories.base import BaseDBRepository
-from usecases.interfaces.notifications import (
-    NotificationDispatchRepositoryInterface,
-)
+from usecases.interfaces.db import NotificationDispatchRepositoryInterface
 
 
 class DBNotificationDispatchRepository(
