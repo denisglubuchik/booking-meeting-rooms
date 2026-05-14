@@ -2,6 +2,8 @@ export const queryKeys = {
   officesLookup: ["offices-lookup"] as const,
   roomsLookup: ["rooms-lookup"] as const,
   usersLookup: ["users-lookup"] as const,
+  myBookings: ["my-bookings"] as const,
+  myBookingsList: (filters: Record<string, unknown> = {}) => ["my-bookings", filters] as const,
   bookingDetails: (bookingId: string) => ["booking-details", bookingId] as const,
   userLookup: (query: string) => ["users-lookup", query] as const,
   adminOffices: (filters: Record<string, unknown>) => ["admin-offices", filters] as const,

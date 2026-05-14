@@ -38,8 +38,30 @@ export async function getRoomBookings(roomId: string) {
   return unwrapData(result) as Promise<Booking[]>;
 }
 
-export async function getMyBookings() {
-  const result = await apiClient.GET("/bookings/my-bookings");
+export async function getMyBookings(params?: {
+  room_id?: string;
+  status?: "created" | "cancelled" | "completed";
+  start_time_gte?: string;
+  end_time_lte?: string;
+  sort_by?: "start_time" | "end_time";
+  sort_order?: "asc" | "desc";
+  limit?: number;
+  offset?: number;
+}) {
+  const result = await apiClient.GET("/bookings/my-bookings", {
+    params: {
+      query: {
+        room_id: params?.room_id,
+        status: params?.status,
+        start_time_gte: params?.start_time_gte,
+        end_time_lte: params?.end_time_lte,
+        sort_by: params?.sort_by,
+        sort_order: params?.sort_order,
+        limit: params?.limit,
+        offset: params?.offset,
+      },
+    },
+  });
   return unwrapData(result) as Promise<Booking[]>;
 }
 

@@ -21,6 +21,8 @@ from usecases.dto.booking import (
     BookingParticipantDetailsDTO,
     BookingParticipantResponseDTO,
     BookingResponseDTO,
+    BookingSortBy,
+    BookingSortOrder,
     ChangeRoomBookingDTO,
     CreateBookingDTO,
     RescheduleBookingDTO,
@@ -43,6 +45,8 @@ class GetBookingsFilters(BaseModel):
     status: BookingStatus | None = None
     start_time_gte: datetime | None = None
     end_time_lte: datetime | None = None
+    sort_by: BookingSortBy = "start_time"
+    sort_order: BookingSortOrder = "asc"
     limit: int = 100
     offset: int = 0
 
@@ -63,6 +67,8 @@ class GetBookingsFilters(BaseModel):
             status=self.status,
             start_time_gte=self.start_time_gte,
             end_time_lte=self.end_time_lte,
+            sort_by=self.sort_by,
+            sort_order=self.sort_order,
             limit=self.limit,
             offset=self.offset,
         )

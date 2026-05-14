@@ -67,6 +67,19 @@
           </div>
         </BookingCard>
       </section>
+
+      <div class="row row-between">
+        <span class="muted">{{ loadedBookingsLabel }}</span>
+        <button
+          v-if="hasMoreBookings"
+          type="button"
+          class="button"
+          :disabled="isLoadingMoreBookings"
+          @click="loadMoreBookings"
+        >
+          {{ isLoadingMoreBookings ? "Загружаем..." : "Показать ещё" }}
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -80,6 +93,10 @@ const {
   groupedBookings,
   hasBookings,
   isLoading,
+  hasMoreBookings,
+  isLoadingMoreBookings,
+  loadedBookingsLabel,
+  loadMoreBookings,
   errorText,
   formatDate,
   formatTime,

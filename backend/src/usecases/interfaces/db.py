@@ -16,6 +16,7 @@ from domain.entities.notification import (
 from domain.entities.office import Office
 from domain.entities.user import User
 from domain.entities.user_session import UserSession
+from usecases.dto.booking import BookingSortBy, BookingSortOrder
 
 
 class AsyncContextManagerInterface(Protocol):
@@ -84,6 +85,8 @@ class DBBookingsRepositoryInterface(AsyncContextManagerInterface, Protocol):
         status: BookingStatus | None = None,
         start_time_gte: datetime | None = None,
         end_time_lte: datetime | None = None,
+        sort_by: BookingSortBy = "start_time",
+        sort_order: BookingSortOrder = "asc",
         limit: int = 100,
         offset: int = 0,
     ) -> list[Booking]: ...
@@ -95,6 +98,8 @@ class DBBookingsRepositoryInterface(AsyncContextManagerInterface, Protocol):
         status: BookingStatus | None = None,
         start_time_gte: datetime | None = None,
         end_time_lte: datetime | None = None,
+        sort_by: BookingSortBy = "start_time",
+        sort_order: BookingSortOrder = "asc",
         limit: int = 100,
         offset: int = 0,
     ) -> list[Booking]: ...
@@ -220,7 +225,8 @@ class NotificationRepositoryInterface(AsyncContextManagerInterface, Protocol):
 
 
 class NotificationDispatchRepositoryInterface(
-    AsyncContextManagerInterface, Protocol,
+    AsyncContextManagerInterface,
+    Protocol,
 ):
     async def save(
         self,

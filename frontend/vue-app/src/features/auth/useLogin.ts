@@ -1,4 +1,5 @@
 import { computed } from "vue";
+import { useQueryClient } from "@tanstack/vue-query";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { useRouter } from "vue-router";
@@ -7,6 +8,7 @@ import { useAuthStore } from "./store";
 
 export function useLogin() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const auth = useAuthStore();
 
   const schema = toTypedSchema(
@@ -31,6 +33,7 @@ export function useLogin() {
   const onSubmit = handleSubmit(async (values) => {
     try {
       await auth.loginWithPassword(values.email, values.password);
+      queryClient.clear();
       await router.push("/");
     } catch {
       // handled in store

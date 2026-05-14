@@ -1,10 +1,10 @@
 import { computed, ref, watchEffect } from "vue";
-import { useMutation, useQuery } from "@tanstack/vue-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { useRoute, useRouter } from "vue-router";
 import { z } from "zod";
-import { createBooking, getOffices, getRooms, humanizeApiError } from "../../shared/api";
+import { createBooking, getOffices, getRooms, humanizeApiError, queryKeys } from "../../shared/api";
 import { isValidTime24h } from "../../shared/lib/time";
 import { useToast } from "../ui/toast";
 
@@ -15,6 +15,7 @@ function toIso(date: string, time: string) {
 export function useCreateBooking() {
   const route = useRoute();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const toast = useToast();
   const success = ref("");
 
@@ -157,6 +158,8 @@ export function useCreateBooking() {
     onSuccess: async () => {
       success.value = "Бронирование создано.";
       toast.success("Бронирование успешно создано.");
+      await queryClient.invalidateQueries({ queryKey: queryKeys.myBookings });
+      await queryClient.refetchQueries({ queryKey: queryKeys.myBookings, type: "all" });
       await router.push("/my-bookings");
     },
     onError: (err) => {

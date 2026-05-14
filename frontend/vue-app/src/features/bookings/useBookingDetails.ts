@@ -84,7 +84,7 @@ export function useBookingDetails() {
         }, delayMs);
       }
       await queryClient.invalidateQueries({ queryKey: queryKeys.bookingDetails(bookingId.value) });
-      await queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.myBookings });
       await queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
     },
     onError: (error) => {
@@ -97,7 +97,7 @@ export function useBookingDetails() {
     onSuccess: async () => {
       toast.success("Участник удален.");
       await queryClient.invalidateQueries({ queryKey: queryKeys.bookingDetails(bookingId.value) });
-      await queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.myBookings });
       await queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
     },
     onError: (error) => {
@@ -145,7 +145,7 @@ export function useBookingDetails() {
     onSuccess: async () => {
       toast.success("Бронирование отменено.");
       await queryClient.invalidateQueries({ queryKey: queryKeys.bookingDetails(bookingId.value) });
-      await queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.myBookings });
       await queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
     },
     onError: (error) => {
@@ -160,7 +160,7 @@ export function useBookingDetails() {
       selectedReschedule.value = false;
       toast.success("Бронирование перенесено.");
       await queryClient.invalidateQueries({ queryKey: queryKeys.bookingDetails(bookingId.value) });
-      await queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.myBookings });
       await queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
     },
     onError: (error) => {
@@ -175,7 +175,7 @@ export function useBookingDetails() {
       selectedNewRoomId.value = "";
       toast.success("Комната изменена.");
       await queryClient.invalidateQueries({ queryKey: queryKeys.bookingDetails(bookingId.value) });
-      await queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.myBookings });
       await queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
     },
     onError: (error) => {

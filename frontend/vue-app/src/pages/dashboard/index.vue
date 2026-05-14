@@ -75,15 +75,24 @@ import dayjs from "dayjs";
 import { useQuery } from "@tanstack/vue-query";
 import { RouterLink } from "vue-router";
 import { BookingCard, EmptyState, ErrorState, LoadingState, PageHeader, StatusBadge } from "../../components/common";
-import { getMyBookings, getRooms, humanizeApiError } from "../../shared/api";
+import { getMyBookings, getRooms, humanizeApiError, queryKeys } from "../../shared/api";
 import { formatDateRu, formatTimeRu } from "../../shared/lib/datetime";
 
+const dashboardBookingFilters = computed(() => ({
+  start_time_gte: dayjs().startOf("day").toISOString(),
+  end_time_lte: dayjs().add(1, "day").endOf("day").toISOString(),
+  sort_by: "start_time" as const,
+  sort_order: "asc" as const,
+  limit: 100,
+  offset: 0,
+}));
+
 const bookingsQuery = useQuery({
-  queryKey: ["dashboard-my-bookings"],
-  queryFn: () => getMyBookings(),
+  queryKey: computed(() => queryKeys.myBookingsList(dashboardBookingFilters.value)),
+  queryFn: () => getMyBookings(dashboardBookingFilters.value),
 });
 const roomsQuery = useQuery({
-  queryKey: ["dashboard-rooms-lookup"],
+  queryKey: queryKeys.roomsLookup,
   queryFn: () => getRooms(),
 });
 

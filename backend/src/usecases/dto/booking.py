@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from domain.entities.booking import BookingStatus
@@ -8,6 +9,12 @@ from domain.entities.booking_participant import BookingParticipantRole
 from domain.entities.user import UserRole
 from usecases.dto.meeting_room import RoomResponseDTO
 from usecases.dto.office import OfficeResponseDTO
+
+BookingSortBy = Literal[
+    "start_time",
+    "end_time",
+]
+BookingSortOrder = Literal["asc", "desc"]
 
 
 @dataclass(frozen=True)
@@ -50,6 +57,8 @@ class BookingFiltersDTO:
     status: BookingStatus | None = None
     start_time_gte: datetime | None = None
     end_time_lte: datetime | None = None
+    sort_by: BookingSortBy = "start_time"
+    sort_order: BookingSortOrder = "asc"
     limit: int = 100
     offset: int = 0
 

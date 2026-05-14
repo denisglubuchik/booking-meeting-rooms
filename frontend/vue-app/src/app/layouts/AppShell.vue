@@ -50,6 +50,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
+import { useQueryClient } from "@tanstack/vue-query";
 import { RouterLink } from "vue-router";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "../../features/auth/store";
@@ -58,6 +59,7 @@ import { Button } from "@/components/ui/button";
 const auth = useAuthStore();
 const router = useRouter();
 const route = useRoute();
+const queryClient = useQueryClient();
 const navOpen = ref(true);
 
 onMounted(() => {
@@ -77,6 +79,7 @@ watch(
 
 function onLogout() {
   auth.logout();
+  queryClient.clear();
   void router.replace("/login");
 }
 </script>

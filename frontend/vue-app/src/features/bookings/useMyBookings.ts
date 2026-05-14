@@ -1,6 +1,6 @@
 import { computed, reactive, ref } from "vue";
 import dayjs from "dayjs";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import {
   cancelBooking,
   changeBookingRoom,
@@ -8,28 +8,46 @@ import {
   getMyBookings,
   getRooms,
   humanizeApiError,
+  queryKeys,
   rescheduleBooking,
 } from "../../shared/api";
 import { formatDateRu, formatTimeRu } from "../../shared/lib/datetime";
 import { useConfirm } from "../ui/confirm";
 import { useToast } from "../ui/toast";
 
+const BOOKINGS_PAGE_SIZE = 50;
+
 export function useMyBookings() {
   const toast = useToast();
   const confirm = useConfirm();
   const queryClient = useQueryClient();
 
-  const bookingsQuery = useQuery({
-    queryKey: ["my-bookings"],
-    queryFn: () => getMyBookings(),
+  const bookingsQuery = useInfiniteQuery({
+    queryKey: queryKeys.myBookingsList({
+      sort_by: "start_time",
+      sort_order: "desc",
+      limit: BOOKINGS_PAGE_SIZE,
+    }),
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      getMyBookings({
+        sort_by: "start_time",
+        sort_order: "desc",
+        limit: BOOKINGS_PAGE_SIZE,
+        offset: pageParam,
+      }),
+    getNextPageParam: (lastPage, _allPages, lastPageParam) => {
+      if (lastPage.length < BOOKINGS_PAGE_SIZE) return undefined;
+      return lastPageParam + BOOKINGS_PAGE_SIZE;
+    },
   });
 
   const roomsQuery = useQuery({
-    queryKey: ["rooms-lookup"],
+    queryKey: queryKeys.roomsLookup,
     queryFn: () => getRooms(),
   });
 
-  const bookings = computed(() => bookingsQuery.data.value ?? []);
+  const bookings = computed(() => bookingsQuery.data.value?.pages.flat() ?? []);
   const rooms = computed(() => roomsQuery.data.value ?? []);
   const groupedBookings = computed(() => {
     const now = dayjs();
@@ -39,16 +57,22 @@ export function useMyBookings() {
         (booking.status === "created" && dayjs(booking.end_time).isBefore(now)) || booking.status === "completed",
     );
     const cancelled = bookings.value.filter((booking) => booking.status === "cancelled");
-    return { upcoming, past, cancelled };
+    return {
+      upcoming: [...upcoming].sort((a, b) => dayjs(a.start_time).valueOf() - dayjs(b.start_time).valueOf()),
+      past: [...past].sort((a, b) => dayjs(b.end_time).valueOf() - dayjs(a.end_time).valueOf()),
+      cancelled: [...cancelled].sort((a, b) => dayjs(b.start_time).valueOf() - dayjs(a.start_time).valueOf()),
+    };
   });
   const hasBookings = computed(() => bookings.value.length > 0);
   const isLoading = computed(
     () =>
       bookingsQuery.isLoading.value ||
-      bookingsQuery.isFetching.value ||
       roomsQuery.isLoading.value ||
       roomsQuery.isFetching.value,
   );
+  const hasMoreBookings = computed(() => bookingsQuery.hasNextPage.value);
+  const isLoadingMoreBookings = computed(() => bookingsQuery.isFetchingNextPage.value);
+  const loadedBookingsLabel = computed(() => `Показано ${bookings.value.length}`);
 
   const errorText = computed(() => {
     if (bookingsQuery.error.value) return humanizeApiError(bookingsQuery.error.value);
@@ -117,7 +141,11 @@ export function useMyBookings() {
   );
 
   async function refreshBookings() {
-    await queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+    await queryClient.invalidateQueries({ queryKey: queryKeys.myBookings });
+  }
+
+  async function loadMoreBookings() {
+    await bookingsQuery.fetchNextPage();
   }
 
   const cancelMutation = useMutation({
@@ -245,6 +273,10 @@ export function useMyBookings() {
     groupedBookings,
     hasBookings,
     isLoading,
+    hasMoreBookings,
+    isLoadingMoreBookings,
+    loadedBookingsLabel,
+    loadMoreBookings,
     errorText,
     formatDate,
     formatTime,

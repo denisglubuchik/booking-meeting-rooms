@@ -24,6 +24,8 @@ class GetMyBookingsUseCase:
                 status=filters.status,
                 start_time_gte=filters.start_time_gte,
                 end_time_lte=filters.end_time_lte,
+                sort_by=filters.sort_by,
+                sort_order=filters.sort_order,
                 limit=filters.limit,
                 offset=filters.offset,
             )

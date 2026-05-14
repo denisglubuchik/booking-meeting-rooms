@@ -11,6 +11,7 @@ from infra.db.models.booking_participant import BookingParticipantModel
 from infra.db.models.meeting_room import MeetingRoomModel
 from infra.db.models.office import OfficeModel
 from infra.db.repositories.base import BaseDBRepository
+from usecases.dto.booking import BookingSortBy, BookingSortOrder
 from usecases.interfaces.db import DBBookingsRepositoryInterface
 
 
@@ -127,6 +128,8 @@ class DBBookingsRepository(
         status: BookingStatus | None = None,
         start_time_gte: datetime | None = None,
         end_time_lte: datetime | None = None,
+        sort_by: BookingSortBy = "start_time",
+        sort_order: BookingSortOrder = "asc",
         limit: int = 100,
         offset: int = 0,
     ) -> list[Booking]:
@@ -144,7 +147,19 @@ class DBBookingsRepository(
         if end_time_lte is not None:
             stmt = stmt.where(BookingModel.end_time <= end_time_lte)
 
-        stmt = stmt.limit(limit).offset(offset)
+        if sort_by == "start_time":
+            sort_column = BookingModel.start_time
+        elif sort_by == "end_time":
+            sort_column = BookingModel.end_time
+        order_clause = (
+            sort_column.desc() if sort_order == "desc" else sort_column.asc()
+        )
+        stmt = (
+            stmt
+            .order_by(order_clause, BookingModel.id.asc())
+            .limit(limit)
+            .offset(offset)
+        )
         result = await self._session.execute(stmt)
         bookings = [model.to_domain() for model in result.scalars().all()]
         self._logger.debug("get_all_bookings_finished count=%s", len(bookings))
@@ -158,6 +173,8 @@ class DBBookingsRepository(
         status: BookingStatus | None = None,
         start_time_gte: datetime | None = None,
         end_time_lte: datetime | None = None,
+        sort_by: BookingSortBy = "start_time",
+        sort_order: BookingSortOrder = "asc",
         limit: int = 100,
         offset: int = 0,
     ) -> list[Booking]:
@@ -185,10 +202,18 @@ class DBBookingsRepository(
         if end_time_lte is not None:
             stmt = stmt.where(BookingModel.end_time <= end_time_lte)
 
+        if sort_by == "start_time":
+            sort_column = BookingModel.start_time
+        elif sort_by == "end_time":
+            sort_column = BookingModel.end_time
+
+        order_clause = (
+            sort_column.desc() if sort_order == "desc" else sort_column.asc()
+        )
         stmt = (
             stmt
             .distinct()
-            .order_by(BookingModel.start_time)
+            .order_by(order_clause, BookingModel.id.asc())
             .limit(limit)
             .offset(offset)
         )
