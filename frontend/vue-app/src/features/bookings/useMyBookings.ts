@@ -40,6 +40,7 @@ export function useMyBookings() {
       if (lastPage.length < BOOKINGS_PAGE_SIZE) return undefined;
       return lastPageParam + BOOKINGS_PAGE_SIZE;
     },
+    refetchOnMount: true,
   });
 
   const roomsQuery = useQuery({

@@ -43,8 +43,8 @@
             <strong>Перенос бронирования</strong>
             <div class="row">
               <Input v-model="rescheduleDraft.date" type="date" aria-label="Новая дата бронирования" />
-              <Input v-model="rescheduleDraft.start" type="time" step="300" aria-label="Новое время начала" />
-              <Input v-model="rescheduleDraft.end" type="time" step="300" aria-label="Новое время окончания" />
+              <Input v-model="rescheduleDraft.start" type="time" step="300" lang="ru-RU" aria-label="Новое время начала" />
+              <Input v-model="rescheduleDraft.end" type="time" step="300" lang="ru-RU" aria-label="Новое время окончания" />
             </div>
             <ErrorState v-if="rescheduleError" :message="rescheduleError" />
             <div class="row">

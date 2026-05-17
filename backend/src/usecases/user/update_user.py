@@ -1,7 +1,7 @@
 import logging
 
 from usecases.dto.user import UpdateUserDTO, UserResponseDTO
-from usecases.exceptions import NotFoundError
+from usecases.exceptions import NotFoundError, UserEmailAlreadyExistsError
 from usecases.interfaces.db import DBUsersRepositoryInterface
 
 
@@ -17,6 +17,13 @@ class UpdateUserUseCase:
             if not user:
                 self.logger.warning("update_user_not_found user_id=%s", dto.id)
                 raise NotFoundError(f"User with id {dto.id} not found")
+
+            if dto.email is not None and dto.email != user.email:
+                existing_user = await self.user_repo.get_by_email(dto.email)
+                if existing_user is not None and existing_user.id != user.id:
+                    raise UserEmailAlreadyExistsError(
+                        f"User with email={dto.email} already exists",
+                    )
 
             user.update(full_name=dto.full_name, email=dto.email)
 

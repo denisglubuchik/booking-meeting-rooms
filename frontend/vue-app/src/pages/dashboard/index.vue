@@ -90,6 +90,7 @@ const dashboardBookingFilters = computed(() => ({
 const bookingsQuery = useQuery({
   queryKey: computed(() => queryKeys.myBookingsList(dashboardBookingFilters.value)),
   queryFn: () => getMyBookings(dashboardBookingFilters.value),
+  refetchOnMount: true,
 });
 const roomsQuery = useQuery({
   queryKey: queryKeys.roomsLookup,

@@ -71,6 +71,12 @@ export function useBookingDetails() {
     (userLookupQuery.data.value ?? []).filter((item) => !participantIds.value.has(item.id)),
   );
 
+  async function refreshBookingCaches() {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.bookingDetails(bookingId.value) });
+    await queryClient.invalidateQueries({ queryKey: queryKeys.myBookings });
+    await queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
+  }
+
   const addParticipantMutation = useMutation({
     mutationFn: (userId: string) => addBookingParticipant(bookingId.value, userId),
     onSuccess: async (result) => {
@@ -83,9 +89,7 @@ export function useBookingDetails() {
           toast.info(formatWarningMessage(warning.code, warning.message));
         }, delayMs);
       }
-      await queryClient.invalidateQueries({ queryKey: queryKeys.bookingDetails(bookingId.value) });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.myBookings });
-      await queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
+      await refreshBookingCaches();
     },
     onError: (error) => {
       toast.error(humanizeApiError(error));
@@ -96,9 +100,7 @@ export function useBookingDetails() {
     mutationFn: (userId: string) => removeBookingParticipant(bookingId.value, userId),
     onSuccess: async () => {
       toast.success("Участник удален.");
-      await queryClient.invalidateQueries({ queryKey: queryKeys.bookingDetails(bookingId.value) });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.myBookings });
-      await queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
+      await refreshBookingCaches();
     },
     onError: (error) => {
       toast.error(humanizeApiError(error));
@@ -144,9 +146,7 @@ export function useBookingDetails() {
     mutationFn: () => cancelBooking(bookingId.value),
     onSuccess: async () => {
       toast.success("Бронирование отменено.");
-      await queryClient.invalidateQueries({ queryKey: queryKeys.bookingDetails(bookingId.value) });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.myBookings });
-      await queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
+      await refreshBookingCaches();
     },
     onError: (error) => {
       toast.error(humanizeApiError(error));
@@ -159,9 +159,7 @@ export function useBookingDetails() {
     onSuccess: async () => {
       selectedReschedule.value = false;
       toast.success("Бронирование перенесено.");
-      await queryClient.invalidateQueries({ queryKey: queryKeys.bookingDetails(bookingId.value) });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.myBookings });
-      await queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
+      await refreshBookingCaches();
     },
     onError: (error) => {
       toast.error(humanizeApiError(error));
@@ -174,9 +172,7 @@ export function useBookingDetails() {
       selectedRoomChange.value = false;
       selectedNewRoomId.value = "";
       toast.success("Комната изменена.");
-      await queryClient.invalidateQueries({ queryKey: queryKeys.bookingDetails(bookingId.value) });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.myBookings });
-      await queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
+      await refreshBookingCaches();
     },
     onError: (error) => {
       toast.error(humanizeApiError(error));
