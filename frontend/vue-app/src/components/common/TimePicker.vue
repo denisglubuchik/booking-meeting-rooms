@@ -7,31 +7,35 @@
     lang="ru-RU"
     @update:model-value="onNativeInput"
   />
-  <div v-else class="time-picker-desktop">
-    <Select :model-value="selectedHour" @update:model-value="onHourChange">
-      <SelectTrigger class="w-[92px]" aria-label="Часы">
-        <SelectValue placeholder="ЧЧ" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem v-for="hour in hours" :key="hour" :value="hour">{{ hour }}</SelectItem>
-      </SelectContent>
-    </Select>
-    <span class="kv">:</span>
-    <Select :model-value="selectedMinute" @update:model-value="onMinuteChange">
-      <SelectTrigger class="w-[92px]" aria-label="Минуты">
-        <SelectValue placeholder="ММ" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem v-for="minute in minutes" :key="minute" :value="minute">{{ minute }}</SelectItem>
-      </SelectContent>
-    </Select>
-  </div>
+  <TimeFieldRoot
+    v-else
+    v-slot="{ segments }"
+    :model-value="desktopValue"
+    locale="ru-RU"
+    :hour-cycle="24"
+    granularity="minute"
+    :step="{ minute: normalizedStepMinutes }"
+    :step-snapping="true"
+    @update:model-value="onDesktopChange"
+  >
+    <div class="time-picker-desktop">
+      <template v-for="item in segments" :key="`${item.part}-${item.value}`">
+        <TimeFieldInput
+          :part="item.part"
+          :class="item.part === 'literal' ? 'time-segment-literal' : 'time-segment-input'"
+        >
+          {{ item.value }}
+        </TimeFieldInput>
+      </template>
+    </div>
+  </TimeFieldRoot>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
+import { Time } from "@internationalized/date";
 import { Input } from "../ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { TimeFieldInput, TimeFieldRoot } from "reka-ui";
 
 const props = withDefaults(
   defineProps<{
@@ -61,37 +65,25 @@ function normalizeTime(value: string) {
 }
 
 const normalizedValue = computed(() => normalizeTime(props.modelValue ?? ""));
-const selectedHour = computed(() => normalizedValue.value.slice(0, 2));
-const selectedMinute = computed(() => normalizedValue.value.slice(3, 5));
 const stepSeconds = computed(() => Math.max(1, props.stepMinutes) * 60);
+const normalizedStepMinutes = computed(() => Math.max(1, props.stepMinutes));
 
-const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
-const minutes = computed(() => {
-  const step = Math.max(1, props.stepMinutes);
-  const values: string[] = [];
-  for (let i = 0; i < 60; i += step) {
-    values.push(String(i).padStart(2, "0"));
-  }
-  return values;
+const desktopValue = computed(() => {
+  const [hours = "00", minutes = "00"] = normalizedValue.value.split(":");
+  return new Time(Number(hours), Number(minutes));
 });
-
-function emitTime(hour: string, minute: string) {
-  emit("update:modelValue", `${hour}:${minute}`);
-}
-
-function onHourChange(value: unknown) {
-  if (value === null) return;
-  emitTime(String(value), selectedMinute.value);
-}
-
-function onMinuteChange(value: unknown) {
-  if (value === null) return;
-  emitTime(selectedHour.value, String(value));
-}
 
 function onNativeInput(value: string | number) {
   const nextValue = normalizeTime(String(value));
   emit("update:modelValue", nextValue);
+}
+
+function onDesktopChange(value: unknown) {
+  if (!value) return;
+  if (typeof value !== "object" || value === null || !("hour" in value) || !("minute" in value)) return;
+  const hours = String((value as { hour: number }).hour).padStart(2, "0");
+  const minutes = String((value as { minute: number }).minute).padStart(2, "0");
+  emit("update:modelValue", `${hours}:${minutes}`);
 }
 
 function updatePointerMode() {
@@ -113,8 +105,51 @@ onUnmounted(() => {
 
 <style scoped>
 .time-picker-desktop {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 8px;
+  min-height: 52px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: #fffdf9;
+  padding: 0 14px;
+  gap: 2px;
+}
+
+.time-segment-input {
+  min-width: 1.8ch;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 32px;
+  line-height: 1;
+  padding: 8px 3px;
+  outline: none;
+}
+
+.time-segment-input[data-placeholder] {
+  opacity: 0.65;
+}
+
+.time-segment-input:focus-visible {
+  background: #f3ede4;
+}
+
+.time-segment-literal {
+  font-size: 24px;
+  line-height: 1;
+  padding: 6px 2px;
+}
+
+@media (max-width: 900px) {
+  .time-picker-desktop {
+    min-height: 48px;
+  }
+
+  .time-segment-input {
+    font-size: 28px;
+  }
+
+  .time-segment-literal {
+    font-size: 22px;
+  }
 }
 </style>
