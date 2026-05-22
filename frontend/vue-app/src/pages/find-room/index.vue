@@ -12,8 +12,8 @@
         </SelectContent>
       </Select>
       <Input v-model="draft.date" type="date" aria-label="Дата бронирования" />
-      <Input v-model="draft.startTime" type="time" step="300" aria-label="Время начала" />
-      <Input v-model="draft.endTime" type="time" step="300" aria-label="Время окончания" />
+      <TimePicker v-model="draft.startTime" :step-minutes="5" />
+      <TimePicker v-model="draft.endTime" :step-minutes="5" />
       <Input v-model.number="draft.floor" class="w-[140px]" type="number" min="0" placeholder="Этаж" aria-label="Этаж" />
       <Input v-model.number="draft.capacity_gte" class="w-[170px]" type="number" min="1" placeholder="Вместимость от" aria-label="Минимальная вместимость" />
       <Input v-model.number="draft.capacity_lte" class="w-[170px]" type="number" min="1" placeholder="Вместимость до" aria-label="Максимальная вместимость" />
@@ -35,7 +35,7 @@
         v-for="room in rooms"
         :key="room.id"
         :name="room.name"
-        :office-name="officeLabel"
+        :office-name="officeLabel(room.office_id)"
         :floor="room.floor"
         :capacity="room.capacity"
         :image-url="room.image_url"
@@ -54,7 +54,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { RouterLink } from "vue-router";
-import { EmptyState, ErrorState, FilterBar, LoadingState, PageHeader, RoomCard, StatusBadge } from "../../components/common";
+import { EmptyState, ErrorState, FilterBar, LoadingState, PageHeader, RoomCard, StatusBadge, TimePicker } from "../../components/common";
 import AppButton from "../../components/ui/button/AppButton.vue";
 import { Input } from "../../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
@@ -75,11 +75,10 @@ function bookingQuery(roomId: string) {
   };
 }
 
-const officeLabel = computed(() => {
-  if (!applied.office_id) return "Офис: любой";
-  const office = offices.value.find((item) => item.id === applied.office_id);
+function officeLabel(officeId: string) {
+  const office = offices.value.find((item) => item.id === officeId);
   return office ? `Офис: ${office.name}` : "Офис";
-});
+}
 
 const appliedCriteria = computed(() => {
   const chunks = [`Дата: ${applied.date}`, `${applied.startTime}-${applied.endTime}`];

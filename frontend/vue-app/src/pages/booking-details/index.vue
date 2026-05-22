@@ -43,8 +43,8 @@
             <strong>Перенос бронирования</strong>
             <div class="row">
               <Input v-model="rescheduleDraft.date" type="date" aria-label="Новая дата бронирования" />
-              <Input v-model="rescheduleDraft.start" type="time" step="300" lang="ru-RU" aria-label="Новое время начала" />
-              <Input v-model="rescheduleDraft.end" type="time" step="300" lang="ru-RU" aria-label="Новое время окончания" />
+              <TimePicker v-model="rescheduleDraft.start" :step-minutes="5" />
+              <TimePicker v-model="rescheduleDraft.end" :step-minutes="5" />
             </div>
             <ErrorState v-if="rescheduleError" :message="rescheduleError" />
             <div class="row">
@@ -150,7 +150,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { RouterLink } from "vue-router";
-import { EmptyState, ErrorState, LoadingState, PageHeader, StatusBadge } from "../../components/common";
+import { EmptyState, ErrorState, LoadingState, PageHeader, StatusBadge, TimePicker } from "../../components/common";
 import { Input } from "../../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { useBookingDetails } from "../../features/bookings";

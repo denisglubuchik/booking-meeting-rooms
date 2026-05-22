@@ -7,6 +7,18 @@ import { useRoute } from "vue-router";
 import { getAvailableRooms, getOffices, humanizeApiError } from "../../shared/api";
 import { isValidTime24h } from "../../shared/lib/time";
 
+const FIND_ROOM_STATE_KEY = "find-room-search-state-v1";
+
+type FindRoomStoredState = {
+  office_id: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  floor?: number;
+  capacity_gte?: number;
+  capacity_lte?: number;
+};
+
 function minutesFromTime(timeStr: string) {
   const [hours = "0", minutes = "0"] = timeStr.split(":");
   return Number(hours) * 60 + Number(minutes);
@@ -32,15 +44,51 @@ export function useFindRoom() {
   const route = useRoute();
   const now = new Date();
   const initialDate = now.toISOString().slice(0, 10);
-  const initialStart = typeof route.query.start === "string" ? route.query.start : "14:00";
-  const initialEnd = typeof route.query.end === "string" ? route.query.end : "15:00";
-  const initialOfficeId = typeof route.query.officeId === "string" ? route.query.officeId : "";
-  const queryDate = typeof route.query.date === "string" ? route.query.date : initialDate;
-  const initialFloor = typeof route.query.floor === "string" ? Number(route.query.floor) : undefined;
+  const hasRouteSearchParams =
+    typeof route.query.start === "string" ||
+    typeof route.query.end === "string" ||
+    typeof route.query.officeId === "string" ||
+    typeof route.query.date === "string" ||
+    typeof route.query.floor === "string" ||
+    typeof route.query.capacityGte === "string" ||
+    typeof route.query.capacityLte === "string";
+  let storedState: FindRoomStoredState | null = null;
+  if (!hasRouteSearchParams) {
+    try {
+      const raw = localStorage.getItem(FIND_ROOM_STATE_KEY);
+      if (raw) storedState = JSON.parse(raw) as FindRoomStoredState;
+    } catch {
+      storedState = null;
+    }
+  }
+
+  const initialStart =
+    typeof route.query.start === "string" ? route.query.start : storedState?.startTime || "14:00";
+  const initialEnd = typeof route.query.end === "string" ? route.query.end : storedState?.endTime || "15:00";
+  const initialOfficeId =
+    typeof route.query.officeId === "string" ? route.query.officeId : storedState?.office_id || "";
+  const queryDate = typeof route.query.date === "string" ? route.query.date : storedState?.date || initialDate;
+  const initialFloor =
+    typeof route.query.floor === "string"
+      ? Number(route.query.floor)
+      : typeof storedState?.floor === "number"
+        ? storedState.floor
+        : undefined;
   const isDashboardSearch = route.query.source === "dashboard";
   const initialCapacityGte =
-    typeof route.query.capacityGte === "string" ? Number(route.query.capacityGte) : isDashboardSearch ? undefined : 6;
-  const initialCapacityLte = typeof route.query.capacityLte === "string" ? Number(route.query.capacityLte) : undefined;
+    typeof route.query.capacityGte === "string"
+      ? Number(route.query.capacityGte)
+      : typeof storedState?.capacity_gte === "number"
+        ? storedState.capacity_gte
+        : isDashboardSearch
+          ? undefined
+          : 6;
+  const initialCapacityLte =
+    typeof route.query.capacityLte === "string"
+      ? Number(route.query.capacityLte)
+      : typeof storedState?.capacity_lte === "number"
+        ? storedState.capacity_lte
+        : undefined;
 
   const schema = toTypedSchema(
     z
@@ -173,6 +221,17 @@ export function useFindRoom() {
       typeof values.capacity_gte === "number" ? Math.max(1, Number(values.capacity_gte) || 1) : undefined;
     applied.capacity_lte =
       typeof values.capacity_lte === "number" ? Math.max(1, Number(values.capacity_lte) || 1) : undefined;
+
+    const stateToPersist: FindRoomStoredState = {
+      office_id: applied.office_id,
+      date: applied.date,
+      startTime: applied.startTime,
+      endTime: applied.endTime,
+      floor: applied.floor,
+      capacity_gte: applied.capacity_gte,
+      capacity_lte: applied.capacity_lte,
+    };
+    localStorage.setItem(FIND_ROOM_STATE_KEY, JSON.stringify(stateToPersist));
   });
 
   return { draft, applied, officeFilterValue, offices, firstError, rooms, isLoading, errorText, search };

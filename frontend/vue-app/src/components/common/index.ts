@@ -9,3 +9,4 @@ export { default as PageHeader } from "./PageHeader.vue";
 export { default as RoomCard } from "./RoomCard.vue";
 export { default as StatCard } from "./StatCard.vue";
 export { default as StatusBadge } from "./StatusBadge.vue";
+export { default as TimePicker } from "./TimePicker.vue";

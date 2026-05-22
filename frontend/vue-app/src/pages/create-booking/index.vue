@@ -18,8 +18,8 @@
           </SelectContent>
         </Select>
         <Input v-model="date" type="date" aria-label="Дата встречи" />
-        <Input v-model="start" type="time" step="300" aria-label="Время начала встречи" />
-        <Input v-model="end" type="time" step="300" aria-label="Время окончания встречи" />
+        <TimePicker v-model="start" :step-minutes="5" />
+        <TimePicker v-model="end" :step-minutes="5" />
         <Input v-model="title" placeholder="Название встречи" aria-label="Название встречи" />
         <ErrorState v-if="firstError" :message="firstError" />
         <AppButton variant="dark" type="submit" :disabled="createMutation.isPending.value">{{ createMutation.isPending.value ? 'Создаем...' : 'Подтвердить бронь' }}</AppButton>
@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { ErrorState, LoadingState, PageHeader } from "../../components/common";
+import { ErrorState, LoadingState, PageHeader, TimePicker } from "../../components/common";
 import AppButton from "../../components/ui/button/AppButton.vue";
 import { Input } from "../../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
