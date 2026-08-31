@@ -1,0 +1,52 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-create-bucket
+  namespace: booking
+  labels:
+    app: create-bucket
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 120
+  ttlSecondsAfterFinished: 60
+  template:
+    metadata:
+      labels:
+        app: create-bucket
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: create-bucket
+          image: quay.io/minio/mc:latest
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              until mc alias set minio http://minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"; do
+                sleep 2
+              done
+              mc mb --ignore-existing "minio/$S3_BUCKET"
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: booking-secrets
+                  key: S3_ACCESS_KEY_ID
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: booking-secrets
+                  key: S3_SECRET_ACCESS_KEY
+            - name: S3_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: booking-config
+                  key: S3_BUCKET

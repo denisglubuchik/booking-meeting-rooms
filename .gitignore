@@ -2,6 +2,7 @@
 .DS_Store
 
 # Environments
+k8s/secrets.yaml
 app.env
 .venv
 env/

@@ -2,7 +2,13 @@ import createClient, { type Middleware } from "openapi-fetch";
 import { i18n } from "../i18n";
 import type { paths } from "./schema";
 
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") || "http://localhost:8000";
+const API_VERSION = "v1";
+
+const API_ROOT_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ||
+  "http://localhost:8000/api";
+
+export const API_BASE_URL = `${API_ROOT_URL}/${API_VERSION}`;
 
 let token = localStorage.getItem("booking_token") || "";
 let refreshPromise: Promise<string | null> | null = null;

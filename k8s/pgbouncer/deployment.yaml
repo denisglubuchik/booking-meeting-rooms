@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgbouncer
+  namespace: booking
+  labels:
+    app: pgbouncer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pgbouncer
+  template:
+    metadata:
+      labels:
+        app: pgbouncer
+    spec:
+      containers:
+        - name: pgbouncer
+          image: edoburu/pgbouncer:v1.24.1-p1
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+          env:
+            - name: DB_HOST
+              value: postgres
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: booking-config
+                  key: PG_DB
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: booking-secrets
+                  key: PG_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: booking-secrets
+                  key: PG_PASS
+            - name: AUTH_USER
+              valueFrom:
+                secretKeyRef:
+                  name: booking-secrets
+                  key: PG_USER
+            - name: ADMIN_USERS
+              valueFrom:
+                secretKeyRef:
+                  name: booking-secrets
+                  key: PG_USER
+            - name: POOL_MODE
+              value: transaction
+            - name: MAX_CLIENT_CONN
+              value: "1000"
+            - name: DEFAULT_POOL_SIZE
+              value: "20"
+            - name: AUTH_TYPE
+              value: scram-sha-256
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -h 127.0.0.1 -p 5432 -U "$DB_USER"
+            initialDelaySeconds: 5
+            periodSeconds: 10

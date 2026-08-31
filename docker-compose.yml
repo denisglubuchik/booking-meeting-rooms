@@ -88,7 +88,7 @@ services:
   nginx:
     build:
       context: ./frontend/vue-app
-      dockerfile: Dockerfile.prod
+      dockerfile: frontend/vue-app/Dockerfile
       args:
         VITE_API_BASE_URL: /api
     restart: unless-stopped

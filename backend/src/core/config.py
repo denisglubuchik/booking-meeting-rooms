@@ -41,7 +41,7 @@ class AuthConfig(Settings):
     REFRESH_COOKIE_NAME: str = "booking_refresh_token"
     REFRESH_COOKIE_SECURE: bool = False
     REFRESH_COOKIE_SAMESITE: Literal["lax", "strict", "none"] = "lax"
-    REFRESH_COOKIE_PATH: str = "/auth"
+    REFRESH_COOKIE_PATH: str = "/api/v1/auth"
     CORS_ALLOW_ORIGINS: str = "http://localhost:5173"
 
 
@@ -78,6 +78,7 @@ class EmailConfig(Settings):
 
 class S3Config(Settings):
     S3_ENDPOINT_URL: str
+    S3_PUBLIC_ENDPOINT_URL: str | None = None
     S3_REGION: str
     S3_BUCKET: str
     S3_ACCESS_KEY_ID: str

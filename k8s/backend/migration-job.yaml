@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: backend-migrations
+  namespace: booking
+  labels:
+    app: migrations
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 300
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      labels:
+        app: migrations
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrations
+          image: booking-backend:1.0.0
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - cd /code && exec uv run --no-sync alembic upgrade head
+          envFrom:
+            - configMapRef:
+                name: booking-config
+            - secretRef:
+                name: booking-secrets

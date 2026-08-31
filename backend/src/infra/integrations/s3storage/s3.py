@@ -78,7 +78,10 @@ class S3FileStorage(FileStorageInterface):
         async with self._session.client(
             "s3",
             region_name=self._config.S3_REGION,
-            endpoint_url=self._config.S3_ENDPOINT_URL,
+            endpoint_url=(
+                self._config.S3_PUBLIC_ENDPOINT_URL
+                or self._config.S3_ENDPOINT_URL
+            ),
             aws_access_key_id=self._config.S3_ACCESS_KEY_ID,
             aws_secret_access_key=self._config.S3_SECRET_ACCESS_KEY,
             config=self._resolve_client_config(),

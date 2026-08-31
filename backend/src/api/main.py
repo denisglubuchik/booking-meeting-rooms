@@ -8,11 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.errors import register_exception_handlers
 from api.middleware import register_middlewares
-from api.routes.auth import router as auth_router
-from api.routes.bookings import router as bookings_router
-from api.routes.offices import router as offices_router
-from api.routes.rooms import router as rooms_router
-from api.routes.users import router as users_router
+from api.router import API_V1_PREFIX, api_router
 from core.config import AuthConfig, LoggingConfig
 from core.logging import setup_logging
 from infra.dependencies import container
@@ -31,6 +27,13 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(
     title="Booking meeting rooms API",
+    version="1.0.0",
+    docs_url=f"{API_V1_PREFIX}/docs",
+    redoc_url=f"{API_V1_PREFIX}/redoc",
+    openapi_url=f"{API_V1_PREFIX}/openapi.json",
+    swagger_ui_oauth2_redirect_url=(
+        f"{API_V1_PREFIX}/docs/oauth2-redirect"
+    ),
     lifespan=lifespan,
 )
 register_exception_handlers(app)
@@ -54,11 +57,7 @@ def check_service_health() -> None:
     return
 
 
-app.include_router(offices_router, prefix="/offices")
-app.include_router(rooms_router, prefix="/rooms")
-app.include_router(bookings_router, prefix="/bookings")
-app.include_router(users_router, prefix="/users")
-app.include_router(auth_router, prefix="/auth")
+app.include_router(api_router)
 
 
 setup_dishka(container, app)
