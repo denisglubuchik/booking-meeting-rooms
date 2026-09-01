@@ -4,6 +4,17 @@ metadata:
   name: booking-config
   namespace: booking
 data:
+  APP_VERSION: "1.0.0"
+
+  OTEL_SDK_DISABLED: "false"
+  OTEL_TRACES_EXPORTER: "otlp"
+  OTEL_METRICS_EXPORTER: "otlp"
+  OTEL_LOGS_EXPORTER: "otlp"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+  OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+  OTEL_EXPORTER_OTLP_INSECURE: "true"
+  OTEL_RESOURCE_ATTRIBUTES: "service.namespace=booking-meeting-rooms,deployment.environment.name=kubernetes"
+
   PG_HOST: "pgbouncer"
   PG_PORT: "5432"
   PG_DB: "booking_db"

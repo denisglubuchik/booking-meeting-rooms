@@ -2,8 +2,90 @@ name: booking-prod
 
 volumes:
   postgres_data:
+  tempo_data:
+  prometheus_data:
+  loki_data:
+  grafana_data:
 
 services:
+  tempo:
+    image: grafana/tempo:3.0.3
+    restart: unless-stopped
+    command:
+      - -config.file=/etc/tempo/tempo.yaml
+      - -backend-scheduler.provider.work.compaction.block-retention=168h
+    volumes:
+      - ./k8s/observability/configs/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo_data:/var/tempo
+    expose:
+      - "3200"
+      - "4317"
+
+  prometheus:
+    image: prom/prometheus:v3.14.0
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+    volumes:
+      - ./k8s/observability/configs/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    expose:
+      - "9090"
+
+  loki-init:
+    image: busybox:1.37.0
+    user: "0"
+    command: ["chown", "10001:10001", "/var/loki"]
+    volumes:
+      - loki_data:/var/loki
+
+  loki:
+    image: grafana/loki:3.7.7
+    restart: unless-stopped
+    command: ["-config.file=/etc/loki/loki.yaml"]
+    volumes:
+      - ./k8s/observability/configs/loki.yaml:/etc/loki/loki.yaml:ro
+      - loki_data:/var/loki
+    expose:
+      - "3100"
+    depends_on:
+      loki-init:
+        condition: service_completed_successfully
+
+  grafana:
+    image: grafana/grafana:13.2.0
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    volumes:
+      - ./k8s/observability/configs/grafana.ini:/etc/grafana/grafana.ini:ro
+      - ./k8s/observability/configs/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/observability.yaml:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - tempo
+      - prometheus
+      - loki
+    ports:
+      - "127.0.0.1:3000:3000"
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.159.0
+    restart: unless-stopped
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ./k8s/observability/configs/otel-collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+    expose:
+      - "4317"
+      - "4318"
+      - "13133"
+    mem_limit: 256m
+    depends_on:
+      - tempo
+      - loki
+
   postgres:
     image: postgres:17-alpine
     restart: unless-stopped
@@ -64,7 +146,15 @@ services:
       ]
     env_file:
       - ./backend/.env.prod
+    environment:
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_INSECURE: "true"
     depends_on:
+      otel-collector:
+        condition: service_started
       pgbouncer:
         condition: service_healthy
       redis:
@@ -79,7 +169,15 @@ services:
     command: ["sh", "./start-worker.sh"]
     env_file:
       - ./backend/.env.prod
+    environment:
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_INSECURE: "true"
     depends_on:
+      otel-collector:
+        condition: service_started
       pgbouncer:
         condition: service_healthy
       redis:

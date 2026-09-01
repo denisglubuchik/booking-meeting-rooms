@@ -12,6 +12,7 @@ spec:
     - hosts:
         - booking.localhost
         - s3.booking.localhost
+        - grafana.booking.localhost
   rules:
     - host: booking.localhost
       http:
@@ -40,3 +41,13 @@ spec:
                 name: minio
                 port:
                   number: 9000
+    - host: grafana.booking.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: grafana
+                port:
+                  number: 3000

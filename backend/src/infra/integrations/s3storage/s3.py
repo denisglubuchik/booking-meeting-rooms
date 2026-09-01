@@ -1,7 +1,10 @@
 import logging
+from urllib.parse import urlsplit
 
 import aioboto3
 from botocore.client import Config
+from opentelemetry import trace
+from opentelemetry.trace import SpanKind
 
 from core.config import S3Config
 from infra.cache.decorators import cache, invalidate_cache
@@ -36,6 +39,20 @@ class S3FileStorage(FileStorageInterface):
             return self._client_config()
         return None
 
+    def _span_attributes(self, operation: str) -> dict[str, str | int]:
+        endpoint = urlsplit(self._config.S3_ENDPOINT_URL)
+        attributes: dict[str, str | int] = {
+            "storage.system": "s3",
+            "storage.operation": operation,
+            "cloud.region": self._config.S3_REGION,
+            "s3.bucket.name": self._config.S3_BUCKET,
+        }
+        if endpoint.hostname:
+            attributes["server.address"] = endpoint.hostname
+        if endpoint.port:
+            attributes["server.port"] = endpoint.port
+        return attributes
+
     async def upload(
         self,
         *,
@@ -49,21 +66,29 @@ class S3FileStorage(FileStorageInterface):
             content_type,
             len(data),
         )
-        async with self._session.client(
-            "s3",
-            region_name=self._config.S3_REGION,
-            endpoint_url=self._config.S3_ENDPOINT_URL,
-            aws_access_key_id=self._config.S3_ACCESS_KEY_ID,
-            aws_secret_access_key=self._config.S3_SECRET_ACCESS_KEY,
-            config=self._resolve_client_config(),
-        ) as s3:
-            await s3.put_object(
-                Bucket=self._config.S3_BUCKET,
-                Key=key,
-                Body=data,
-                ContentType=content_type,
-                CacheControl=self._CACHE_CONTROL_VALUE,
-            )
+        attributes = self._span_attributes("put_object")
+        attributes["object.size"] = len(data)
+        tracer = trace.get_tracer("infra.integrations.s3storage")
+        with tracer.start_as_current_span(
+            "s3.put_object",
+            kind=SpanKind.CLIENT,
+            attributes=attributes,
+        ):
+            async with self._session.client(
+                "s3",
+                region_name=self._config.S3_REGION,
+                endpoint_url=self._config.S3_ENDPOINT_URL,
+                aws_access_key_id=self._config.S3_ACCESS_KEY_ID,
+                aws_secret_access_key=self._config.S3_SECRET_ACCESS_KEY,
+                config=self._resolve_client_config(),
+            ) as s3:
+                await s3.put_object(
+                    Bucket=self._config.S3_BUCKET,
+                    Key=key,
+                    Body=data,
+                    ContentType=content_type,
+                    CacheControl=self._CACHE_CONTROL_VALUE,
+                )
         self._logger.info("s3_upload_finished key=%s", key)
 
     @cache(
@@ -100,13 +125,22 @@ class S3FileStorage(FileStorageInterface):
     @invalidate_cache(key_prefix="s3")
     async def delete(self, *, key: str) -> None:
         self._logger.info("s3_delete_started key=%s", key)
-        async with self._session.client(
-            "s3",
-            region_name=self._config.S3_REGION,
-            endpoint_url=self._config.S3_ENDPOINT_URL,
-            aws_access_key_id=self._config.S3_ACCESS_KEY_ID,
-            aws_secret_access_key=self._config.S3_SECRET_ACCESS_KEY,
-            config=self._resolve_client_config(),
-        ) as s3:
-            await s3.delete_object(Bucket=self._config.S3_BUCKET, Key=key)
+        tracer = trace.get_tracer("infra.integrations.s3storage")
+        with tracer.start_as_current_span(
+            "s3.delete_object",
+            kind=SpanKind.CLIENT,
+            attributes=self._span_attributes("delete_object"),
+        ):
+            async with self._session.client(
+                "s3",
+                region_name=self._config.S3_REGION,
+                endpoint_url=self._config.S3_ENDPOINT_URL,
+                aws_access_key_id=self._config.S3_ACCESS_KEY_ID,
+                aws_secret_access_key=self._config.S3_SECRET_ACCESS_KEY,
+                config=self._resolve_client_config(),
+            ) as s3:
+                await s3.delete_object(
+                    Bucket=self._config.S3_BUCKET,
+                    Key=key,
+                )
         self._logger.info("s3_delete_finished key=%s", key)

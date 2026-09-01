@@ -3,6 +3,9 @@ import smtplib
 import ssl
 from email.message import EmailMessage
 
+from opentelemetry import trace
+from opentelemetry.trace import SpanKind
+
 from core.config import EmailConfig
 from domain.entities.notification import (
     NotificationChannel,
@@ -22,7 +25,25 @@ class SMTPEmailNotificationSender(NotificationSenderInterface):
         self.config = config
 
     async def send(self, dispatch: NotificationDispatch) -> None:
-        await asyncio.to_thread(self._send_sync, dispatch)
+        if self.config.SMTP_USE_TLS:
+            security = "tls"
+        elif self.config.SMTP_USE_STARTTLS:
+            security = "starttls"
+        else:
+            security = "plain"
+
+        tracer = trace.get_tracer("infra.integrations.notifications.email")
+        with tracer.start_as_current_span(
+            "smtp.send",
+            kind=SpanKind.CLIENT,
+            attributes={
+                "server.address": self.config.SMTP_HOST,
+                "server.port": self.config.SMTP_PORT,
+                "network.transport": "tcp",
+                "smtp.security": security,
+            },
+        ):
+            await asyncio.to_thread(self._send_sync, dispatch)
 
     def _send_sync(self, dispatch: NotificationDispatch) -> None:
         message = EmailMessage()

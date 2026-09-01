@@ -3,8 +3,9 @@ import logging
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from core.config import LoggingConfig, WorkerConfig
+from core.config import AppConfig, LoggingConfig, TelemetryConfig, WorkerConfig
 from core.logging import setup_logging
+from core.telemetry import setup_telemetry
 from infra.dependencies import worker_container
 from worker.jobs import (
     run_booking_completion_job,
@@ -16,7 +17,13 @@ logger = logging.getLogger("worker.main")
 
 
 async def run_worker() -> None:
-    setup_logging(LoggingConfig())
+    app_config = AppConfig()
+    telemetry = setup_telemetry(
+        service_name="booking-worker",
+        service_version=app_config.APP_VERSION,
+        config=TelemetryConfig(),
+    )
+    setup_logging(LoggingConfig(), telemetry.logging_handler)
     config = WorkerConfig()
 
     logger.info(
@@ -66,9 +73,12 @@ async def run_worker() -> None:
     try:
         await asyncio.Event().wait()
     finally:
-        scheduler.shutdown(wait=False)
-        await worker_container.close()
-        logger.info("worker_scheduler_stopped")
+        try:
+            scheduler.shutdown(wait=False)
+            await worker_container.close()
+        finally:
+            logger.info("worker_scheduler_stopped")
+            telemetry.shutdown()
 
 
 def main() -> None:

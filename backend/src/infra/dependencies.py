@@ -9,6 +9,7 @@ from dishka import (
     make_async_container,
     provide,
 )
+from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -198,6 +199,7 @@ class DependencyProvider(Provider):
             max_overflow=20,
             pool_pre_ping=True,
         )
+        SQLAlchemyInstrumentor().instrument(engine=engine.sync_engine)
         try:
             yield engine
         finally:
@@ -408,6 +410,7 @@ class WorkerDependencyProvider(Provider):
             max_overflow=20,
             pool_pre_ping=True,
         )
+        SQLAlchemyInstrumentor().instrument(engine=engine.sync_engine)
         try:
             yield engine
         finally:

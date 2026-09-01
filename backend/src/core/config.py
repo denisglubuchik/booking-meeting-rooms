@@ -1,5 +1,6 @@
 from typing import Literal
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,6 +10,10 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+
+class AppConfig(Settings):
+    APP_VERSION: str = "1.0.0"
 
 
 class DBConfig(Settings):
@@ -48,6 +53,14 @@ class AuthConfig(Settings):
 class LoggingConfig(Settings):
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: Literal["console", "json"] = "console"
+
+
+class TelemetryConfig(Settings):
+    OTEL_SDK_DISABLED: bool = False
+    OTEL_TRACES_EXPORTER: Literal["console", "otlp", "none"] = "none"
+    OTEL_METRICS_EXPORTER: Literal["console", "otlp", "none"] = "none"
+    OTEL_LOGS_EXPORTER: Literal["console", "otlp", "none"] = "none"
+    OTEL_METRIC_EXPORT_INTERVAL: int = Field(default=60_000, gt=0)
 
 
 class WorkerConfig(Settings):

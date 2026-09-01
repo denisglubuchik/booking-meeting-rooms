@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: booking
+
+configMapGenerator:
+  - name: otel-collector-config
+    files:
+      - config.yaml=configs/otel-collector.yaml
+  - name: tempo-config
+    files:
+      - tempo.yaml=configs/tempo.yaml
+  - name: prometheus-config
+    files:
+      - prometheus.yml=configs/prometheus.yaml
+  - name: loki-config
+    files:
+      - loki.yaml=configs/loki.yaml
+  - name: grafana-config
+    files:
+      - grafana.ini=configs/grafana.ini
+      - datasources.yaml=configs/grafana-datasources.yaml
+      - dashboards.yaml=configs/grafana-dashboards.yaml
+      - booking-overview.json=dashboards/booking-overview.json
+
+resources:
+  - tempo.yaml
+  - prometheus.yaml
+  - loki.yaml
+  - grafana.yaml
+  - otel-collector.yaml
+  - network-policy.yaml
