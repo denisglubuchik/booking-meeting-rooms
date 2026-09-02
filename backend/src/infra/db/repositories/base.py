@@ -40,15 +40,22 @@ class BaseDBRepository:
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001
-        if exc_val:
-            self._logger.warning(
-                "repository_session_rollback error=%s",
-                str(exc_val),
-            )
-            await self._session.rollback()
+        try:
+            if exc_val:
+                self._logger.warning(
+                    "repository_session_rollback error=%s",
+                    str(exc_val),
+                )
+                await self._session.rollback()
+                return
+
+            self._logger.debug("repository_session_commit")
+            try:
+                await self._session.commit()
+            except Exception:
+                self._logger.exception("repository_session_commit_failed")
+                await self._session.rollback()
+                raise
+        finally:
             await self._session.close()
-            raise exc_val
-        self._logger.debug("repository_session_commit")
-        await self._session.commit()
-        await self._session.close()
-        self._logger.debug("repository_session_closed")
+            self._logger.debug("repository_session_closed")
