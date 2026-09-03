@@ -1908,7 +1908,9 @@ export interface operations {
     };
     get_booking_bookings__booking_id__get: {
         parameters: {
-            query?: never;
+            query?: {
+                consistent?: boolean;
+            };
             header?: never;
             path: {
                 booking_id: string;
@@ -2206,7 +2208,9 @@ export interface operations {
     };
     get_me_users_me_get: {
         parameters: {
-            query?: never;
+            query?: {
+                consistent?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;

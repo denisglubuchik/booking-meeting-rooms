@@ -6,7 +6,6 @@ from uuid import UUID
 from domain.entities.booking import BookingStatus
 from domain.entities.booking_history import HistoryAction
 from domain.entities.booking_participant import BookingParticipantRole
-from domain.entities.user import UserRole
 from usecases.dto.meeting_room import RoomResponseDTO
 from usecases.dto.office import OfficeResponseDTO
 
@@ -15,73 +14,6 @@ BookingSortBy = Literal[
     "end_time",
 ]
 BookingSortOrder = Literal["asc", "desc"]
-
-
-@dataclass(frozen=True)
-class CreateBookingDTO:
-    room_id: UUID
-    created_by: UUID
-    start_time: datetime
-    end_time: datetime
-    title: str | None = None
-
-
-@dataclass(frozen=True)
-class RescheduleBookingDTO:
-    id: UUID
-    actor_id: UUID
-    actor_role: UserRole
-    new_start_time: datetime
-    new_end_time: datetime
-
-
-@dataclass(frozen=True)
-class ChangeRoomBookingDTO:
-    id: UUID
-    actor_id: UUID
-    actor_role: UserRole
-    new_room_id: UUID
-
-
-@dataclass(frozen=True)
-class CancelBookingDTO:
-    id: UUID
-    actor_id: UUID
-    actor_role: UserRole
-
-
-@dataclass(frozen=True)
-class BookingFiltersDTO:
-    user_id: UUID | None = None
-    room_id: UUID | None = None
-    status: BookingStatus | None = None
-    start_time_gte: datetime | None = None
-    end_time_lte: datetime | None = None
-    sort_by: BookingSortBy = "start_time"
-    sort_order: BookingSortOrder = "asc"
-    limit: int = 100
-    offset: int = 0
-
-
-@dataclass(frozen=True)
-class BookingHistoryFiltersDTO:
-    booking_id: UUID | None = None
-    action: HistoryAction | None = None
-    performed_by: UUID | None = None
-    created_at_gte: datetime | None = None
-    created_at_lte: datetime | None = None
-    limit: int = 100
-    offset: int = 0
-
-
-@dataclass(frozen=True)
-class AvailableRoomsFiltersDTO:
-    start_time: datetime
-    end_time: datetime
-    office_id: UUID | None = None
-    floor: int | None = None
-    capacity_gte: int | None = None
-    capacity_lte: int | None = None
 
 
 @dataclass(frozen=True)
@@ -105,22 +37,6 @@ class BookingHistoryResponseDTO:
     performed_by: UUID
     details: str
     created_at: datetime
-
-
-@dataclass(frozen=True)
-class AddBookingParticipantDTO:
-    booking_id: UUID
-    actor_id: UUID
-    actor_role: UserRole
-    user_id: UUID
-
-
-@dataclass(frozen=True)
-class RemoveBookingParticipantDTO:
-    booking_id: UUID
-    actor_id: UUID
-    actor_role: UserRole
-    user_id: UUID
 
 
 @dataclass(frozen=True)

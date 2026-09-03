@@ -14,6 +14,7 @@ import {
 import { formatDateRu, formatTimeRu } from "../../shared/lib/datetime";
 import { useConfirm } from "../ui/confirm";
 import { useToast } from "../ui/toast";
+import { mergeMyBookingsWithCommandResults, updateBookingFromCommand } from "./bookingCache";
 
 const BOOKINGS_PAGE_SIZE = 50;
 
@@ -23,24 +24,22 @@ export function useMyBookings() {
   const queryClient = useQueryClient();
 
   const bookingsQuery = useInfiniteQuery({
-    queryKey: queryKeys.myBookingsList({
-      sort_by: "start_time",
-      sort_order: "desc",
-      limit: BOOKINGS_PAGE_SIZE,
-    }),
+    queryKey: queryKeys.myBookingsDefault(),
     initialPageParam: 0,
-    queryFn: ({ pageParam }) =>
-      getMyBookings({
+    queryFn: async ({ pageParam }) => {
+      const bookings = await getMyBookings({
         sort_by: "start_time",
         sort_order: "desc",
         limit: BOOKINGS_PAGE_SIZE,
         offset: pageParam,
-      }),
+      });
+      return mergeMyBookingsWithCommandResults(queryClient, bookings, pageParam === 0);
+    },
     getNextPageParam: (lastPage, _allPages, lastPageParam) => {
       if (lastPage.length < BOOKINGS_PAGE_SIZE) return undefined;
       return lastPageParam + BOOKINGS_PAGE_SIZE;
     },
-    refetchOnMount: true,
+    refetchOnMount: false,
   });
 
   const roomsQuery = useQuery({
@@ -141,19 +140,15 @@ export function useMyBookings() {
     availableRoomsForChangeQuery.error.value ? humanizeApiError(availableRoomsForChangeQuery.error.value) : "",
   );
 
-  async function refreshBookings() {
-    await queryClient.invalidateQueries({ queryKey: queryKeys.myBookings });
-  }
-
   async function loadMoreBookings() {
     await bookingsQuery.fetchNextPage();
   }
 
   const cancelMutation = useMutation({
     mutationFn: (bookingId: string) => cancelBooking(bookingId),
-    onSuccess: async () => {
+    onSuccess: (updatedBooking) => {
+      updateBookingFromCommand(queryClient, updatedBooking, undefined, true);
       toast.success("Бронирование отменено.");
-      await refreshBookings();
     },
     onError: (err) => {
       toast.error(humanizeApiError(err));
@@ -163,9 +158,9 @@ export function useMyBookings() {
   const rescheduleMutation = useMutation({
     mutationFn: ({ bookingId, start, end }: { bookingId: string; start: string; end: string }) =>
       rescheduleBooking(bookingId, start, end),
-    onSuccess: async () => {
+    onSuccess: (updatedBooking) => {
+      updateBookingFromCommand(queryClient, updatedBooking, undefined, true);
       toast.success("Бронирование перенесено.");
-      await refreshBookings();
     },
     onError: (err) => {
       toast.error(humanizeApiError(err));
@@ -175,9 +170,10 @@ export function useMyBookings() {
   const roomMutation = useMutation({
     mutationFn: ({ bookingId, roomId }: { bookingId: string; roomId: string }) =>
       changeBookingRoom(bookingId, roomId),
-    onSuccess: async () => {
+    onSuccess: (updatedBooking) => {
+      const updatedRoom = availableRoomsForChange.value.find((room) => room.id === updatedBooking.room_id);
+      updateBookingFromCommand(queryClient, updatedBooking, updatedRoom, true);
       toast.success("Комната изменена.");
-      await refreshBookings();
     },
     onError: (err) => {
       toast.error(humanizeApiError(err));

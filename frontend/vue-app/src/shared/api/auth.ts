@@ -20,8 +20,12 @@ export async function register(payload: { full_name: string; email: string; pass
   return unwrapData(result) as Promise<User>;
 }
 
-export async function me() {
-  const result = await apiClient.GET("/users/me");
+export async function me(consistent = false) {
+  const result = await apiClient.GET("/users/me", {
+    params: {
+      query: consistent ? { consistent: true } : {},
+    },
+  });
   return unwrapData(result) as Promise<User>;
 }
 

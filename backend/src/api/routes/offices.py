@@ -13,16 +13,29 @@ from api.schemas.offices import (
     OfficeResponse,
     UpdateOfficeRequest,
 )
-from usecases.offices.activate_office import ActivateOfficeUseCase
-from usecases.offices.create_office import CreateOfficeUseCase
-from usecases.offices.deactivate_office import DeactivateOfficeUseCase
-from usecases.offices.get_office_details import GetOfficeDetailsUseCase
-from usecases.offices.get_offices import GetOfficesUseCase
-from usecases.offices.image_ops import (
-    DeleteOfficeImageUseCase,
-    UploadOfficeImageUseCase,
+from usecases.commands.offices.activate_office import (
+    ActivateOfficeCommand,
+    ActivateOfficeCommandHandler,
 )
-from usecases.offices.update_office import UpdateOfficeUseCase
+from usecases.commands.offices.create_office import CreateOfficeCommandHandler
+from usecases.commands.offices.deactivate_office import (
+    DeactivateOfficeCommand,
+    DeactivateOfficeCommandHandler,
+)
+from usecases.commands.offices.image_ops import (
+    DeleteOfficeImageCommand,
+    DeleteOfficeImageCommandHandler,
+    UploadOfficeImageCommand,
+    UploadOfficeImageCommandHandler,
+)
+from usecases.commands.offices.update_office import (
+    UpdateOfficeCommandHandler,
+)
+from usecases.queries.offices.get_office_details import (
+    GetOfficeDetailsQuery,
+    GetOfficeDetailsQueryHandler,
+)
+from usecases.queries.offices.get_offices import GetOfficesQueryHandler
 
 router = APIRouter(tags=["offices"], route_class=DishkaRoute)
 logger = logging.getLogger("api.routes.offices")
@@ -30,7 +43,7 @@ logger = logging.getLogger("api.routes.offices")
 
 @router.get("/")
 async def get_offices(
-    get_offices_uc: FromDishka[GetOfficesUseCase],
+    handler: FromDishka[GetOfficesQueryHandler],
     filters: Annotated[GetOfficesFilters, Query()],
     _: CurrentUserDep,
 ) -> list[OfficeResponse]:
@@ -39,7 +52,7 @@ async def get_offices(
         filters.limit,
         filters.offset,
     )
-    offices = await get_offices_uc.execute(filters.to_dto())
+    offices = await handler.handle(filters.to_query())
     logger.info("get_offices_finished count=%s", len(offices))
     return [OfficeResponse.from_dto(office) for office in offices]
 
@@ -47,11 +60,11 @@ async def get_offices(
 @router.get("/{office_id}")
 async def get_office(
     office_id: UUID,
-    get_office_uc: FromDishka[GetOfficeDetailsUseCase],
+    handler: FromDishka[GetOfficeDetailsQueryHandler],
     _: CurrentUserDep,
 ) -> OfficeResponse:
     logger.info("get_office_started office_id=%s", office_id)
-    office = await get_office_uc.execute(office_id)
+    office = await handler.handle(GetOfficeDetailsQuery(office_id=office_id))
     logger.info("get_office_finished office_id=%s", office.id)
     return OfficeResponse.from_dto(office)
 
@@ -59,7 +72,7 @@ async def get_office(
 @router.post("/")
 async def create_office(
     payload: CreateOfficeRequest,
-    create_office_uc: FromDishka[CreateOfficeUseCase],
+    handler: FromDishka[CreateOfficeCommandHandler],
     _: AdminUserDep,
 ) -> OfficeResponse:
     logger.info(
@@ -67,7 +80,7 @@ async def create_office(
         payload.name,
         payload.city,
     )
-    office = await create_office_uc.execute(payload.to_dto())
+    office = await handler.handle(payload.to_command())
     logger.info("create_office_finished office_id=%s", office.id)
     return OfficeResponse.from_dto(office)
 
@@ -76,11 +89,11 @@ async def create_office(
 async def update_office(
     office_id: UUID,
     payload: UpdateOfficeRequest,
-    update_office_uc: FromDishka[UpdateOfficeUseCase],
+    handler: FromDishka[UpdateOfficeCommandHandler],
     _: AdminUserDep,
 ) -> OfficeResponse:
     logger.info("update_office_started office_id=%s", office_id)
-    office = await update_office_uc.execute(payload.to_dto(office_id))
+    office = await handler.handle(payload.to_command(office_id))
     logger.info("update_office_finished office_id=%s", office.id)
     return OfficeResponse.from_dto(office)
 
@@ -88,11 +101,11 @@ async def update_office(
 @router.post("/{office_id}/activate")
 async def activate_office(
     office_id: UUID,
-    activate_office_uc: FromDishka[ActivateOfficeUseCase],
+    handler: FromDishka[ActivateOfficeCommandHandler],
     _: AdminUserDep,
 ) -> OfficeResponse:
     logger.info("activate_office_started office_id=%s", office_id)
-    office = await activate_office_uc.execute(office_id)
+    office = await handler.handle(ActivateOfficeCommand(office_id=office_id))
     logger.info("activate_office_finished office_id=%s", office.id)
     return OfficeResponse.from_dto(office)
 
@@ -100,11 +113,13 @@ async def activate_office(
 @router.post("/{office_id}/deactivate")
 async def deactivate_office(
     office_id: UUID,
-    deactivate_office_uc: FromDishka[DeactivateOfficeUseCase],
+    handler: FromDishka[DeactivateOfficeCommandHandler],
     _: AdminUserDep,
 ) -> OfficeResponse:
     logger.info("deactivate_office_started office_id=%s", office_id)
-    office = await deactivate_office_uc.execute(office_id)
+    office = await handler.handle(
+        DeactivateOfficeCommand(office_id=office_id),
+    )
     logger.info("deactivate_office_finished office_id=%s", office.id)
     return OfficeResponse.from_dto(office)
 
@@ -113,7 +128,7 @@ async def deactivate_office(
 async def upload_office_image(
     office_id: UUID,
     image: Annotated[UploadFile, File()],
-    upload_image_uc: FromDishka[UploadOfficeImageUseCase],
+    handler: FromDishka[UploadOfficeImageCommandHandler],
     _: AdminUserDep,
 ) -> None:
     content_type = image.content_type or ""
@@ -125,10 +140,12 @@ async def upload_office_image(
         content_type,
         len(data),
     )
-    await upload_image_uc.execute(
-        office_id,
-        content_type=content_type,
-        data=data,
+    await handler.handle(
+        UploadOfficeImageCommand(
+            office_id=office_id,
+            content_type=content_type,
+            data=data,
+        ),
     )
     logger.info("upload_office_image_finished office_id=%s", office_id)
 
@@ -136,9 +153,9 @@ async def upload_office_image(
 @router.delete("/{office_id}/image", status_code=204)
 async def delete_office_image(
     office_id: UUID,
-    delete_image_uc: FromDishka[DeleteOfficeImageUseCase],
+    handler: FromDishka[DeleteOfficeImageCommandHandler],
     _: AdminUserDep,
 ) -> None:
     logger.info("delete_office_image_started office_id=%s", office_id)
-    await delete_image_uc.execute(office_id)
+    await handler.handle(DeleteOfficeImageCommand(office_id=office_id))
     logger.info("delete_office_image_finished office_id=%s", office_id)

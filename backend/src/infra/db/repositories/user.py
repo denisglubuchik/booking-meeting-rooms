@@ -43,6 +43,20 @@ class DBUsersRepository(
         )
         return model.to_domain() if model else None
 
+    async def get_by_id_for_update(self, user_id: UUID) -> User | None:
+        self._logger.debug("lock_user_started user_id=%s", user_id)
+        stmt = (
+            select(UserModel).where(UserModel.id == user_id).with_for_update()
+        )
+        result = await self._session.execute(stmt)
+        model = result.scalar_one_or_none()
+        self._logger.debug(
+            "lock_user_finished user_id=%s found=%s",
+            user_id,
+            model is not None,
+        )
+        return model.to_domain() if model else None
+
     @cache(key_prefix="user", return_type=User)
     async def get_by_email(self, email: str) -> User | None:
         self._logger.debug("get_user_by_email_started email=%s", email)

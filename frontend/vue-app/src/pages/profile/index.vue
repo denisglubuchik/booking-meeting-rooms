@@ -1,6 +1,16 @@
 <template>
   <div class="stack">
-    <PageHeader title="Профиль" />
+    <div class="row row-between">
+      <PageHeader title="Профиль" />
+      <button
+        class="button"
+        type="button"
+        :disabled="isLoading || isRefreshing || updateMutation.isPending.value"
+        @click="refreshProfile"
+      >
+        {{ isRefreshing ? "Обновляем..." : "Обновить профиль" }}
+      </button>
+    </div>
     <LoadingState v-if="isLoading" />
     <ErrorState v-else-if="errorText" :message="errorText" />
 
@@ -57,6 +67,7 @@ import { formatDateTimeRu } from "../../shared/lib/datetime";
 const {
   user,
   isLoading,
+  isRefreshing,
   errorText,
   userRoleLabel,
   fullName,
@@ -64,6 +75,7 @@ const {
   firstError,
   updateMutation,
   onSubmit,
+  refreshProfile,
   sessions,
   sessionsLoading,
   sessionsErrorText,

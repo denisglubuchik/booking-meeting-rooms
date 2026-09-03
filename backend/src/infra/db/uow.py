@@ -15,6 +15,7 @@ from infra.db.repositories.notification_dispatch import (
 )
 from infra.db.repositories.office import DBOfficesRepository
 from infra.db.repositories.user import DBUsersRepository
+from infra.db.repositories.user_session import DBUserSessionsRepository
 from infra.interfaces.cache import CacheInterface
 from usecases.interfaces.uow import UoWInterface
 
@@ -51,6 +52,9 @@ class SQLAlchemyUOW(UoWInterface):
         self.users_repo = DBUsersRepository(
             session=self._session,
             cache=self._cache,
+        )
+        self.user_sessions_repo = DBUserSessionsRepository(
+            session=self._session,
         )
         self.notifications_repo = DBNotificationRepository(
             session=self._session,

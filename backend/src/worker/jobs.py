@@ -4,8 +4,9 @@ from opentelemetry import trace
 
 from core.config import WorkerConfig
 from infra.dependencies import worker_container
-from usecases.bookings.complete_expired_bookings import (
-    CompleteExpiredBookingsUseCase,
+from usecases.commands.bookings.complete_expired_bookings import (
+    CompleteExpiredBookingsCommand,
+    CompleteExpiredBookingsCommandHandler,
 )
 from usecases.notifications.process_dispatch import (
     ProcessNotificationDispatchUseCase,
@@ -65,11 +66,13 @@ async def run_booking_completion_job() -> None:
     with tracer.start_as_current_span("worker.booking_completion") as span:
         config = WorkerConfig()
         async with worker_container() as request_container:
-            usecase = await request_container.get(
-                CompleteExpiredBookingsUseCase,
+            handler = await request_container.get(
+                CompleteExpiredBookingsCommandHandler,
             )
-            result = await usecase.execute(
-                scan_limit=config.BOOKING_COMPLETION_SCAN_LIMIT,
+            result = await handler.handle(
+                CompleteExpiredBookingsCommand(
+                    scan_limit=config.BOOKING_COMPLETION_SCAN_LIMIT,
+                ),
             )
         span.set_attribute("bookings.scanned", result.scanned)
         span.set_attribute("bookings.completed", result.completed)

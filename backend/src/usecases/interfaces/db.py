@@ -15,7 +15,6 @@ from domain.entities.notification import (
 )
 from domain.entities.office import Office
 from domain.entities.user import User
-from domain.entities.user_session import UserSession
 from usecases.dto.booking import BookingSortBy, BookingSortOrder
 
 
@@ -54,27 +53,12 @@ class DBMeetingRoomsRepositoryInterface(AsyncContextManagerInterface, Protocol):
         limit: int = 100,
         offset: int = 0,
     ) -> list[MeetingRoom]: ...
-    async def get_rooms_with_bookings(
-        self,
-        *,
-        is_active: bool | None = None,
-        office_id: UUID | None = None,
-        floor: int | None = None,
-        capacity_gte: int | None = None,
-        capacity_lte: int | None = None,
-        start_time_gte: datetime,
-        end_time_lte: datetime,
-    ) -> list[MeetingRoom]: ...
 
 
 class DBBookingsRepositoryInterface(AsyncContextManagerInterface, Protocol):
     async def save(self, booking: Booking) -> Booking: ...
     async def delete_booking(self, booking: Booking) -> None: ...
     async def get_by_id(self, booking_id: UUID) -> Booking | None: ...
-    async def get_with_room_office(
-        self,
-        booking_id: UUID,
-    ) -> tuple[Booking, MeetingRoom, Office] | None: ...
     async def get_active_by_room_id(self, room_id: UUID) -> list[Booking]: ...
     async def get_active_by_user_id(self, user_id: UUID) -> list[Booking]: ...
     async def get_all(
@@ -82,19 +66,6 @@ class DBBookingsRepositoryInterface(AsyncContextManagerInterface, Protocol):
         *,
         room_id: UUID | None = None,
         user_id: UUID | None = None,
-        status: BookingStatus | None = None,
-        start_time_gte: datetime | None = None,
-        end_time_lte: datetime | None = None,
-        sort_by: BookingSortBy = "start_time",
-        sort_order: BookingSortOrder = "asc",
-        limit: int = 100,
-        offset: int = 0,
-    ) -> list[Booking]: ...
-    async def get_all_for_participant(
-        self,
-        *,
-        participant_id: UUID,
-        room_id: UUID | None = None,
         status: BookingStatus | None = None,
         start_time_gte: datetime | None = None,
         end_time_lte: datetime | None = None,
@@ -157,30 +128,6 @@ class DBUsersRepositoryInterface(AsyncContextManagerInterface, Protocol):
         limit: int = 100,
         offset: int = 0,
     ) -> list[User]: ...
-
-
-class DBUserSessionsRepositoryInterface(
-    AsyncContextManagerInterface,
-    Protocol,
-):
-    async def save(self, session: UserSession) -> UserSession: ...
-    async def get_active_by_id(
-        self,
-        session_id: UUID,
-    ) -> UserSession | None: ...
-    async def list_by_user(
-        self,
-        *,
-        user_id: UUID,
-        is_active: bool | None = None,
-    ) -> list[UserSession]: ...
-    async def revoke_for_user(
-        self,
-        *,
-        user_id: UUID,
-        session_id: UUID,
-        revoked_at: datetime,
-    ) -> None: ...
 
 
 class DBBookingParticipantsRepositoryInterface(

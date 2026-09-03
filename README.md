@@ -42,7 +42,9 @@ Vue собирается в статические файлы (`dist`), и Nginx
 Минимум, который обычно нужно проверить/подставить:
 
 - `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` в `/.env`.
-- `PG_HOST`, `PG_DB`, `PG_USER`, `PG_PASS`, `PG_PORT` в backend env-файле.
+- `PG_RW_HOST`, `PG_RO_HOST`, `PG_DB`, `PG_USER`, `PG_PASS`, `PG_PORT`
+  в backend env-файле. При необходимости для RO можно отдельно задать
+  `PG_RO_PORT`, `PG_RO_DB`, `PG_RO_USER`, `PG_RO_PASS` (аналогично для RW).
 - `JWT_ACCESS_SECRET`.
 - S3/SMTP параметры, если нужны загрузка файлов и email-уведомления.
 

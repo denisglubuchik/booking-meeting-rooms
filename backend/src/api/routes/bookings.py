@@ -21,21 +21,45 @@ from api.schemas.bookings import (
     RescheduleBookingRequest,
 )
 from api.schemas.rooms import RoomResponse
-from usecases.bookings.add_participant import AddBookingParticipantUseCase
-from usecases.bookings.cancel_booking import CancelBookingUseCase
-from usecases.bookings.change_room import ChangeRoomBookingUseCase
-from usecases.bookings.create_booking import CreateBookingUseCase
-from usecases.bookings.get_all_bookings import GetAllBookingsUseCase
-from usecases.bookings.get_available_rooms import GetAvailableRoomsUseCase
-from usecases.bookings.get_booking_details import GetBookingDetailsUseCase
-from usecases.bookings.get_booking_history import GetBookingHistoryUseCase
-from usecases.bookings.get_my_bookings import GetMyBookingsUseCase
-from usecases.bookings.get_room_bookings import GetRoomBookingsUseCase
-from usecases.bookings.remove_participant import (
-    RemoveBookingParticipantUseCase,
+from usecases.commands.bookings.add_participant import (
+    AddBookingParticipantCommandHandler,
 )
-from usecases.bookings.reschedule_booking import RescheduleBookingUseCase
-from usecases.dto.booking import CancelBookingDTO, RemoveBookingParticipantDTO
+from usecases.commands.bookings.cancel_booking import (
+    CancelBookingCommand,
+    CancelBookingCommandHandler,
+)
+from usecases.commands.bookings.change_room import (
+    ChangeRoomBookingCommandHandler,
+)
+from usecases.commands.bookings.create_booking import (
+    CreateBookingCommandHandler,
+)
+from usecases.commands.bookings.remove_participant import (
+    RemoveBookingParticipantCommand,
+    RemoveBookingParticipantCommandHandler,
+)
+from usecases.commands.bookings.reschedule_booking import (
+    RescheduleBookingCommandHandler,
+)
+from usecases.queries.bookings.get_all_bookings import (
+    GetAllBookingsQueryHandler,
+)
+from usecases.queries.bookings.get_available_rooms import (
+    GetAvailableRoomsQueryHandler,
+)
+from usecases.queries.bookings.get_booking_details import (
+    GetBookingDetailsQuery,
+    GetBookingDetailsQueryHandler,
+)
+from usecases.queries.bookings.get_booking_history import (
+    GetBookingHistoryQueryHandler,
+)
+from usecases.queries.bookings.get_room_bookings import (
+    GetRoomBookingsQueryHandler,
+)
+from usecases.queries.bookings.get_user_bookings import (
+    GetUserBookingsQueryHandler,
+)
 
 router = APIRouter(tags=["bookings"], route_class=DishkaRoute)
 logger = logging.getLogger("api.routes.bookings")
@@ -43,7 +67,7 @@ logger = logging.getLogger("api.routes.bookings")
 
 @router.get("/")
 async def get_bookings(
-    get_bookings_uc: FromDishka[GetAllBookingsUseCase],
+    handler: FromDishka[GetAllBookingsQueryHandler],
     filters: Annotated[GetBookingsFilters, Query()],
     _: AdminUserDep,
 ) -> list[BookingResponse]:
@@ -52,14 +76,14 @@ async def get_bookings(
         filters.limit,
         filters.offset,
     )
-    bookings = await get_bookings_uc.execute(filters.to_dto())
+    bookings = await handler.handle(filters.to_all_query())
     logger.info("get_bookings_finished count=%s", len(bookings))
     return [BookingResponse.from_dto(booking) for booking in bookings]
 
 
 @router.get("/history")
 async def get_booking_history(
-    get_booking_history_uc: FromDishka[GetBookingHistoryUseCase],
+    handler: FromDishka[GetBookingHistoryQueryHandler],
     filters: Annotated[GetBookingHistoryFilters, Query()],
     _: AdminUserDep,
 ) -> list[BookingHistoryResponse]:
@@ -68,19 +92,19 @@ async def get_booking_history(
         filters.limit,
         filters.offset,
     )
-    history = await get_booking_history_uc.execute(filters.to_dto())
+    history = await handler.handle(filters.to_query())
     logger.info("get_booking_history_finished count=%s", len(history))
     return [BookingHistoryResponse.from_dto(item) for item in history]
 
 
 @router.get("/available-rooms")
 async def get_available_rooms(
-    get_available_rooms_uc: FromDishka[GetAvailableRoomsUseCase],
+    handler: FromDishka[GetAvailableRoomsQueryHandler],
     filters: Annotated[GetAvailableRoomsFilters, Query()],
     _: CurrentUserDep,
 ) -> list[RoomResponse]:
     logger.info("get_available_rooms_started")
-    rooms = await get_available_rooms_uc.execute(filters.to_dto())
+    rooms = await handler.handle(filters.to_query())
     logger.info("get_available_rooms_finished count=%s", len(rooms))
     return [RoomResponse.from_dto(room) for room in rooms]
 
@@ -88,14 +112,12 @@ async def get_available_rooms(
 @router.get("/by-room/{room_id}")
 async def get_room_bookings(
     room_id: UUID,
-    get_room_bookings_uc: FromDishka[GetRoomBookingsUseCase],
+    handler: FromDishka[GetRoomBookingsQueryHandler],
     filters: Annotated[GetBookingsFilters, Query()],
     _: CurrentUserDep,
 ) -> list[BookingResponse]:
     logger.info("get_room_bookings_started room_id=%s", room_id)
-    bookings = await get_room_bookings_uc.execute(
-        filters.to_dto(room_id=room_id),
-    )
+    bookings = await handler.handle(filters.to_room_query(room_id=room_id))
     logger.info(
         "get_room_bookings_finished room_id=%s count=%s",
         room_id,
@@ -107,14 +129,12 @@ async def get_room_bookings(
 @router.get("/by-user/{user_id}")
 async def get_user_bookings(
     user_id: UUID,
-    get_user_bookings_uc: FromDishka[GetMyBookingsUseCase],
+    handler: FromDishka[GetUserBookingsQueryHandler],
     filters: Annotated[GetBookingsFilters, Query()],
     _: AdminUserDep,
 ) -> list[BookingResponse]:
     logger.info("get_user_bookings_started user_id=%s", user_id)
-    bookings = await get_user_bookings_uc.execute(
-        filters.to_dto(user_id=user_id),
-    )
+    bookings = await handler.handle(filters.to_user_query(user_id=user_id))
     logger.info(
         "get_user_bookings_finished user_id=%s count=%s",
         user_id,
@@ -125,13 +145,13 @@ async def get_user_bookings(
 
 @router.get("/my-bookings")
 async def get_my_bookings(
-    get_user_bookings_uc: FromDishka[GetMyBookingsUseCase],
+    handler: FromDishka[GetUserBookingsQueryHandler],
     filters: Annotated[GetBookingsFilters, Query()],
     current_user: CurrentUserDep,
 ) -> list[BookingResponse]:
     logger.info("get_my_bookings_started user_id=%s", current_user.id)
-    bookings = await get_user_bookings_uc.execute(
-        filters.to_dto(user_id=current_user.id),
+    bookings = await handler.handle(
+        filters.to_user_query(user_id=current_user.id),
     )
     logger.info(
         "get_my_bookings_finished user_id=%s count=%s",
@@ -144,10 +164,17 @@ async def get_my_bookings(
 @router.get("/{booking_id}")
 async def get_booking(
     booking_id: UUID,
-    get_booking_uc: FromDishka[GetBookingDetailsUseCase],
+    handler: FromDishka[GetBookingDetailsQueryHandler],
+    _: CurrentUserDep,
+    consistent: bool = False,
 ) -> BookingDetailsResponse:
     logger.info("get_booking_started booking_id=%s", booking_id)
-    booking = await get_booking_uc.execute(booking_id)
+    booking = await handler.handle(
+        GetBookingDetailsQuery(
+            booking_id=booking_id,
+            consistent=consistent,
+        ),
+    )
     logger.info("get_booking_finished booking_id=%s", booking_id)
     return BookingDetailsResponse.from_dto(booking)
 
@@ -155,7 +182,7 @@ async def get_booking(
 @router.post("/")
 async def create_booking(
     payload: CreateBookingRequest,
-    create_booking_uc: FromDishka[CreateBookingUseCase],
+    handler: FromDishka[CreateBookingCommandHandler],
     current_user: CurrentUserDep,
 ) -> BookingResponse:
     logger.info(
@@ -163,8 +190,8 @@ async def create_booking(
         current_user.id,
         payload.room_id,
     )
-    booking = await create_booking_uc.execute(
-        payload.to_dto(created_by=current_user.id),
+    booking = await handler.handle(
+        payload.to_command(created_by=current_user.id),
     )
     logger.info("create_booking_finished booking_id=%s", booking.id)
     return BookingResponse.from_dto(booking)
@@ -174,7 +201,7 @@ async def create_booking(
 async def reschedule_booking(
     booking_id: UUID,
     payload: RescheduleBookingRequest,
-    reschedule_booking_uc: FromDishka[RescheduleBookingUseCase],
+    handler: FromDishka[RescheduleBookingCommandHandler],
     current_user: CurrentUserDep,
 ) -> BookingResponse:
     logger.info(
@@ -182,8 +209,8 @@ async def reschedule_booking(
         booking_id,
         current_user.id,
     )
-    booking = await reschedule_booking_uc.execute(
-        payload.to_dto(
+    booking = await handler.handle(
+        payload.to_command(
             booking_id=booking_id,
             actor_id=current_user.id,
             actor_role=current_user.role,
@@ -197,7 +224,7 @@ async def reschedule_booking(
 async def change_room_booking(
     booking_id: UUID,
     payload: ChangeRoomBookingRequest,
-    change_room_booking_uc: FromDishka[ChangeRoomBookingUseCase],
+    handler: FromDishka[ChangeRoomBookingCommandHandler],
     current_user: CurrentUserDep,
 ) -> BookingResponse:
     logger.info(
@@ -205,8 +232,8 @@ async def change_room_booking(
         booking_id,
         current_user.id,
     )
-    booking = await change_room_booking_uc.execute(
-        payload.to_dto(
+    booking = await handler.handle(
+        payload.to_command(
             booking_id=booking_id,
             actor_id=current_user.id,
             actor_role=current_user.role,
@@ -223,7 +250,7 @@ async def change_room_booking(
 @router.post("/{booking_id}/cancel")
 async def cancel_booking(
     booking_id: UUID,
-    cancel_booking_uc: FromDishka[CancelBookingUseCase],
+    handler: FromDishka[CancelBookingCommandHandler],
     current_user: CurrentUserDep,
 ) -> BookingResponse:
     logger.info(
@@ -231,9 +258,9 @@ async def cancel_booking(
         booking_id,
         current_user.id,
     )
-    booking = await cancel_booking_uc.execute(
-        CancelBookingDTO(
-            id=booking_id,
+    booking = await handler.handle(
+        CancelBookingCommand(
+            booking_id=booking_id,
             actor_id=current_user.id,
             actor_role=current_user.role,
         ),
@@ -246,7 +273,7 @@ async def cancel_booking(
 async def add_booking_participant(
     booking_id: UUID,
     payload: AddBookingParticipantRequest,
-    add_booking_participant_uc: FromDishka[AddBookingParticipantUseCase],
+    handler: FromDishka[AddBookingParticipantCommandHandler],
     current_user: CurrentUserDep,
 ) -> AddBookingParticipantResponse:
     logger.info(
@@ -255,8 +282,8 @@ async def add_booking_participant(
         current_user.id,
         payload.user_id,
     )
-    participant = await add_booking_participant_uc.execute(
-        payload.to_dto(
+    participant = await handler.handle(
+        payload.to_command(
             booking_id=booking_id,
             actor_id=current_user.id,
             actor_role=current_user.role,
@@ -274,7 +301,7 @@ async def add_booking_participant(
 async def remove_booking_participant(
     booking_id: UUID,
     user_id: UUID,
-    remove_booking_participant_uc: FromDishka[RemoveBookingParticipantUseCase],
+    handler: FromDishka[RemoveBookingParticipantCommandHandler],
     current_user: CurrentUserDep,
 ) -> None:
     logger.info(
@@ -284,8 +311,8 @@ async def remove_booking_participant(
         current_user.id,
         user_id,
     )
-    await remove_booking_participant_uc.execute(
-        RemoveBookingParticipantDTO(
+    await handler.handle(
+        RemoveBookingParticipantCommand(
             booking_id=booking_id,
             actor_id=current_user.id,
             actor_role=current_user.role,

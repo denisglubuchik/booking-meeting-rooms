@@ -15,7 +15,8 @@ data:
   OTEL_EXPORTER_OTLP_INSECURE: "true"
   OTEL_RESOURCE_ATTRIBUTES: "service.namespace=booking-meeting-rooms,deployment.environment.name=kubernetes"
 
-  PG_HOST: "pgbouncer"
+  PG_RW_HOST: "pgbouncer"
+  PG_RO_HOST: "pgbouncer"
   PG_PORT: "5432"
   PG_DB: "booking_db"
 

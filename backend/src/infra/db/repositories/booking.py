@@ -1,23 +1,20 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import delete, or_, select
+from sqlalchemy import delete, exists, select
 
 from domain.entities.booking import Booking, BookingStatus
-from domain.entities.meeting_room import MeetingRoom
-from domain.entities.office import Office
 from infra.db.models.booking import BookingModel
-from infra.db.models.booking_participant import BookingParticipantModel
-from infra.db.models.meeting_room import MeetingRoomModel
-from infra.db.models.office import OfficeModel
 from infra.db.repositories.base import BaseDBRepository
 from usecases.dto.booking import BookingSortBy, BookingSortOrder
+from usecases.interfaces.commands import BookingsCommandRepositoryInterface
 from usecases.interfaces.db import DBBookingsRepositoryInterface
 
 
 class DBBookingsRepository(
     BaseDBRepository,
     DBBookingsRepositoryInterface,
+    BookingsCommandRepositoryInterface,
 ):
     async def save(self, booking: Booking) -> Booking:
         self._logger.debug("save_booking_started booking_id=%s", booking.id)
@@ -51,47 +48,41 @@ class DBBookingsRepository(
         )
         return model.to_domain() if model else None
 
-    async def get_with_room_office(
+    async def get_by_id_for_update(
         self,
         booking_id: UUID,
-    ) -> tuple[Booking, MeetingRoom, Office] | None:
+    ) -> Booking | None:
         self._logger.debug(
-            "get_with_room_office_started booking_id=%s",
+            "lock_booking_started booking_id=%s",
             booking_id,
         )
         stmt = (
-            select(BookingModel, MeetingRoomModel, OfficeModel)
-            .join(MeetingRoomModel, MeetingRoomModel.id == BookingModel.room_id)
-            .join(OfficeModel, OfficeModel.id == MeetingRoomModel.office_id)
+            select(BookingModel)
             .where(BookingModel.id == booking_id)
+            .with_for_update()
         )
         result = await self._session.execute(stmt)
-        row = result.first()
-        if row is None:
-            self._logger.debug(
-                "get_with_room_office_finished booking_id=%s found=false",
-                booking_id,
-            )
-            return None
-        booking_model, room_model, office_model = row
+        model = result.scalar_one_or_none()
         self._logger.debug(
-            "get_with_room_office_finished booking_id=%s found=true",
+            "lock_booking_finished booking_id=%s found=%s",
             booking_id,
+            model is not None,
         )
-        return (
-            booking_model.to_domain(),
-            room_model.to_domain(),
-            office_model.to_domain(),
-        )
+        return model.to_domain() if model else None
 
     async def get_active_by_room_id(self, room_id: UUID) -> list[Booking]:
         self._logger.debug(
             "get_active_bookings_by_room_started room_id=%s",
             room_id,
         )
-        stmt = select(BookingModel).where(
-            BookingModel.room_id == room_id,
-            BookingModel.status == BookingStatus.CREATED,
+        stmt = (
+            select(BookingModel)
+            .where(
+                BookingModel.room_id == room_id,
+                BookingModel.status == BookingStatus.CREATED,
+            )
+            .order_by(BookingModel.id)
+            .with_for_update()
         )
         result = await self._session.execute(stmt)
         bookings = [model.to_domain() for model in result.scalars().all()]
@@ -107,9 +98,14 @@ class DBBookingsRepository(
             "get_active_bookings_by_user_started user_id=%s",
             user_id,
         )
-        stmt = select(BookingModel).where(
-            BookingModel.user_id == user_id,
-            BookingModel.status == BookingStatus.CREATED,
+        stmt = (
+            select(BookingModel)
+            .where(
+                BookingModel.user_id == user_id,
+                BookingModel.status == BookingStatus.CREATED,
+            )
+            .order_by(BookingModel.id)
+            .with_for_update()
         )
         result = await self._session.execute(stmt)
         bookings = [model.to_domain() for model in result.scalars().all()]
@@ -119,6 +115,56 @@ class DBBookingsRepository(
             len(bookings),
         )
         return bookings
+
+    async def get_expired_for_update(
+        self,
+        *,
+        now: datetime,
+        limit: int = 500,
+    ) -> list[Booking]:
+        self._logger.debug(
+            "lock_expired_bookings_started now=%s limit=%s",
+            now,
+            limit,
+        )
+        stmt = (
+            select(BookingModel)
+            .where(
+                BookingModel.status == BookingStatus.CREATED,
+                BookingModel.end_time <= now,
+            )
+            .order_by(BookingModel.end_time, BookingModel.id)
+            .limit(limit)
+            .with_for_update(skip_locked=True)
+        )
+        result = await self._session.execute(stmt)
+        bookings = [model.to_domain() for model in result.scalars().all()]
+        self._logger.debug(
+            "lock_expired_bookings_finished count=%s",
+            len(bookings),
+        )
+        return bookings
+
+    async def exists_active_overlap(
+        self,
+        *,
+        room_id: UUID,
+        start_time: datetime,
+        end_time: datetime,
+        exclude_booking_id: UUID | None = None,
+    ) -> bool:
+        conditions = [
+            BookingModel.room_id == room_id,
+            BookingModel.status == BookingStatus.CREATED,
+            BookingModel.start_time < end_time,
+            BookingModel.end_time > start_time,
+        ]
+        if exclude_booking_id is not None:
+            conditions.append(BookingModel.id != exclude_booking_id)
+
+        stmt = select(exists().where(*conditions))
+        result = await self._session.execute(stmt)
+        return bool(result.scalar_one())
 
     async def get_all(
         self,
@@ -163,66 +209,4 @@ class DBBookingsRepository(
         result = await self._session.execute(stmt)
         bookings = [model.to_domain() for model in result.scalars().all()]
         self._logger.debug("get_all_bookings_finished count=%s", len(bookings))
-        return bookings
-
-    async def get_all_for_participant(
-        self,
-        *,
-        participant_id: UUID,
-        room_id: UUID | None = None,
-        status: BookingStatus | None = None,
-        start_time_gte: datetime | None = None,
-        end_time_lte: datetime | None = None,
-        sort_by: BookingSortBy = "start_time",
-        sort_order: BookingSortOrder = "asc",
-        limit: int = 100,
-        offset: int = 0,
-    ) -> list[Booking]:
-        self._logger.debug(
-            "get_all_bookings_for_participant_started participant_id=%s",
-            participant_id,
-        )
-        stmt = select(BookingModel).outerjoin(
-            BookingParticipantModel,
-            BookingParticipantModel.booking_id == BookingModel.id,
-        )
-        stmt = stmt.where(
-            or_(
-                BookingModel.user_id == participant_id,
-                BookingParticipantModel.user_id == participant_id,
-            ),
-        )
-
-        if room_id is not None:
-            stmt = stmt.where(BookingModel.room_id == room_id)
-        if status is not None:
-            stmt = stmt.where(BookingModel.status == status)
-        if start_time_gte is not None:
-            stmt = stmt.where(BookingModel.start_time >= start_time_gte)
-        if end_time_lte is not None:
-            stmt = stmt.where(BookingModel.end_time <= end_time_lte)
-
-        if sort_by == "start_time":
-            sort_column = BookingModel.start_time
-        elif sort_by == "end_time":
-            sort_column = BookingModel.end_time
-
-        order_clause = (
-            sort_column.desc() if sort_order == "desc" else sort_column.asc()
-        )
-        stmt = (
-            stmt
-            .distinct()
-            .order_by(order_clause, BookingModel.id.asc())
-            .limit(limit)
-            .offset(offset)
-        )
-        result = await self._session.execute(stmt)
-        bookings = [model.to_domain() for model in result.scalars().all()]
-        self._logger.debug(
-            "get_all_bookings_for_participant_finished "
-            "participant_id=%s count=%s",
-            participant_id,
-            len(bookings),
-        )
         return bookings

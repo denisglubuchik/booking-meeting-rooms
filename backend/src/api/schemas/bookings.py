@@ -10,23 +10,33 @@ from domain.entities.booking import BookingStatus
 from domain.entities.booking_history import HistoryAction
 from domain.entities.booking_participant import BookingParticipantRole
 from domain.entities.user import UserRole
+from usecases.commands.bookings.add_participant import (
+    AddBookingParticipantCommand,
+)
+from usecases.commands.bookings.change_room import ChangeRoomBookingCommand
+from usecases.commands.bookings.create_booking import CreateBookingCommand
+from usecases.commands.bookings.reschedule_booking import (
+    RescheduleBookingCommand,
+)
 from usecases.dto.booking import (
-    AddBookingParticipantDTO,
     AddBookingParticipantResultDTO,
-    AvailableRoomsFiltersDTO,
     BookingDetailsResponseDTO,
-    BookingFiltersDTO,
-    BookingHistoryFiltersDTO,
     BookingHistoryResponseDTO,
     BookingParticipantDetailsDTO,
     BookingParticipantResponseDTO,
     BookingResponseDTO,
     BookingSortBy,
     BookingSortOrder,
-    ChangeRoomBookingDTO,
-    CreateBookingDTO,
-    RescheduleBookingDTO,
 )
+from usecases.queries.bookings.get_all_bookings import GetAllBookingsQuery
+from usecases.queries.bookings.get_available_rooms import (
+    GetAvailableRoomsQuery,
+)
+from usecases.queries.bookings.get_booking_history import (
+    GetBookingHistoryQuery,
+)
+from usecases.queries.bookings.get_room_bookings import GetRoomBookingsQuery
+from usecases.queries.bookings.get_user_bookings import GetUserBookingsQuery
 
 MOSCOW_TZ = ZoneInfo("Europe/Moscow")
 
@@ -55,15 +65,44 @@ class GetBookingsFilters(BaseModel):
     def normalize_datetime(cls, value: datetime | None) -> datetime | None:
         return _as_moscow_datetime(value)
 
-    def to_dto(
+    def to_all_query(self) -> GetAllBookingsQuery:
+        return GetAllBookingsQuery(
+            user_id=self.user_id,
+            room_id=self.room_id,
+            status=self.status,
+            start_time_gte=self.start_time_gte,
+            end_time_lte=self.end_time_lte,
+            sort_by=self.sort_by,
+            sort_order=self.sort_order,
+            limit=self.limit,
+            offset=self.offset,
+        )
+
+    def to_user_query(
         self,
         *,
-        user_id: UUID | None = None,
-        room_id: UUID | None = None,
-    ) -> BookingFiltersDTO:
-        return BookingFiltersDTO(
-            user_id=user_id if user_id is not None else self.user_id,
-            room_id=room_id if room_id is not None else self.room_id,
+        user_id: UUID,
+    ) -> GetUserBookingsQuery:
+        return GetUserBookingsQuery(
+            user_id=user_id,
+            room_id=self.room_id,
+            status=self.status,
+            start_time_gte=self.start_time_gte,
+            end_time_lte=self.end_time_lte,
+            sort_by=self.sort_by,
+            sort_order=self.sort_order,
+            limit=self.limit,
+            offset=self.offset,
+        )
+
+    def to_room_query(
+        self,
+        *,
+        room_id: UUID,
+    ) -> GetRoomBookingsQuery:
+        return GetRoomBookingsQuery(
+            room_id=room_id,
+            user_id=self.user_id,
             status=self.status,
             start_time_gte=self.start_time_gte,
             end_time_lte=self.end_time_lte,
@@ -88,8 +127,8 @@ class GetBookingHistoryFilters(BaseModel):
     def normalize_datetime(cls, value: datetime | None) -> datetime | None:
         return _as_moscow_datetime(value)
 
-    def to_dto(self) -> BookingHistoryFiltersDTO:
-        return BookingHistoryFiltersDTO(
+    def to_query(self) -> GetBookingHistoryQuery:
+        return GetBookingHistoryQuery(
             booking_id=self.booking_id,
             action=self.action,
             performed_by=self.performed_by,
@@ -117,8 +156,8 @@ class GetAvailableRoomsFilters(BaseModel):
             raise ValueError(msg)
         return normalized
 
-    def to_dto(self) -> AvailableRoomsFiltersDTO:
-        return AvailableRoomsFiltersDTO(
+    def to_query(self) -> GetAvailableRoomsQuery:
+        return GetAvailableRoomsQuery(
             start_time=self.start_time,
             end_time=self.end_time,
             office_id=self.office_id,
@@ -143,8 +182,8 @@ class CreateBookingRequest(BaseModel):
             raise ValueError(msg)
         return normalized
 
-    def to_dto(self, created_by: UUID) -> CreateBookingDTO:
-        return CreateBookingDTO(
+    def to_command(self, created_by: UUID) -> CreateBookingCommand:
+        return CreateBookingCommand(
             room_id=self.room_id,
             created_by=created_by,
             start_time=self.start_time,
@@ -166,14 +205,14 @@ class RescheduleBookingRequest(BaseModel):
             raise ValueError(msg)
         return normalized
 
-    def to_dto(
+    def to_command(
         self,
         booking_id: UUID,
         actor_id: UUID,
         actor_role: UserRole,
-    ) -> RescheduleBookingDTO:
-        return RescheduleBookingDTO(
-            id=booking_id,
+    ) -> RescheduleBookingCommand:
+        return RescheduleBookingCommand(
+            booking_id=booking_id,
             actor_id=actor_id,
             actor_role=actor_role,
             new_start_time=self.new_start_time,
@@ -184,14 +223,14 @@ class RescheduleBookingRequest(BaseModel):
 class ChangeRoomBookingRequest(BaseModel):
     new_room_id: UUID
 
-    def to_dto(
+    def to_command(
         self,
         booking_id: UUID,
         actor_id: UUID,
         actor_role: UserRole,
-    ) -> ChangeRoomBookingDTO:
-        return ChangeRoomBookingDTO(
-            id=booking_id,
+    ) -> ChangeRoomBookingCommand:
+        return ChangeRoomBookingCommand(
+            booking_id=booking_id,
             actor_id=actor_id,
             actor_role=actor_role,
             new_room_id=self.new_room_id,
@@ -201,13 +240,13 @@ class ChangeRoomBookingRequest(BaseModel):
 class AddBookingParticipantRequest(BaseModel):
     user_id: UUID
 
-    def to_dto(
+    def to_command(
         self,
         booking_id: UUID,
         actor_id: UUID,
         actor_role: UserRole,
-    ) -> AddBookingParticipantDTO:
-        return AddBookingParticipantDTO(
+    ) -> AddBookingParticipantCommand:
+        return AddBookingParticipantCommand(
             booking_id=booking_id,
             actor_id=actor_id,
             actor_role=actor_role,

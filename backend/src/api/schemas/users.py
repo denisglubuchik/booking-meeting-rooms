@@ -3,14 +3,14 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from usecases.commands.users.create_user import CreateUserCommand
+from usecases.commands.users.update_user import UpdateUserCommand
 from usecases.dto.user import (
-    CreateUserDTO,
-    UpdateUserDTO,
-    UserFiltersDTO,
-    UserLookupFiltersDTO,
     UserLookupResponseDTO,
     UserResponseDTO,
 )
+from usecases.queries.users.get_users import GetUsersQuery
+from usecases.queries.users.lookup_users import LookupUsersQuery
 
 
 class GetUsersFilters(BaseModel):
@@ -21,8 +21,8 @@ class GetUsersFilters(BaseModel):
     limit: int = 100
     offset: int = 0
 
-    def to_dto(self) -> UserFiltersDTO:
-        return UserFiltersDTO(
+    def to_query(self) -> GetUsersQuery:
+        return GetUsersQuery(
             is_active=self.is_active,
             role=self.role,
             created_at_gte=self.created_at_gte,
@@ -37,8 +37,8 @@ class CreateUserRequest(BaseModel):
     email: str
     password: str
 
-    def to_dto(self) -> CreateUserDTO:
-        return CreateUserDTO(
+    def to_command(self) -> CreateUserCommand:
+        return CreateUserCommand(
             full_name=self.full_name,
             email=self.email,
             password=self.password,
@@ -49,9 +49,9 @@ class UpdateUserRequest(BaseModel):
     full_name: str
     email: str
 
-    def to_dto(self, user_id: UUID) -> UpdateUserDTO:
-        return UpdateUserDTO(
-            id=user_id,
+    def to_command(self, user_id: UUID) -> UpdateUserCommand:
+        return UpdateUserCommand(
+            user_id=user_id,
             full_name=self.full_name,
             email=self.email,
         )
@@ -81,8 +81,8 @@ class UserLookupFilters(BaseModel):
     query: str = Field(min_length=2, max_length=255)
     limit: int = Field(default=20, ge=1, le=20)
 
-    def to_dto(self) -> UserLookupFiltersDTO:
-        return UserLookupFiltersDTO(
+    def to_query(self) -> LookupUsersQuery:
+        return LookupUsersQuery(
             query=self.query,
             limit=self.limit,
         )

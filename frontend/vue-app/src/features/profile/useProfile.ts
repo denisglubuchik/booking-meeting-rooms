@@ -1,12 +1,13 @@
-import { computed, watchEffect } from "vue";
+import { computed, ref, watchEffect } from "vue";
 import { toTypedSchema } from "@vee-validate/zod";
-import { useMutation, useQuery } from "@tanstack/vue-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { useForm } from "vee-validate";
 import { z } from "zod";
 import {
   getSessions,
   humanizeApiError,
   me,
+  queryKeys,
   revokeSession,
   updateMe,
 } from "../../shared/api";
@@ -16,6 +17,7 @@ import { useToast } from "../ui/toast";
 export function useProfile() {
   const auth = useAuthStore();
   const toast = useToast();
+  const queryClient = useQueryClient();
 
   const schema = toTypedSchema(
     z.object({
@@ -36,8 +38,9 @@ export function useProfile() {
   const [email] = defineField("email");
 
   const meQuery = useQuery({
-    queryKey: ["profile-me"],
+    queryKey: queryKeys.profileMe,
     queryFn: () => me(),
+    staleTime: Infinity,
   });
 
   const user = computed(() => meQuery.data.value ?? null);
@@ -62,7 +65,7 @@ export function useProfile() {
       }),
     onSuccess: (updated) => {
       auth.applyUser(updated);
-      meQuery.refetch();
+      queryClient.setQueryData(queryKeys.profileMe, updated);
       toast.success("Профиль обновлен.");
     },
     onError: (err) => {
@@ -73,6 +76,23 @@ export function useProfile() {
   const onSubmit = handleSubmit((values) => {
     updateMutation.mutate(values);
   });
+
+  const isRefreshing = ref(false);
+
+  async function refreshProfile() {
+    if (isRefreshing.value) return;
+    isRefreshing.value = true;
+    try {
+      const freshUser = await me(true);
+      queryClient.setQueryData(queryKeys.profileMe, freshUser);
+      auth.applyUser(freshUser);
+      toast.success("Профиль обновлен.");
+    } catch (error) {
+      toast.error(humanizeApiError(error));
+    } finally {
+      isRefreshing.value = false;
+    }
+  }
 
   const sessionsQuery = useQuery({
     queryKey: ["profile-sessions"],
@@ -105,6 +125,7 @@ export function useProfile() {
   return {
     user,
     isLoading,
+    isRefreshing,
     errorText,
     userRoleLabel,
     fullName,
@@ -112,6 +133,7 @@ export function useProfile() {
     firstError,
     updateMutation,
     onSubmit,
+    refreshProfile,
     sessions,
     sessionsLoading,
     sessionsErrorText,

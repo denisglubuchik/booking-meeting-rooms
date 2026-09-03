@@ -1,6 +1,16 @@
 <template>
   <div class="stack">
-    <PageHeader title="Детали бронирования" />
+    <div class="row row-between">
+      <PageHeader title="Детали бронирования" />
+      <button
+        class="button"
+        type="button"
+        :disabled="isLoading || isRefreshing || isMutating"
+        @click="refreshBookingDetails(true)"
+      >
+        {{ isRefreshing ? "Обновляем..." : "Обновить детали" }}
+      </button>
+    </div>
     <LoadingState v-if="isLoading" />
     <ErrorState v-else-if="errorText" :message="errorText" />
     <EmptyState
@@ -176,6 +186,7 @@ const {
   availableRoomsForChangeQuery,
   roomChangeError,
   isLoading,
+  isRefreshing,
   lookupLoading,
   isMutating,
   errorText,
@@ -190,6 +201,7 @@ const {
   cancelChangeRoom,
   submitChangeRoom,
   cancelCurrentBooking,
+  refreshBookingDetails,
 } = useBookingDetails();
 
 function formatDate(value: string) {

@@ -16,7 +16,7 @@ export const useAuthStore = defineStore("auth", {
     async hydrate() {
       if (!this.isAuthenticated) return;
       try {
-        const user = await me();
+        const user = await me(true);
         this.applyUser(user);
       } catch {
         this.logout();
@@ -35,7 +35,7 @@ export const useAuthStore = defineStore("auth", {
       try {
         const auth = await login(email, password);
         setAuthTokens(auth.access_token);
-        const user = await me();
+        const user = await me(true);
         this.applyUser(user);
       } catch (err) {
         this.error = err instanceof Error ? err.message : "Ошибка входа";

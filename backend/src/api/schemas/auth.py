@@ -5,15 +5,26 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from domain.entities.user import UserRole
-from usecases.dto.user import LoginUserDTO
+from usecases.commands.auth.login import LoginCommand
+from usecases.dto.auth import UserSessionDTO
 
 
 class LoginUserRequest(BaseModel):
     email: str
     password: str
 
-    def to_dto(self) -> LoginUserDTO:
-        return LoginUserDTO(email=self.email, password=self.password)
+    def to_command(
+        self,
+        *,
+        user_agent: str | None,
+        ip: str | None,
+    ) -> LoginCommand:
+        return LoginCommand(
+            email=self.email,
+            password=self.password,
+            user_agent=user_agent,
+            ip=ip,
+        )
 
 
 class AccessTokenResponse(BaseModel):
@@ -27,6 +38,17 @@ class UserSessionResponse(BaseModel):
     created_at: datetime
     user_agent: str | None
     ip: str | None
+
+    @classmethod
+    def from_dto(cls, dto: UserSessionDTO) -> "UserSessionResponse":
+        return cls(
+            id=dto.id,
+            expires_at=dto.expires_at,
+            revoked_at=dto.revoked_at,
+            created_at=dto.created_at,
+            user_agent=dto.user_agent,
+            ip=dto.ip,
+        )
 
 
 @dataclass(frozen=True)

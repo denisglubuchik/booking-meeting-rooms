@@ -21,11 +21,61 @@ class DBConfig(Settings):
     PG_DB: str
     PG_USER: str
     PG_PASS: str
-    PG_HOST: str
+    PG_HOST: str | None = None
+
+    PG_RW_HOST: str | None = None
+    PG_RW_PORT: int | None = None
+    PG_RW_DB: str | None = None
+    PG_RW_USER: str | None = None
+    PG_RW_PASS: str | None = None
+
+    PG_RO_HOST: str | None = None
+    PG_RO_PORT: int | None = None
+    PG_RO_DB: str | None = None
+    PG_RO_USER: str | None = None
+    PG_RO_PASS: str | None = None
+
+    @staticmethod
+    def _url(
+        *,
+        host: str | None,
+        port: int,
+        database: str,
+        user: str,
+        password: str,
+    ) -> str:
+        if host is None:
+            msg = "PG_RW_HOST/PG_RO_HOST or legacy PG_HOST must be set"
+            raise ValueError(msg)
+        return (
+            f"postgresql+asyncpg://{user}:{password}@"
+            f"{host}:{port}/{database}"
+        )
 
     @property
-    def DATABASE_URL(self) -> str:  # noqa
-        return f"postgresql+asyncpg://{self.PG_USER}:{self.PG_PASS}@{self.PG_HOST}:{self.PG_PORT}/{self.PG_DB}"
+    def RW_DATABASE_URL(self) -> str:  # noqa: N802
+        return self._url(
+            host=self.PG_RW_HOST or self.PG_HOST,
+            port=self.PG_RW_PORT or self.PG_PORT,
+            database=self.PG_RW_DB or self.PG_DB,
+            user=self.PG_RW_USER or self.PG_USER,
+            password=self.PG_RW_PASS or self.PG_PASS,
+        )
+
+    @property
+    def RO_DATABASE_URL(self) -> str:  # noqa: N802
+        return self._url(
+            host=self.PG_RO_HOST or self.PG_RW_HOST or self.PG_HOST,
+            port=self.PG_RO_PORT or self.PG_RW_PORT or self.PG_PORT,
+            database=self.PG_RO_DB or self.PG_RW_DB or self.PG_DB,
+            user=self.PG_RO_USER or self.PG_RW_USER or self.PG_USER,
+            password=self.PG_RO_PASS or self.PG_RW_PASS or self.PG_PASS,
+        )
+
+    @property
+    def DATABASE_URL(self) -> str:  # noqa: N802
+        """Backward-compatible alias used by Alembic."""
+        return self.RW_DATABASE_URL
 
 
 class RedisConfig(Settings):

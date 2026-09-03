@@ -2,12 +2,10 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from usecases.dto.office import (
-    CreateOfficeDTO,
-    OfficeFiltersDTO,
-    OfficeResponseDTO,
-    UpdateOfficeDTO,
-)
+from usecases.commands.offices.create_office import CreateOfficeCommand
+from usecases.commands.offices.update_office import UpdateOfficeCommand
+from usecases.dto.office import OfficeResponseDTO
+from usecases.queries.offices.get_offices import GetOfficesQuery
 
 
 class GetOfficesFilters(BaseModel):
@@ -16,8 +14,8 @@ class GetOfficesFilters(BaseModel):
     limit: int = 100
     offset: int = 0
 
-    def to_dto(self) -> OfficeFiltersDTO:
-        return OfficeFiltersDTO(
+    def to_query(self) -> GetOfficesQuery:
+        return GetOfficesQuery(
             is_active=self.is_active,
             city=self.city,
             limit=self.limit,
@@ -30,8 +28,8 @@ class CreateOfficeRequest(BaseModel):
     city: str
     address: str
 
-    def to_dto(self) -> CreateOfficeDTO:
-        return CreateOfficeDTO(
+    def to_command(self) -> CreateOfficeCommand:
+        return CreateOfficeCommand(
             name=self.name,
             city=self.city,
             address=self.address,
@@ -43,9 +41,9 @@ class UpdateOfficeRequest(BaseModel):
     city: str | None = None
     address: str | None = None
 
-    def to_dto(self, office_id: UUID) -> UpdateOfficeDTO:
-        return UpdateOfficeDTO(
-            id=office_id,
+    def to_command(self, office_id: UUID) -> UpdateOfficeCommand:
+        return UpdateOfficeCommand(
+            office_id=office_id,
             name=self.name,
             city=self.city,
             address=self.address,

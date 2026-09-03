@@ -2,13 +2,11 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from usecases.dto.meeting_room import (
-    CreateRoomDTO,
-    OfficeRoomFiltersDTO,
-    RoomFiltersDTO,
-    RoomResponseDTO,
-    UpdateRoomDTO,
-)
+from usecases.commands.rooms.create_room import CreateRoomCommand
+from usecases.commands.rooms.update_room import UpdateRoomCommand
+from usecases.dto.meeting_room import RoomResponseDTO
+from usecases.queries.rooms.get_all_rooms import GetAllRoomsQuery
+from usecases.queries.rooms.get_office_rooms import GetOfficeRoomsQuery
 
 
 class GetRoomsFilters(BaseModel):
@@ -18,8 +16,8 @@ class GetRoomsFilters(BaseModel):
     limit: int = 100
     offset: int = 0
 
-    def to_dto(self) -> RoomFiltersDTO:
-        return RoomFiltersDTO(
+    def to_query(self) -> GetAllRoomsQuery:
+        return GetAllRoomsQuery(
             is_active=self.is_active,
             capacity_gte=self.capacity_gte,
             capacity_lte=self.capacity_lte,
@@ -36,8 +34,9 @@ class GetOfficeRoomsFilters(BaseModel):
     limit: int = 100
     offset: int = 0
 
-    def to_dto(self) -> OfficeRoomFiltersDTO:
-        return OfficeRoomFiltersDTO(
+    def to_query(self, office_id: UUID) -> GetOfficeRoomsQuery:
+        return GetOfficeRoomsQuery(
+            office_id=office_id,
             is_active=self.is_active,
             floor=self.floor,
             capacity_gte=self.capacity_gte,
@@ -55,14 +54,14 @@ class CreateRoomRequest(BaseModel):
     description: str
     equipment: list[str]
 
-    def to_dto(self) -> CreateRoomDTO:
-        return CreateRoomDTO(
+    def to_command(self) -> CreateRoomCommand:
+        return CreateRoomCommand(
             office_id=self.office_id,
             name=self.name,
             floor=self.floor,
             capacity=self.capacity,
             description=self.description,
-            equipment=self.equipment,
+            equipment=tuple(self.equipment),
         )
 
 
@@ -71,12 +70,12 @@ class UpdateRoomRequest(BaseModel):
     description: str
     equipment: list[str]
 
-    def to_dto(self, room_id: UUID) -> UpdateRoomDTO:
-        return UpdateRoomDTO(
-            id=room_id,
+    def to_command(self, room_id: UUID) -> UpdateRoomCommand:
+        return UpdateRoomCommand(
+            room_id=room_id,
             name=self.name,
             description=self.description,
-            equipment=self.equipment,
+            equipment=tuple(self.equipment),
         )
 
 

@@ -39,6 +39,11 @@ class UserEmailAlreadyExistsError(ApplicationError):
     default_status_code = 409
 
 
+class ConflictError(ApplicationError):
+    default_code = "conflict"
+    default_status_code = 409
+
+
 class NotificationEnqueueError(ApplicationError):
     default_code = "notification_enqueue_failed"
     default_status_code = 500

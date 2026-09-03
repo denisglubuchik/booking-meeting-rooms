@@ -65,9 +65,12 @@ export async function getMyBookings(params?: {
   return unwrapData(result) as Promise<Booking[]>;
 }
 
-export async function getBookingDetails(bookingId: string) {
+export async function getBookingDetails(bookingId: string, consistent = false) {
   const result = await apiClient.GET("/bookings/{booking_id}", {
-    params: { path: { booking_id: bookingId } },
+    params: {
+      path: { booking_id: bookingId },
+      query: consistent ? { consistent: true } : {},
+    },
   });
   return unwrapData(result) as Promise<BookingDetails>;
 }

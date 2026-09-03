@@ -9,13 +9,6 @@ from dishka import (
     make_async_container,
     provide,
 )
-from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
-from sqlalchemy.ext.asyncio import (
-    AsyncEngine,
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
 
 from core.config import (
     AuthConfig,
@@ -28,6 +21,17 @@ from core.config import (
 from infra.argon_hasher import ArgonHasher
 from infra.auth.tokens import JWTTokenService
 from infra.cache.service import RedisCacheService
+from infra.db.provider import (
+    DatabaseProvider,
+    ROSessionFactory,
+    RWSessionFactory,
+)
+from infra.db.queries.booking_history import BookingHistoryQueryRepository
+from infra.db.queries.bookings import BookingsQueryRepository
+from infra.db.queries.offices import OfficesQueryRepository
+from infra.db.queries.rooms import RoomsQueryRepository
+from infra.db.queries.user_sessions import UserSessionsQueryRepository
+from infra.db.queries.users import UsersQueryRepository
 from infra.db.repositories.booking import DBBookingsRepository
 from infra.db.repositories.booking_history import DBBookingHistoryRepository
 from infra.db.repositories.booking_participant import (
@@ -40,7 +44,6 @@ from infra.db.repositories.notification_dispatch import (
 )
 from infra.db.repositories.office import DBOfficesRepository
 from infra.db.repositories.user import DBUsersRepository
-from infra.db.repositories.user_session import DBUserSessionsRepository
 from infra.db.uow import SQLAlchemyUOW
 from infra.integrations.notifications.email import (
     SMTPEmailNotificationSender,
@@ -49,35 +52,69 @@ from infra.integrations.s3storage.s3 import S3FileStorage
 from infra.interfaces.cache import CacheInterface
 from infra.interfaces.file_storage import FileStorageInterface
 from infra.interfaces.jwt_tokens import JWTTokenServiceInterface
-from usecases.auth.tokens import (
-    GetUserSessionsUseCase,
-    LoginWithSessionUseCase,
-    LogoutUseCase,
-    RefreshTokensUseCase,
-    RevokeUserSessionUseCase,
+from usecases.commands.auth.login import LoginCommandHandler
+from usecases.commands.auth.logout import LogoutCommandHandler
+from usecases.commands.auth.refresh_tokens import RefreshTokensCommandHandler
+from usecases.commands.auth.revoke_user_session import (
+    RevokeUserSessionCommandHandler,
 )
-from usecases.bookings.add_participant import AddBookingParticipantUseCase
-from usecases.bookings.cancel_booking import CancelBookingUseCase
-from usecases.bookings.change_room import ChangeRoomBookingUseCase
-from usecases.bookings.complete_expired_bookings import (
-    CompleteExpiredBookingsUseCase,
+from usecases.commands.bookings.add_participant import (
+    AddBookingParticipantCommandHandler,
 )
-from usecases.bookings.create_booking import CreateBookingUseCase
-from usecases.bookings.get_all_bookings import GetAllBookingsUseCase
-from usecases.bookings.get_available_rooms import GetAvailableRoomsUseCase
-from usecases.bookings.get_booking_details import GetBookingDetailsUseCase
-from usecases.bookings.get_booking_history import GetBookingHistoryUseCase
-from usecases.bookings.get_my_bookings import GetMyBookingsUseCase
-from usecases.bookings.get_room_bookings import GetRoomBookingsUseCase
-from usecases.bookings.remove_participant import RemoveBookingParticipantUseCase
-from usecases.bookings.reschedule_booking import RescheduleBookingUseCase
+from usecases.commands.bookings.cancel_booking import (
+    CancelBookingCommandHandler,
+)
+from usecases.commands.bookings.change_room import (
+    ChangeRoomBookingCommandHandler,
+)
+from usecases.commands.bookings.complete_expired_bookings import (
+    CompleteExpiredBookingsCommandHandler,
+)
+from usecases.commands.bookings.create_booking import (
+    CreateBookingCommandHandler,
+)
+from usecases.commands.bookings.remove_participant import (
+    RemoveBookingParticipantCommandHandler,
+)
+from usecases.commands.bookings.reschedule_booking import (
+    RescheduleBookingCommandHandler,
+)
+from usecases.commands.offices.activate_office import (
+    ActivateOfficeCommandHandler,
+)
+from usecases.commands.offices.create_office import CreateOfficeCommandHandler
+from usecases.commands.offices.deactivate_office import (
+    DeactivateOfficeCommandHandler,
+)
+from usecases.commands.offices.image_ops import (
+    DeleteOfficeImageCommandHandler,
+    UploadOfficeImageCommandHandler,
+)
+from usecases.commands.offices.update_office import UpdateOfficeCommandHandler
+from usecases.commands.rooms.activate_room import ActivateRoomCommandHandler
+from usecases.commands.rooms.create_room import CreateRoomCommandHandler
+from usecases.commands.rooms.deactivate_room import DeactivateRoomCommandHandler
+from usecases.commands.rooms.image_ops import (
+    DeleteRoomImageCommandHandler,
+    UploadRoomImageCommandHandler,
+)
+from usecases.commands.rooms.update_room import UpdateRoomCommandHandler
+from usecases.commands.users.activate_user import ActivateUserCommandHandler
+from usecases.commands.users.change_role import ChangeUserRoleCommandHandler
+from usecases.commands.users.create_user import CreateUserCommandHandler
+from usecases.commands.users.deactivate_user import DeactivateUserCommandHandler
+from usecases.commands.users.update_user import UpdateUserCommandHandler
+from usecases.interfaces.commands import (
+    OfficesCommandRepositoryInterface,
+    RoomsCommandRepositoryInterface,
+    UsersCommandRepositoryInterface,
+)
 from usecases.interfaces.db import (
     DBBookingHistoryRepositoryInterface,
     DBBookingParticipantsRepositoryInterface,
     DBBookingsRepositoryInterface,
     DBMeetingRoomsRepositoryInterface,
     DBOfficesRepositoryInterface,
-    DBUserSessionsRepositoryInterface,
     DBUsersRepositoryInterface,
     NotificationDispatchRepositoryInterface,
     NotificationRepositoryInterface,
@@ -87,18 +124,18 @@ from usecases.interfaces.notifications import (
     NotificationSenderInterface,
     NotificationTemplateRendererInterface,
 )
-from usecases.interfaces.uow import UoWInterface
-from usecases.meeting_rooms.activate_room import ActivateRoomUseCase
-from usecases.meeting_rooms.create_room import CreateRoomUseCase
-from usecases.meeting_rooms.deactivate_room import DeactivateRoomUseCase
-from usecases.meeting_rooms.get_all_rooms import GetAllRoomsUseCase
-from usecases.meeting_rooms.get_office_rooms import GetOfficeRoomsUseCase
-from usecases.meeting_rooms.get_room_details import GetRoomDetailsUseCase
-from usecases.meeting_rooms.image_ops import (
-    DeleteRoomImageUseCase,
-    UploadRoomImageUseCase,
+from usecases.interfaces.queries import (
+    BookingHistoryQueryInterface,
+    BookingsQueryInterface,
+    ConsistentBookingsQueryInterface,
+    ConsistentUserSessionsQueryInterface,
+    ConsistentUsersQueryInterface,
+    OfficesQueryInterface,
+    RoomsQueryInterface,
+    UserSessionsQueryInterface,
+    UsersQueryInterface,
 )
-from usecases.meeting_rooms.update_room import UpdateRoomUseCase
+from usecases.interfaces.uow import UoWInterface
 from usecases.notifications.create_dispatch import (
     CreateNotificationDispatchUseCase,
 )
@@ -111,25 +148,35 @@ from usecases.notifications.select_reminders import (
 from usecases.notifications.template_renderer import (
     NotificationTemplateRenderer,
 )
-from usecases.offices.activate_office import ActivateOfficeUseCase
-from usecases.offices.create_office import CreateOfficeUseCase
-from usecases.offices.deactivate_office import DeactivateOfficeUseCase
-from usecases.offices.get_office_details import GetOfficeDetailsUseCase
-from usecases.offices.get_offices import GetOfficesUseCase
-from usecases.offices.image_ops import (
-    DeleteOfficeImageUseCase,
-    UploadOfficeImageUseCase,
+from usecases.queries.bookings.get_all_bookings import (
+    GetAllBookingsQueryHandler,
 )
-from usecases.offices.update_office import UpdateOfficeUseCase
-from usecases.user.activate_user import ActivateUserUseCase
-from usecases.user.change_role import ChangeUserRoleUseCase
-from usecases.user.create_user import CreateUserUseCase
-from usecases.user.deactivate_user import DeactivateUserUseCase
-from usecases.user.get_user_details import GetUserDetailsUseCase
-from usecases.user.get_users import GetUsersUseCase
-from usecases.user.login_user import LoginUserUseCase
-from usecases.user.lookup_users import LookupUsersUseCase
-from usecases.user.update_user import UpdateUserUseCase
+from usecases.queries.bookings.get_available_rooms import (
+    GetAvailableRoomsQueryHandler,
+)
+from usecases.queries.bookings.get_booking_details import (
+    GetBookingDetailsQueryHandler,
+)
+from usecases.queries.bookings.get_booking_history import (
+    GetBookingHistoryQueryHandler,
+)
+from usecases.queries.bookings.get_room_bookings import (
+    GetRoomBookingsQueryHandler,
+)
+from usecases.queries.bookings.get_user_bookings import (
+    GetUserBookingsQueryHandler,
+)
+from usecases.queries.offices.get_office_details import (
+    GetOfficeDetailsQueryHandler,
+)
+from usecases.queries.offices.get_offices import GetOfficesQueryHandler
+from usecases.queries.rooms.get_all_rooms import GetAllRoomsQueryHandler
+from usecases.queries.rooms.get_office_rooms import GetOfficeRoomsQueryHandler
+from usecases.queries.rooms.get_room_details import GetRoomDetailsQueryHandler
+from usecases.queries.users.get_user_details import GetUserDetailsQueryHandler
+from usecases.queries.users.get_user_sessions import GetUserSessionsQueryHandler
+from usecases.queries.users.get_users import GetUsersQueryHandler
+from usecases.queries.users.lookup_users import LookupUsersQueryHandler
 
 db_config = DBConfig()
 redis_config = RedisConfig()
@@ -142,7 +189,6 @@ worker_config = WorkerConfig()
 class DependencyProvider(Provider):
     def __init__(
         self,
-        db_config: DBConfig,
         redis_config: RedisConfig,
         auth_config: AuthConfig,
         s3_config: S3Config,
@@ -150,7 +196,6 @@ class DependencyProvider(Provider):
         component: Component | None = None,
     ) -> None:
         super().__init__(scope=scope, component=component)
-        self.db_config = db_config
         self.redis_config = redis_config
         self.auth_config = auth_config
         self.s3_config = s3_config
@@ -190,36 +235,10 @@ class DependencyProvider(Provider):
     ) -> JWTTokenServiceInterface:
         return JWTTokenService(config=auth_settings)
 
-    @provide(scope=Scope.APP)
-    async def db_engine(self) -> AsyncIterator[AsyncEngine]:
-        engine = create_async_engine(
-            self.db_config.DATABASE_URL,
-            echo=False,
-            pool_size=7,
-            max_overflow=20,
-            pool_pre_ping=True,
-        )
-        SQLAlchemyInstrumentor().instrument(engine=engine.sync_engine)
-        try:
-            yield engine
-        finally:
-            await engine.dispose()
-
-    @provide(scope=Scope.APP)
-    def session_factory(
-        self,
-        engine: AsyncEngine,
-    ) -> async_sessionmaker[AsyncSession]:
-        return async_sessionmaker(
-            autocommit=False,
-            autoflush=False,
-            bind=engine,
-        )
-
     @provide(scope=Scope.REQUEST)
     def sql_alchemy_uow(
         self,
-        session_factory: async_sessionmaker[AsyncSession],
+        session_factory: RWSessionFactory,
         cache: CacheInterface,
     ) -> UoWInterface:
         return SQLAlchemyUOW(session_factory=session_factory, cache=cache)
@@ -227,7 +246,7 @@ class DependencyProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def db_users_repository(
         self,
-        session_factory: async_sessionmaker[AsyncSession],
+        session_factory: RWSessionFactory,
         cache: CacheInterface,
     ) -> DBUsersRepositoryInterface:
         return DBUsersRepository(
@@ -237,19 +256,9 @@ class DependencyProvider(Provider):
         )
 
     @provide(scope=Scope.REQUEST)
-    def db_user_sessions_repository(
-        self,
-        session_factory: async_sessionmaker[AsyncSession],
-    ) -> DBUserSessionsRepositoryInterface:
-        return DBUserSessionsRepository(
-            session=None,
-            session_factory=session_factory,
-        )
-
-    @provide(scope=Scope.REQUEST)
     def db_offices_repository(
         self,
-        session_factory: async_sessionmaker[AsyncSession],
+        session_factory: RWSessionFactory,
         cache: CacheInterface,
     ) -> DBOfficesRepositoryInterface:
         return DBOfficesRepository(
@@ -261,7 +270,7 @@ class DependencyProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def db_rooms_repository(
         self,
-        session_factory: async_sessionmaker[AsyncSession],
+        session_factory: RWSessionFactory,
         cache: CacheInterface,
     ) -> DBMeetingRoomsRepositoryInterface:
         return DBMeetingRoomsRepository(
@@ -271,9 +280,124 @@ class DependencyProvider(Provider):
         )
 
     @provide(scope=Scope.REQUEST)
+    def offices_command_repository(
+        self,
+        session_factory: RWSessionFactory,
+        cache: CacheInterface,
+    ) -> OfficesCommandRepositoryInterface:
+        return DBOfficesRepository(
+            session=None,
+            session_factory=session_factory,
+            cache=cache,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def rooms_command_repository(
+        self,
+        session_factory: RWSessionFactory,
+        cache: CacheInterface,
+    ) -> RoomsCommandRepositoryInterface:
+        return DBMeetingRoomsRepository(
+            session=None,
+            session_factory=session_factory,
+            cache=cache,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def users_command_repository(
+        self,
+        session_factory: RWSessionFactory,
+        cache: CacheInterface,
+    ) -> UsersCommandRepositoryInterface:
+        return DBUsersRepository(
+            session=None,
+            session_factory=session_factory,
+            cache=cache,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def offices_query_repository(
+        self,
+        session_factory: ROSessionFactory,
+        cache: CacheInterface,
+    ) -> OfficesQueryInterface:
+        return OfficesQueryRepository(
+            session_factory=session_factory,
+            cache=cache,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def rooms_query_repository(
+        self,
+        session_factory: ROSessionFactory,
+        cache: CacheInterface,
+    ) -> RoomsQueryInterface:
+        return RoomsQueryRepository(
+            session_factory=session_factory,
+            cache=cache,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def users_query_repository(
+        self,
+        session_factory: ROSessionFactory,
+        cache: CacheInterface,
+    ) -> UsersQueryInterface:
+        return UsersQueryRepository(
+            session_factory=session_factory,
+            cache=cache,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def consistent_users_query_repository(
+        self,
+        session_factory: RWSessionFactory,
+        cache: CacheInterface,
+    ) -> ConsistentUsersQueryInterface:
+        return UsersQueryRepository(
+            session_factory=session_factory,
+            cache=cache,
+        )
+
+    @provide(scope=Scope.REQUEST)
+    def user_sessions_query_repository(
+        self,
+        session_factory: ROSessionFactory,
+    ) -> UserSessionsQueryInterface:
+        return UserSessionsQueryRepository(session_factory=session_factory)
+
+    @provide(scope=Scope.REQUEST)
+    def consistent_user_sessions_query_repository(
+        self,
+        session_factory: RWSessionFactory,
+    ) -> ConsistentUserSessionsQueryInterface:
+        return UserSessionsQueryRepository(session_factory=session_factory)
+
+    @provide(scope=Scope.REQUEST)
+    def bookings_query_repository(
+        self,
+        session_factory: ROSessionFactory,
+    ) -> BookingsQueryInterface:
+        return BookingsQueryRepository(session_factory=session_factory)
+
+    @provide(scope=Scope.REQUEST)
+    def consistent_bookings_query_repository(
+        self,
+        session_factory: RWSessionFactory,
+    ) -> ConsistentBookingsQueryInterface:
+        return BookingsQueryRepository(session_factory=session_factory)
+
+    @provide(scope=Scope.REQUEST)
+    def booking_history_query_repository(
+        self,
+        session_factory: ROSessionFactory,
+    ) -> BookingHistoryQueryInterface:
+        return BookingHistoryQueryRepository(session_factory=session_factory)
+
+    @provide(scope=Scope.REQUEST)
     def db_bookings_repository(
         self,
-        session_factory: async_sessionmaker[AsyncSession],
+        session_factory: RWSessionFactory,
     ) -> DBBookingsRepositoryInterface:
         return DBBookingsRepository(
             session=None,
@@ -283,7 +407,7 @@ class DependencyProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def db_booking_history_repository(
         self,
-        session_factory: async_sessionmaker[AsyncSession],
+        session_factory: RWSessionFactory,
     ) -> DBBookingHistoryRepositoryInterface:
         return DBBookingHistoryRepository(
             session=None,
@@ -293,7 +417,7 @@ class DependencyProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def db_booking_participants_repository(
         self,
-        session_factory: async_sessionmaker[AsyncSession],
+        session_factory: RWSessionFactory,
     ) -> DBBookingParticipantsRepositoryInterface:
         return DBBookingParticipantsRepository(
             session=None,
@@ -303,7 +427,7 @@ class DependencyProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def db_notifications_repository(
         self,
-        session_factory: async_sessionmaker[AsyncSession],
+        session_factory: RWSessionFactory,
     ) -> NotificationRepositoryInterface:
         return DBNotificationRepository(
             session=None,
@@ -313,7 +437,7 @@ class DependencyProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def db_notification_dispatch_repository(
         self,
-        session_factory: async_sessionmaker[AsyncSession],
+        session_factory: RWSessionFactory,
     ) -> NotificationDispatchRepositoryInterface:
         return DBNotificationDispatchRepository(
             session=None,
@@ -328,57 +452,60 @@ class DependencyProvider(Provider):
 
     create_notification_dispatch_uc = provide(CreateNotificationDispatchUseCase)
 
-    activate_office_uc = provide(ActivateOfficeUseCase)
-    create_office_uc = provide(CreateOfficeUseCase)
-    deactivate_office_uc = provide(DeactivateOfficeUseCase)
-    get_office_uc = provide(GetOfficeDetailsUseCase)
-    get_offices_uc = provide(GetOfficesUseCase)
-    update_office_uc = provide(UpdateOfficeUseCase)
-    upload_office_image_uc = provide(UploadOfficeImageUseCase)
-    delete_office_image_uc = provide(DeleteOfficeImageUseCase)
+    activate_office_handler = provide(ActivateOfficeCommandHandler)
+    create_office_handler = provide(CreateOfficeCommandHandler)
+    deactivate_office_handler = provide(DeactivateOfficeCommandHandler)
+    get_office_handler = provide(GetOfficeDetailsQueryHandler)
+    get_offices_handler = provide(GetOfficesQueryHandler)
+    update_office_handler = provide(UpdateOfficeCommandHandler)
+    upload_office_image_handler = provide(UploadOfficeImageCommandHandler)
+    delete_office_image_handler = provide(DeleteOfficeImageCommandHandler)
 
-    activate_room_uc = provide(ActivateRoomUseCase)
-    create_room_uc = provide(CreateRoomUseCase)
-    deactivate_room_uc = provide(DeactivateRoomUseCase)
-    get_room_uc = provide(GetRoomDetailsUseCase)
-    update_room_uc = provide(UpdateRoomUseCase)
-    get_all_rooms_uc = provide(GetAllRoomsUseCase)
-    get_office_rooms_uc = provide(GetOfficeRoomsUseCase)
-    upload_room_image_uc = provide(UploadRoomImageUseCase)
-    delete_room_image_uc = provide(DeleteRoomImageUseCase)
+    activate_room_handler = provide(ActivateRoomCommandHandler)
+    create_room_handler = provide(CreateRoomCommandHandler)
+    deactivate_room_handler = provide(DeactivateRoomCommandHandler)
+    get_room_handler = provide(GetRoomDetailsQueryHandler)
+    update_room_handler = provide(UpdateRoomCommandHandler)
+    get_all_rooms_handler = provide(GetAllRoomsQueryHandler)
+    get_office_rooms_handler = provide(GetOfficeRoomsQueryHandler)
+    upload_room_image_handler = provide(UploadRoomImageCommandHandler)
+    delete_room_image_handler = provide(DeleteRoomImageCommandHandler)
 
-    activate_user_uc = provide(ActivateUserUseCase)
-    create_user_uc = provide(CreateUserUseCase)
-    login_user_uc = provide(LoginUserUseCase)
-    deactivate_user_uc = provide(DeactivateUserUseCase)
-    change_user_role_uc = provide(ChangeUserRoleUseCase)
-    get_user_uc = provide(GetUserDetailsUseCase)
-    update_user_uc = provide(UpdateUserUseCase)
-    get_users_uc = provide(GetUsersUseCase)
-    lookup_users_uc = provide(LookupUsersUseCase)
-    login_with_session_uc = provide(LoginWithSessionUseCase)
-    refresh_tokens_uc = provide(RefreshTokensUseCase)
-    logout_uc = provide(LogoutUseCase)
-    get_user_sessions_uc = provide(GetUserSessionsUseCase)
-    revoke_user_session_uc = provide(RevokeUserSessionUseCase)
+    activate_user_handler = provide(ActivateUserCommandHandler)
+    create_user_handler = provide(CreateUserCommandHandler)
+    deactivate_user_handler = provide(DeactivateUserCommandHandler)
+    change_user_role_handler = provide(ChangeUserRoleCommandHandler)
+    get_user_handler = provide(GetUserDetailsQueryHandler)
+    update_user_handler = provide(UpdateUserCommandHandler)
+    get_users_handler = provide(GetUsersQueryHandler)
+    lookup_users_handler = provide(LookupUsersQueryHandler)
+    login_handler = provide(LoginCommandHandler)
+    refresh_tokens_handler = provide(RefreshTokensCommandHandler)
+    logout_handler = provide(LogoutCommandHandler)
+    get_user_sessions_handler = provide(GetUserSessionsQueryHandler)
+    revoke_user_session_handler = provide(RevokeUserSessionCommandHandler)
 
-    cancel_booking_uc = provide(CancelBookingUseCase)
-    add_booking_participant_uc = provide(AddBookingParticipantUseCase)
-    create_booking_uc = provide(CreateBookingUseCase)
-    get_all_bookings_uc = provide(GetAllBookingsUseCase)
-    get_available_rooms_uc = provide(GetAvailableRoomsUseCase)
-    get_booking_uc = provide(GetBookingDetailsUseCase)
-    get_booking_history_uc = provide(GetBookingHistoryUseCase)
-    get_my_bookings_uc = provide(GetMyBookingsUseCase)
-    get_room_bookings_uc = provide(GetRoomBookingsUseCase)
-    remove_booking_participant_uc = provide(RemoveBookingParticipantUseCase)
-    reschedule_booking_uc = provide(RescheduleBookingUseCase)
-    change_room_booking_uc = provide(ChangeRoomBookingUseCase)
+    cancel_booking_handler = provide(CancelBookingCommandHandler)
+    add_booking_participant_handler = provide(
+        AddBookingParticipantCommandHandler,
+    )
+    create_booking_handler = provide(CreateBookingCommandHandler)
+    get_all_bookings_handler = provide(GetAllBookingsQueryHandler)
+    get_available_rooms_handler = provide(GetAvailableRoomsQueryHandler)
+    get_booking_handler = provide(GetBookingDetailsQueryHandler)
+    get_booking_history_handler = provide(GetBookingHistoryQueryHandler)
+    get_user_bookings_handler = provide(GetUserBookingsQueryHandler)
+    get_room_bookings_handler = provide(GetRoomBookingsQueryHandler)
+    remove_booking_participant_handler = provide(
+        RemoveBookingParticipantCommandHandler,
+    )
+    reschedule_booking_handler = provide(RescheduleBookingCommandHandler)
+    change_room_booking_handler = provide(ChangeRoomBookingCommandHandler)
 
 
 container = make_async_container(
+    DatabaseProvider(db_config=db_config),
     DependencyProvider(
-        db_config=db_config,
         redis_config=redis_config,
         auth_config=auth_config,
         s3_config=s3_config,
@@ -390,54 +517,26 @@ container = make_async_container(
 class WorkerDependencyProvider(Provider):
     def __init__(
         self,
-        db_config: DBConfig,
         email_config: EmailConfig,
         worker_config: WorkerConfig,
         scope: BaseScope | None = None,
         component: Component | None = None,
     ) -> None:
         super().__init__(scope=scope, component=component)
-        self.db_config = db_config
         self.email_config = email_config
         self.worker_config = worker_config
-
-    @provide(scope=Scope.APP)
-    async def db_engine(self) -> AsyncIterator[AsyncEngine]:
-        engine = create_async_engine(
-            self.db_config.DATABASE_URL,
-            echo=False,
-            pool_size=7,
-            max_overflow=20,
-            pool_pre_ping=True,
-        )
-        SQLAlchemyInstrumentor().instrument(engine=engine.sync_engine)
-        try:
-            yield engine
-        finally:
-            await engine.dispose()
-
-    @provide(scope=Scope.APP)
-    def session_factory(
-        self,
-        engine: AsyncEngine,
-    ) -> async_sessionmaker[AsyncSession]:
-        return async_sessionmaker(
-            autocommit=False,
-            autoflush=False,
-            bind=engine,
-        )
 
     @provide(scope=Scope.REQUEST)
     def sql_alchemy_uow(
         self,
-        session_factory: async_sessionmaker[AsyncSession],
+        session_factory: RWSessionFactory,
     ) -> UoWInterface:
         return SQLAlchemyUOW(session_factory=session_factory, cache=None)
 
     @provide(scope=Scope.REQUEST)
     def db_notification_dispatch_repository(
         self,
-        session_factory: async_sessionmaker[AsyncSession],
+        session_factory: RWSessionFactory,
     ) -> NotificationDispatchRepositoryInterface:
         return DBNotificationDispatchRepository(
             session=None,
@@ -455,7 +554,7 @@ class WorkerDependencyProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def db_bookings_repository(
         self,
-        session_factory: async_sessionmaker[AsyncSession],
+        session_factory: RWSessionFactory,
     ) -> DBBookingsRepositoryInterface:
         return DBBookingsRepository(
             session=None,
@@ -465,7 +564,7 @@ class WorkerDependencyProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def db_users_repository(
         self,
-        session_factory: async_sessionmaker[AsyncSession],
+        session_factory: RWSessionFactory,
     ) -> DBUsersRepositoryInterface:
         return DBUsersRepository(
             session=None,
@@ -476,7 +575,7 @@ class WorkerDependencyProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def db_rooms_repository(
         self,
-        session_factory: async_sessionmaker[AsyncSession],
+        session_factory: RWSessionFactory,
     ) -> DBMeetingRoomsRepositoryInterface:
         return DBMeetingRoomsRepository(
             session=None,
@@ -487,7 +586,7 @@ class WorkerDependencyProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def db_notifications_repository(
         self,
-        session_factory: async_sessionmaker[AsyncSession],
+        session_factory: RWSessionFactory,
     ) -> NotificationRepositoryInterface:
         return DBNotificationRepository(
             session=None,
@@ -542,12 +641,14 @@ class WorkerDependencyProvider(Provider):
     select_booking_start_reminders_uc = provide(
         SelectBookingStartRemindersUseCase,
     )
-    complete_expired_bookings_uc = provide(CompleteExpiredBookingsUseCase)
+    complete_expired_bookings_handler = provide(
+        CompleteExpiredBookingsCommandHandler,
+    )
 
 
 worker_container = make_async_container(
+    DatabaseProvider(db_config=db_config),
     WorkerDependencyProvider(
-        db_config=db_config,
         email_config=email_config,
         worker_config=worker_config,
         scope=Scope.REQUEST,

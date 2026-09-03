@@ -4,9 +4,10 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { useRoute, useRouter } from "vue-router";
 import { z } from "zod";
-import { createBooking, getOffices, getRooms, humanizeApiError, queryKeys } from "../../shared/api";
+import { createBooking, getOffices, getRooms, humanizeApiError } from "../../shared/api";
 import { isValidTime24h } from "../../shared/lib/time";
 import { useToast } from "../ui/toast";
+import { addCreatedBookingToMyBookings } from "./bookingCache";
 
 function toIso(date: string, time: string) {
   return `${date}T${time}:00`;
@@ -155,11 +156,10 @@ export function useCreateBooking() {
         end_time: toIso(values.date, values.end),
         title: values.title?.trim() ? values.title.trim() : null,
       }),
-    onSuccess: async () => {
+    onSuccess: async (createdBooking) => {
+      addCreatedBookingToMyBookings(queryClient, createdBooking);
       success.value = "Бронирование создано.";
       toast.success("Бронирование успешно создано.");
-      await queryClient.invalidateQueries({ queryKey: queryKeys.myBookings });
-      await queryClient.refetchQueries({ queryKey: queryKeys.myBookings, type: "all" });
       await router.push("/my-bookings");
     },
     onError: (err) => {

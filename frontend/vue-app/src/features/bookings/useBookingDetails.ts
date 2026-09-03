@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import {
+  ApiError,
   addBookingParticipant,
   cancelBooking,
   changeBookingRoom,
@@ -16,9 +17,11 @@ import {
   rescheduleBooking,
 } from "../../shared/api";
 import { isValidTime24h } from "../../shared/lib/time";
+import type { BookingDetails } from "../../shared/types/api";
 import { useAuthStore } from "../auth/store";
 import { useConfirm } from "../ui/confirm";
 import { useToast } from "../ui/toast";
+import { getBookingCommandResult, updateBookingFromCommand } from "./bookingCache";
 
 export function useBookingDetails() {
   const route = useRoute();
@@ -34,8 +37,41 @@ export function useBookingDetails() {
 
   const bookingDetailsQuery = useQuery({
     queryKey: computed(() => queryKeys.bookingDetails(bookingId.value)),
-    queryFn: () => getBookingDetails(bookingId.value),
+    queryFn: async () => {
+      const commandResult = getBookingCommandResult(queryClient, bookingId.value);
+      let replicaDetails: BookingDetails;
+      try {
+        replicaDetails = await getBookingDetails(bookingId.value);
+      } catch (error) {
+        if (commandResult && error instanceof ApiError && error.status === 404) {
+          return getBookingDetails(bookingId.value, true);
+        }
+        throw error;
+      }
+
+      if (
+        !commandResult ||
+        new Date(commandResult.booking.updated_at).getTime() <=
+          new Date(replicaDetails.booking.updated_at).getTime()
+      ) {
+        return replicaDetails;
+      }
+
+      if (
+        commandResult.booking.room_id !== replicaDetails.booking.room_id &&
+        (!commandResult.room || commandResult.room.office_id !== replicaDetails.office.id)
+      ) {
+        return getBookingDetails(bookingId.value, true);
+      }
+
+      return {
+        ...replicaDetails,
+        booking: commandResult.booking,
+        room: commandResult.room ?? replicaDetails.room,
+      };
+    },
     enabled: computed(() => Boolean(bookingId.value)),
+    staleTime: Infinity,
   });
 
   const details = computed(() => bookingDetailsQuery.data.value ?? null);
@@ -60,6 +96,9 @@ export function useBookingDetails() {
     if (currentBooking.status !== "created") return false;
     return auth.role === "admin" || currentBooking.created_by === auth.id;
   });
+  const belongsToMyBookings = computed(
+    () => booking.value?.created_by === auth.id || participantIds.value.has(auth.id),
+  );
 
   const userLookupQuery = useQuery({
     queryKey: computed(() => queryKeys.userLookup(userSearch.value.trim().toLowerCase())),
@@ -71,15 +110,46 @@ export function useBookingDetails() {
     (userLookupQuery.data.value ?? []).filter((item) => !participantIds.value.has(item.id)),
   );
 
-  async function refreshBookingCaches() {
-    await queryClient.invalidateQueries({ queryKey: queryKeys.bookingDetails(bookingId.value) });
-    await queryClient.invalidateQueries({ queryKey: queryKeys.myBookings });
-    await queryClient.invalidateQueries({ queryKey: ["admin-bookings"] });
+  const isRefreshing = ref(false);
+
+  async function refreshBookingDetails(showSuccessToast = false) {
+    if (!bookingId.value || isRefreshing.value) return;
+    isRefreshing.value = true;
+    try {
+      const freshDetails = await getBookingDetails(bookingId.value, true);
+      queryClient.setQueryData(queryKeys.bookingDetails(bookingId.value), freshDetails);
+      if (showSuccessToast) toast.success("Детали бронирования обновлены.");
+    } catch (error) {
+      toast.error(humanizeApiError(error));
+    } finally {
+      isRefreshing.value = false;
+    }
   }
 
   const addParticipantMutation = useMutation({
     mutationFn: (userId: string) => addBookingParticipant(bookingId.value, userId),
     onSuccess: async (result) => {
+      const addedUser = suggestedUsers.value.find((user) => user.id === result.participant.user_id);
+      if (addedUser) {
+        queryClient.setQueryData<BookingDetails>(queryKeys.bookingDetails(bookingId.value), (current) =>
+          current
+            ? {
+                ...current,
+                participants: [
+                  ...current.participants,
+                  {
+                    user_id: result.participant.user_id,
+                    full_name: addedUser.full_name,
+                    email: addedUser.email,
+                    role: result.participant.role,
+                    added_by: result.participant.added_by,
+                    created_at: result.participant.created_at,
+                  },
+                ],
+              }
+            : current,
+        );
+      }
       selectedUserId.value = "";
       userSearch.value = "";
       toast.success("Участник добавлен.", { duration: 1400 });
@@ -89,7 +159,7 @@ export function useBookingDetails() {
           toast.info(formatWarningMessage(warning.code, warning.message));
         }, delayMs);
       }
-      await refreshBookingCaches();
+      await refreshBookingDetails();
     },
     onError: (error) => {
       toast.error(humanizeApiError(error));
@@ -98,9 +168,17 @@ export function useBookingDetails() {
 
   const removeParticipantMutation = useMutation({
     mutationFn: (userId: string) => removeBookingParticipant(bookingId.value, userId),
-    onSuccess: async () => {
+    onSuccess: async (_, userId) => {
+      queryClient.setQueryData<BookingDetails>(queryKeys.bookingDetails(bookingId.value), (current) =>
+        current
+          ? {
+              ...current,
+              participants: current.participants.filter((participant) => participant.user_id !== userId),
+            }
+          : current,
+      );
       toast.success("Участник удален.");
-      await refreshBookingCaches();
+      await refreshBookingDetails();
     },
     onError: (error) => {
       toast.error(humanizeApiError(error));
@@ -144,9 +222,9 @@ export function useBookingDetails() {
 
   const cancelMutation = useMutation({
     mutationFn: () => cancelBooking(bookingId.value),
-    onSuccess: async () => {
+    onSuccess: (updatedBooking) => {
+      updateBookingFromCommand(queryClient, updatedBooking, undefined, belongsToMyBookings.value);
       toast.success("Бронирование отменено.");
-      await refreshBookingCaches();
     },
     onError: (error) => {
       toast.error(humanizeApiError(error));
@@ -156,10 +234,10 @@ export function useBookingDetails() {
   const rescheduleMutation = useMutation({
     mutationFn: ({ start, end }: { start: string; end: string }) =>
       rescheduleBooking(bookingId.value, start, end),
-    onSuccess: async () => {
+    onSuccess: (updatedBooking) => {
+      updateBookingFromCommand(queryClient, updatedBooking, undefined, belongsToMyBookings.value);
       selectedReschedule.value = false;
       toast.success("Бронирование перенесено.");
-      await refreshBookingCaches();
     },
     onError: (error) => {
       toast.error(humanizeApiError(error));
@@ -168,11 +246,12 @@ export function useBookingDetails() {
 
   const roomMutation = useMutation({
     mutationFn: (roomId: string) => changeBookingRoom(bookingId.value, roomId),
-    onSuccess: async () => {
+    onSuccess: (updatedBooking) => {
+      const updatedRoom = availableRoomsForChange.value.find((item) => item.id === updatedBooking.room_id);
+      updateBookingFromCommand(queryClient, updatedBooking, updatedRoom, belongsToMyBookings.value);
       selectedRoomChange.value = false;
       selectedNewRoomId.value = "";
       toast.success("Комната изменена.");
-      await refreshBookingCaches();
     },
     onError: (error) => {
       toast.error(humanizeApiError(error));
@@ -337,6 +416,7 @@ export function useBookingDetails() {
     availableRoomsForChangeQuery,
     roomChangeError,
     isLoading,
+    isRefreshing,
     lookupLoading,
     isMutating,
     errorText,
@@ -351,5 +431,6 @@ export function useBookingDetails() {
     cancelChangeRoom,
     submitChangeRoom,
     cancelCurrentBooking,
+    refreshBookingDetails,
   };
 }
