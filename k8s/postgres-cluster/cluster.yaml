@@ -1,0 +1,26 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: booking-postgres-cluster
+  namespace: booking
+spec:
+  instances: 2
+
+  bootstrap:
+    initdb:
+      database: booking_db
+      owner: booking_user
+      secret:
+        name: booking-cnpg-app
+
+  storage:
+    size: 1Gi
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+

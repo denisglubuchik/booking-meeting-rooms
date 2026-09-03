@@ -12,6 +12,15 @@ backend / worker -> otel-collector:4317
                          `-> Loki        (logs)
                                   |
                                Grafana
+
+CloudNativePG instances and their managed PgBouncer Poolers expose native
+Prometheus endpoints and are scraped directly:
+
+```text
+PostgreSQL primary / replica :9187 --\
+                                      -> Prometheus -> Grafana
+PgBouncer RW / RO           :9127 --/
+```
 ```
 
 Useful checks:
@@ -80,10 +89,19 @@ kubectl apply -k k8s/observability
 kubectl rollout restart deployment/backend deployment/worker -n booking
 ```
 
-Grafana automatically provisions the `Booking overview` dashboard in the
-`Booking` folder. It contains request rate, error rate, p95 latency, breakdowns
-by operation, and application logs. The dashboard source is
-`k8s/observability/dashboards/booking-overview.json`.
+Grafana automatically provisions two dashboards in the `Booking` folder:
+
+- `Booking overview` contains request rate, error rate, p95 latency, breakdowns
+  by operation, traces, and application logs;
+- `PostgreSQL CQRS` compares primary and replica load, replication lag, WAL,
+  database connections, transaction and row-read rates, buffer cache, and the
+  RW/RO PgBouncer pools.
+
+Their sources are `k8s/observability/dashboards/booking-overview.json` and
+`k8s/observability/dashboards/postgres-cqrs.json`.
+
+The standalone Prometheus uses Kubernetes pod discovery for CloudNativePG. Its
+namespace-scoped ServiceAccount can only list and watch Pods in `booking`.
 
 The stateful services are intentionally single-replica Deployments with
 `ReadWriteOnce` volumes of 500 MiB each. This is appropriate for a small

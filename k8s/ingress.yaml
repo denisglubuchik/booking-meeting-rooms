@@ -4,15 +4,9 @@ metadata:
   name: booking
   namespace: booking
   annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
   ingressClassName: traefik
-  tls:
-    - hosts:
-        - booking.localhost
-        - s3.booking.localhost
-        - grafana.booking.localhost
   rules:
     - host: booking.localhost
       http:

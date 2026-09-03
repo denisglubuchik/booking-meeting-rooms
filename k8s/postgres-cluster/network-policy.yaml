@@ -1,0 +1,135 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: booking-postgres-cluster-network-policy
+  namespace: booking
+spec:
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: booking-postgres-cluster
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # PostgreSQL replication and connections between cluster instances.
+    - from:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: booking-postgres-cluster
+      ports:
+        - protocol: TCP
+          port: 5432
+    # CloudNativePG operator communicates with the instance manager.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cnpg-system
+      ports:
+        - protocol: TCP
+          port: 8000
+    # Allow direct clients and the managed Poolers to reach PostgreSQL.
+    - from:
+        - podSelector:
+            matchLabels:
+              app: booking-cnpg-pooler
+      ports:
+        - protocol: TCP
+          port: 5432
+    - from:
+        - podSelector:
+            matchLabels:
+              app: prometheus
+      ports:
+        - protocol: TCP
+          port: 9187
+  egress:
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: booking-postgres-cluster
+      ports:
+        - protocol: TCP
+          port: 5432
+    # The instance manager watches Kubernetes resources through the API server.
+    # K3s exposes the kubernetes Service on 443 and DNATs it to 6443.
+    - ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 6443
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: booking-clients-cnpg-egress
+  namespace: booking
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values: [backend, worker, migrations]
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: booking-cnpg-pooler
+      ports:
+        - protocol: TCP
+          port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: booking-cnpg-pooler-network-policy
+  namespace: booking
+spec:
+  podSelector:
+    matchLabels:
+      app: booking-cnpg-pooler
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values: [backend, worker, migrations]
+      ports:
+        - protocol: TCP
+          port: 5432
+    - from:
+        - podSelector:
+            matchLabels:
+              app: prometheus
+      ports:
+        - protocol: TCP
+          port: 9127
+  egress:
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: booking-postgres-cluster
+      ports:
+        - protocol: TCP
+          port: 5432
+    # PgBouncer's instance manager also reads its Pooler resource from the API.
+    - ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 6443

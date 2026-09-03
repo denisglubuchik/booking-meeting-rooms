@@ -15,8 +15,8 @@ data:
   OTEL_EXPORTER_OTLP_INSECURE: "true"
   OTEL_RESOURCE_ATTRIBUTES: "service.namespace=booking-meeting-rooms,deployment.environment.name=kubernetes"
 
-  PG_RW_HOST: "pgbouncer"
-  PG_RO_HOST: "pgbouncer"
+  PG_RW_HOST: "booking-pooler-rw"
+  PG_RO_HOST: "booking-pooler-ro"
   PG_PORT: "5432"
   PG_DB: "booking_db"
 
@@ -25,12 +25,12 @@ data:
   REDIS_DB: "0"
   APP_REDIS_PREFIX: "booking"
 
-  CORS_ALLOW_ORIGINS: "https://booking.localhost"
+  CORS_ALLOW_ORIGINS: "http://booking.localhost"
   REFRESH_COOKIE_PATH: "/api/v1/auth"
-  REFRESH_COOKIE_SECURE: "true"
+  REFRESH_COOKIE_SECURE: "false"
 
   S3_ENDPOINT_URL: "http://minio:9000"
-  S3_PUBLIC_ENDPOINT_URL: "https://s3.booking.localhost"
+  S3_PUBLIC_ENDPOINT_URL: "http://s3.booking.localhost"
   S3_REGION: "us-east-1"
   S3_BUCKET: "booking"
   S3_USE_PATH_STYLE: "true"

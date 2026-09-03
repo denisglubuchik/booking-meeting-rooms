@@ -103,6 +103,21 @@ spec:
       ports:
         - protocol: TCP
           port: 8889
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: booking-postgres-cluster
+      ports:
+        - protocol: TCP
+          port: 9187
+        - protocol: TCP
+          port: 9127
+    # Kubernetes pod discovery. K3s DNATs Service port 443 to 6443.
+    - ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 6443
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

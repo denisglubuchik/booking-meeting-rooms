@@ -36,11 +36,11 @@ spec:
           image: grafana/grafana:13.2.0
           resources:
             requests:
-              cpu: 100m
-              memory: 256Mi
-            limits:
-              cpu: 500m
+              cpu: 250m
               memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -97,6 +97,10 @@ spec:
             - name: config
               mountPath: /etc/grafana/dashboards/booking-overview.json
               subPath: booking-overview.json
+              readOnly: true
+            - name: config
+              mountPath: /etc/grafana/dashboards/postgres-cqrs.json
+              subPath: postgres-cqrs.json
               readOnly: true
             - name: data
               mountPath: /var/lib/grafana

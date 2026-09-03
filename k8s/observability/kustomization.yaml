@@ -21,10 +21,12 @@ configMapGenerator:
       - datasources.yaml=configs/grafana-datasources.yaml
       - dashboards.yaml=configs/grafana-dashboards.yaml
       - booking-overview.json=dashboards/booking-overview.json
+      - postgres-cqrs.json=dashboards/postgres-cqrs.json
 
 resources:
   - tempo.yaml
   - prometheus.yaml
+  - prometheus-rbac.yaml
   - loki.yaml
   - grafana.yaml
   - otel-collector.yaml

@@ -1,0 +1,42 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: booking-pooler-rw
+  namespace: booking
+spec:
+  cluster:
+    name: booking-postgres-cluster
+  instances: 1
+  type: rw
+  template:
+    metadata:
+      labels:
+        app: booking-cnpg-pooler
+        database-access: rw
+  pgbouncer:
+    poolMode: transaction
+    parameters:
+      max_client_conn: "300"
+      default_pool_size: "20"
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: booking-pooler-ro
+  namespace: booking
+spec:
+  cluster:
+    name: booking-postgres-cluster
+  instances: 1
+  type: ro
+  template:
+    metadata:
+      labels:
+        app: booking-cnpg-pooler
+        database-access: ro
+  pgbouncer:
+    poolMode: transaction
+    parameters:
+      max_client_conn: "300"
+      default_pool_size: "20"
+

@@ -170,11 +170,14 @@ kubectl wait --namespace booking --for=condition=available \
 kubectl get pods,jobs,ingress -n booking
 ```
 
-Приложение будет доступно по адресу `https://booking.localhost`, Grafana —
-`https://grafana.booking.localhost`, S3 API — `https://s3.booking.localhost`. Локальный
-Traefik может отдавать самоподписанный TLS-сертификат, поэтому браузер
-покажет предупреждение. Если ingress не публикуется на localhost, добавьте
-его адрес для трёх имён в `/etc/hosts`.
+Приложение доступно по адресу `http://booking.localhost`, Grafana —
+`http://grafana.booking.localhost`, S3 API — `http://s3.booking.localhost`.
+Если ingress не публикуется на localhost, добавьте его адрес для трёх имён
+в `/etc/hosts`.
+
+Если HTTP-запрос всё равно перенаправляется на HTTPS, redirect настроен глобально
+на entrypoint `web` самого Traefik. Его нужно отключить в конфигурации локальной
+установки Traefik; одного изменения Ingress в таком случае недостаточно.
 
 Для диагностики:
 
