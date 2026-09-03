@@ -4,13 +4,14 @@ from sqlalchemy import select
 
 from domain.entities.office import Office
 from infra.cache.decorators import cache
+from infra.cache.keys import OFFICE_BY_ID_PREFIX, OFFICE_LIST_PREFIX
 from infra.db.models.office import OfficeModel
 from infra.db.queries.base import BaseQueryRepository
 from usecases.interfaces.queries import OfficesQueryInterface
 
 
 class OfficesQueryRepository(BaseQueryRepository, OfficesQueryInterface):
-    @cache(key_prefix="office", return_type=Office)
+    @cache(key_prefix=OFFICE_BY_ID_PREFIX, return_type=Office)
     async def get_by_id(self, office_id: UUID) -> Office | None:
         self._logger.debug("get_office_by_id_started office_id=%s", office_id)
         stmt = select(OfficeModel).where(OfficeModel.id == office_id)
@@ -23,7 +24,7 @@ class OfficesQueryRepository(BaseQueryRepository, OfficesQueryInterface):
         )
         return model.to_domain() if model else None
 
-    @cache(key_prefix="office", return_type=list[Office])
+    @cache(key_prefix=OFFICE_LIST_PREFIX, return_type=list[Office])
     async def get_all(
         self,
         *,

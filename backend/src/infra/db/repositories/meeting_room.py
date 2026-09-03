@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlalchemy import delete, select
 
 from domain.entities.meeting_room import MeetingRoom
-from infra.cache.decorators import cache, invalidate_cache
+from infra.cache.keys import ROOM_BY_ID_PREFIX, cache_key
 from infra.db.models.meeting_room import MeetingRoomModel
 from infra.db.repositories.base import BaseDBRepository
 from usecases.interfaces.db import DBMeetingRoomsRepositoryInterface
@@ -13,23 +13,22 @@ class DBMeetingRoomsRepository(
     BaseDBRepository,
     DBMeetingRoomsRepositoryInterface,
 ):
-    @invalidate_cache(key_prefix="meeting_room")
     async def save(self, room: MeetingRoom) -> MeetingRoom:
         self._logger.debug("save_room_started room_id=%s", room.id)
         model = MeetingRoomModel.from_domain(room)
         merged_model = await self._session.merge(model)
         await self._session.flush()
+        self.mark_cache_key_dirty(cache_key(ROOM_BY_ID_PREFIX, room.id))
         self._logger.debug("save_room_finished room_id=%s", merged_model.id)
         return merged_model.to_domain()
 
-    @invalidate_cache(key_prefix="meeting_room")
     async def delete_room(self, room: MeetingRoom) -> None:
         self._logger.debug("delete_room_started room_id=%s", room.id)
         stmt = delete(MeetingRoomModel).where(MeetingRoomModel.id == room.id)
         await self._session.execute(stmt)
+        self.mark_cache_key_dirty(cache_key(ROOM_BY_ID_PREFIX, room.id))
         self._logger.debug("delete_room_finished room_id=%s", room.id)
 
-    @cache(key_prefix="meeting_room", return_type=MeetingRoom)
     async def get_by_id(self, room_id: UUID) -> MeetingRoom | None:
         self._logger.debug("get_room_by_id_started room_id=%s", room_id)
         stmt = select(MeetingRoomModel).where(MeetingRoomModel.id == room_id)

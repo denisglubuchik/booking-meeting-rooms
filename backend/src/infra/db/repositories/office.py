@@ -3,7 +3,11 @@ from uuid import UUID
 from sqlalchemy import delete, select
 
 from domain.entities.office import Office
-from infra.cache.decorators import cache, invalidate_cache
+from infra.cache.keys import (
+    OFFICE_BY_ID_PREFIX,
+    OFFICE_LIST_PREFIX,
+    cache_key,
+)
 from infra.db.models.office import OfficeModel
 from infra.db.repositories.base import BaseDBRepository
 from usecases.interfaces.db import DBOfficesRepositoryInterface
@@ -13,23 +17,24 @@ class DBOfficesRepository(
     BaseDBRepository,
     DBOfficesRepositoryInterface,
 ):
-    @invalidate_cache(key_prefix="office")
     async def save(self, office: Office) -> Office:
         self._logger.debug("save_office_started office_id=%s", office.id)
         model = OfficeModel.from_domain(office)
         merged_model = await self._session.merge(model)
         await self._session.flush()
+        self.mark_cache_key_dirty(cache_key(OFFICE_BY_ID_PREFIX, office.id))
+        self.mark_cache_prefix_dirty(OFFICE_LIST_PREFIX)
         self._logger.debug("save_office_finished office_id=%s", merged_model.id)
         return merged_model.to_domain()
 
-    @invalidate_cache(key_prefix="office")
     async def delete_office(self, office: Office) -> None:
         self._logger.debug("delete_office_started office_id=%s", office.id)
         stmt = delete(OfficeModel).where(OfficeModel.id == office.id)
         await self._session.execute(stmt)
+        self.mark_cache_key_dirty(cache_key(OFFICE_BY_ID_PREFIX, office.id))
+        self.mark_cache_prefix_dirty(OFFICE_LIST_PREFIX)
         self._logger.debug("delete_office_finished office_id=%s", office.id)
 
-    @cache(key_prefix="office", return_type=Office)
     async def get_by_id(self, office_id: UUID) -> Office | None:
         self._logger.debug("get_office_by_id_started office_id=%s", office_id)
         stmt = select(OfficeModel).where(OfficeModel.id == office_id)
@@ -42,7 +47,6 @@ class DBOfficesRepository(
         )
         return model.to_domain() if model else None
 
-    @cache(key_prefix="office", return_type=list[Office])
     async def get_all(
         self,
         *,

@@ -4,13 +4,14 @@ from sqlalchemy import select
 
 from domain.entities.meeting_room import MeetingRoom
 from infra.cache.decorators import cache
+from infra.cache.keys import ROOM_BY_ID_PREFIX
 from infra.db.models.meeting_room import MeetingRoomModel
 from infra.db.queries.base import BaseQueryRepository
 from usecases.interfaces.queries import RoomsQueryInterface
 
 
 class RoomsQueryRepository(BaseQueryRepository, RoomsQueryInterface):
-    @cache(key_prefix="meeting_room", return_type=MeetingRoom)
+    @cache(key_prefix=ROOM_BY_ID_PREFIX, return_type=MeetingRoom)
     async def get_by_id(self, room_id: UUID) -> MeetingRoom | None:
         self._logger.debug("get_room_by_id_started room_id=%s", room_id)
         stmt = select(MeetingRoomModel).where(MeetingRoomModel.id == room_id)

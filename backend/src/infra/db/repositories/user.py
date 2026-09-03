@@ -4,7 +4,7 @@ from uuid import UUID
 from sqlalchemy import delete, or_, select
 
 from domain.entities.user import User
-from infra.cache.decorators import cache, invalidate_cache
+from infra.cache.keys import USER_BY_ID_PREFIX, cache_key
 from infra.db.models.user import UserModel
 from infra.db.repositories.base import BaseDBRepository
 from usecases.interfaces.db import DBUsersRepositoryInterface
@@ -14,23 +14,22 @@ class DBUsersRepository(
     BaseDBRepository,
     DBUsersRepositoryInterface,
 ):
-    @invalidate_cache(key_prefix="user")
     async def save(self, user: User) -> User:
         self._logger.debug("save_user_started user_id=%s", user.id)
         model = UserModel.from_domain(user)
         merged_model = await self._session.merge(model)
         await self._session.flush()
+        self.mark_cache_key_dirty(cache_key(USER_BY_ID_PREFIX, user.id))
         self._logger.debug("save_user_finished user_id=%s", merged_model.id)
         return merged_model.to_domain()
 
-    @invalidate_cache(key_prefix="user")
     async def delete_user(self, user: User) -> None:
         self._logger.debug("delete_user_started user_id=%s", user.id)
         stmt = delete(UserModel).where(UserModel.id == user.id)
         await self._session.execute(stmt)
+        self.mark_cache_key_dirty(cache_key(USER_BY_ID_PREFIX, user.id))
         self._logger.debug("delete_user_finished user_id=%s", user.id)
 
-    @cache(key_prefix="user", return_type=User)
     async def get_by_id(self, user_id: UUID) -> User | None:
         self._logger.debug("get_user_by_id_started user_id=%s", user_id)
         stmt = select(UserModel).where(UserModel.id == user_id)
@@ -57,7 +56,6 @@ class DBUsersRepository(
         )
         return model.to_domain() if model else None
 
-    @cache(key_prefix="user", return_type=User)
     async def get_by_email(self, email: str) -> User | None:
         self._logger.debug("get_user_by_email_started email=%s", email)
         stmt = select(UserModel).where(UserModel.email == email)

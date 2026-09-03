@@ -5,13 +5,14 @@ from sqlalchemy import or_, select
 
 from domain.entities.user import User
 from infra.cache.decorators import cache
+from infra.cache.keys import USER_BY_ID_PREFIX
 from infra.db.models.user import UserModel
 from infra.db.queries.base import BaseQueryRepository
 from usecases.interfaces.queries import UsersQueryInterface
 
 
 class UsersQueryRepository(BaseQueryRepository, UsersQueryInterface):
-    @cache(key_prefix="user", return_type=User)
+    @cache(key_prefix=USER_BY_ID_PREFIX, return_type=User)
     async def get_by_id(self, user_id: UUID) -> User | None:
         self._logger.debug("get_user_by_id_started user_id=%s", user_id)
         stmt = select(UserModel).where(UserModel.id == user_id)

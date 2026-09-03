@@ -33,7 +33,11 @@ def cache(
             logger.info("cache_lookup_started key_prefix=%s", key_prefix)
 
             # Try to get from cache
-            cached_data = await cache_service.get(key, return_type)
+            try:
+                cached_data = await cache_service.get(key, return_type)
+            except Exception:
+                logger.exception("cache_get_failed key_prefix=%s", key_prefix)
+                cached_data = None
             if cached_data is not None:
                 logger.info("cache_hit key_prefix=%s", key_prefix)
                 return cached_data
@@ -45,12 +49,19 @@ def cache(
             # Save to cache if result is not None
             if result is not None:
                 ttl = expire(self) if callable(expire) else expire
-                await cache_service.set(key, result, ttl=ttl)
-                logger.info(
-                    "cache_set key_prefix=%s ttl=%s",
-                    key_prefix,
-                    ttl,
-                )
+                try:
+                    await cache_service.set(key, result, ttl=ttl)
+                except Exception:
+                    logger.exception(
+                        "cache_set_failed key_prefix=%s",
+                        key_prefix,
+                    )
+                else:
+                    logger.info(
+                        "cache_set key_prefix=%s ttl=%s",
+                        key_prefix,
+                        ttl,
+                    )
 
             return result
 
@@ -68,7 +79,13 @@ def invalidate_cache(key_prefix: str) -> Callable:
             cache_service = getattr(self, "cache", None)
             if cache_service is not None:
                 logger.info("cache_invalidate_by_prefix prefix=%s", key_prefix)
-                await cache_service.delete_by_prefix(key_prefix)
+                try:
+                    await cache_service.delete_by_prefix(key_prefix)
+                except Exception:
+                    logger.exception(
+                        "cache_invalidation_failed key_prefix=%s",
+                        key_prefix,
+                    )
 
             return result
 

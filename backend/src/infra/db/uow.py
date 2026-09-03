@@ -3,6 +3,10 @@ from typing import Self
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from infra.cache.invalidation import (
+    PendingCacheInvalidations,
+    invalidate_cache_after_commit,
+)
 from infra.db.repositories.booking import DBBookingsRepository
 from infra.db.repositories.booking_history import DBBookingHistoryRepository
 from infra.db.repositories.booking_participant import (
@@ -24,7 +28,7 @@ class SQLAlchemyUOW(UoWInterface):
     def __init__(
         self,
         session_factory: async_sessionmaker[AsyncSession],
-        cache: CacheInterface,
+        cache: CacheInterface | None,
     ) -> None:
         self._session_factory = session_factory
         self._cache = cache
@@ -33,15 +37,18 @@ class SQLAlchemyUOW(UoWInterface):
     async def __aenter__(self) -> Self:
         self._logger.debug("uow_enter")
         self._session = self._session_factory()
+        self._pending_cache_invalidations = PendingCacheInvalidations()
 
         self.offices_repo = DBOfficesRepository(
             session=self._session,
             cache=self._cache,
+            pending_cache_invalidations=self._pending_cache_invalidations,
         )
         self.bookings_repo = DBBookingsRepository(session=self._session)
         self.rooms_repo = DBMeetingRoomsRepository(
             session=self._session,
             cache=self._cache,
+            pending_cache_invalidations=self._pending_cache_invalidations,
         )
         self.booking_history_repo = DBBookingHistoryRepository(
             session=self._session,
@@ -52,6 +59,7 @@ class SQLAlchemyUOW(UoWInterface):
         self.users_repo = DBUsersRepository(
             session=self._session,
             cache=self._cache,
+            pending_cache_invalidations=self._pending_cache_invalidations,
         )
         self.user_sessions_repo = DBUserSessionsRepository(
             session=self._session,
@@ -83,7 +91,13 @@ class SQLAlchemyUOW(UoWInterface):
                 await self._session.rollback()
                 self._logger.debug("uow_rollback_after_commit_failure")
                 raise
+            await invalidate_cache_after_commit(
+                self._cache,
+                self._pending_cache_invalidations,
+                self._logger,
+            )
 
         finally:
+            self._pending_cache_invalidations.clear()
             await self._session.close()
             self._logger.debug("uow_close")

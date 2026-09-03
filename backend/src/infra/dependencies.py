@@ -352,11 +352,10 @@ class DependencyProvider(Provider):
     def consistent_users_query_repository(
         self,
         session_factory: RWSessionFactory,
-        cache: CacheInterface,
     ) -> ConsistentUsersQueryInterface:
         return UsersQueryRepository(
             session_factory=session_factory,
-            cache=cache,
+            cache=None,
         )
 
     @provide(scope=Scope.REQUEST)
